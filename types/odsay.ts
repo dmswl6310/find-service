@@ -11,14 +11,27 @@ export interface OdsayPath {
   info: OdsayPathInfo;
 }
 
+export interface OdsayErrorEntry {
+  code: string;
+  msg?: string;
+  message?: string;
+}
+
 export interface OdsayTransitResponse {
   result?: {
     path?: OdsayPath[];
   };
-  error?: {
-    msg: string;
-    code: string;
-  };
+  error?: OdsayErrorEntry | OdsayErrorEntry[];
+}
+
+export type TransitErrorSource = "client" | "server" | "odsay" | "route";
+
+export interface TransitApiErrorPayload {
+  error: string;
+  errorCode?: string;
+  errorStatus?: number;
+  errorSource?: TransitErrorSource;
+  errorDetails?: string;
 }
 
 export interface TransitFetchResult {
@@ -28,4 +41,9 @@ export interface TransitFetchResult {
   payment: number;
   pathType: number;
   error?: boolean;
+  errorMessage?: string;
+  errorCode?: string;
+  errorStatus?: number;
+  errorSource?: TransitErrorSource;
+  errorDetails?: string;
 }

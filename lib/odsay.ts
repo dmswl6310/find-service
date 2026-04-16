@@ -1,17 +1,61 @@
-import { OdsayTransitResponse } from "@/types/odsay";
+import { OdsayErrorEntry, OdsayTransitResponse, TransitErrorSource } from "@/types/odsay";
 
 const ODSAY_API_BASE_URL = "https://api.odsay.com/v1/api/searchPubTransPathT";
+
+export class TransitApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly source: TransitErrorSource,
+    public readonly code?: string,
+    public readonly details?: string
+  ) {
+    super(message);
+    this.name = "TransitApiError";
+  }
+}
+
+function getOdsayErrorEntry(error: OdsayTransitResponse["error"]): OdsayErrorEntry | undefined {
+  if (!error) {
+    return undefined;
+  }
+
+  return Array.isArray(error) ? error[0] : error;
+}
+
+function parseErrorPayload(rawText: string): { code?: string; message?: string } {
+  if (!rawText) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(rawText) as OdsayTransitResponse;
+    const errorEntry = getOdsayErrorEntry(parsed.error);
+
+    return {
+      code: errorEntry?.code,
+      message: errorEntry?.msg || errorEntry?.message,
+    };
+  } catch {
+    return {};
+  }
+}
 
 export async function fetchTransitRoute(
   sx: string,
   sy: string,
   ex: string,
   ey: string
-): Promise<OdsayTransitResponse | null> {
+): Promise<OdsayTransitResponse> {
   const apiKey = process.env.ODSAY_API_KEY;
   if (!apiKey) {
-    console.error("ODSAY_API_KEY is not set");
-    return null;
+    console.error("[transit][odsay] Missing ODSAY_API_KEY", {
+      sx,
+      sy,
+      ex,
+      ey,
+    });
+    throw new TransitApiError("ODSAY_API_KEY is not set", 500, "server");
   }
 
   // ODsay API 요구사항에 맞춰 query param 설정 (API 키는 URL 인코딩 필요)
@@ -32,14 +76,45 @@ export async function fetchTransitRoute(
     });
 
     if (!response.ok) {
-      console.error("ODsay API Error:", await response.text());
-      return null;
+      const rawText = await response.text();
+      const { code, message } = parseErrorPayload(rawText);
+
+      console.error("[transit][odsay] Upstream API error", {
+        status: response.status,
+        code,
+        message: message || "ODsay API request failed",
+        sx,
+        sy,
+        ex,
+        ey,
+        details: rawText,
+      });
+
+      throw new TransitApiError(
+        message || "ODsay API request failed",
+        response.status || 502,
+        code ? "odsay" : "server",
+        code,
+        rawText
+      );
     }
 
     const data: OdsayTransitResponse = await response.json();
     return data;
   } catch (error) {
-    console.error("ODsay API Request Failed:", error);
-    return null;
+    if (error instanceof TransitApiError) {
+      throw error;
+    }
+
+    const message = error instanceof Error ? error.message : "Unknown transit request error";
+    console.error("[transit][odsay] Request failed", {
+      sx,
+      sy,
+      ex,
+      ey,
+      message,
+      error,
+    });
+    throw new TransitApiError(message, 502, "server");
   }
 }
