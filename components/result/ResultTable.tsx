@@ -24,6 +24,11 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating }:
     return matrixData.find((d) => d.fromId === startId && d.toId === endId);
   };
 
+  const getErrorTitle = (res: TransitFetchResult) => {
+    const parts = [res.errorMessage, res.errorCode ? `코드: ${res.errorCode}` : null, res.errorStatus ? `상태: ${res.errorStatus}` : null];
+    return parts.filter(Boolean).join(" | ");
+  };
+
   return (
     <div className="w-full relative overflow-x-auto rounded-xl border border-border shadow-sm bg-surface">
       {/* 로딩 오버레이 */}
@@ -69,7 +74,12 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating }:
                           )}
                         </div>
                       ) : (
-                        <span className="text-red-500 text-xs">조회 실패</span>
+                        <span
+                          className="text-red-500 text-xs break-words"
+                          title={getErrorTitle(res)}
+                        >
+                          {res.errorMessage || "조회 실패"}
+                        </span>
                       )
                     ) : (
                       <span className="text-foreground/30">-</span>
