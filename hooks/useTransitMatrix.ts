@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { KakaoLocation } from "@/types/kakao";
-import { TransitApiErrorPayload, TransitErrorSource, TransitFetchResult } from "@/types/odsay";
+import { TransitApiErrorPayload, TransitErrorSource, TransitFetchResult, OdsaySubPath } from "@/types/odsay";
 
 interface TransitApiSuccessPayload {
   totalTime?: number;
   payment?: number;
   pathType?: number;
+  transitCount?: number;
+  subPath?: OdsaySubPath[];
   walkOnly?: boolean;
 }
 
@@ -59,13 +61,14 @@ export function useTransitMatrix() {
 
     // NxM 개의 fetch Promise 배열 생성
     const fetchPromises: Promise<TransitFetchResult>[] = [];
+    let delayMs = 0; // API 호출 간격 누적 변수
 
     starts.forEach((start) => {
       ends.forEach((end) => {
-        const promise = fetch(
-          `/api/transit?sx=${start.x}&sy=${start.y}&ex=${end.x}&ey=${end.y}`
-        )
-          .then(async (res) => {
+        const promise = new Promise<TransitFetchResult>((resolve) => {
+          setTimeout(() => {
+            fetch(`/api/transit?sx=${start.x}&sy=${start.y}&ex=${end.x}&ey=${end.y}`)
+              .then(async (res) => {
             const data = await res.json().catch(() => null);
 
             if (!res.ok) {
@@ -116,6 +119,8 @@ export function useTransitMatrix() {
                 timeMn: 0, // 도보 전용 식별용
                 payment: 0,
                 pathType: 0,
+                transitCount: 0,
+                subPath: [],
               };
             }
 
@@ -126,6 +131,8 @@ export function useTransitMatrix() {
                 timeMn: data.totalTime || -1,
                 payment: data.payment || 0,
                 pathType: data.pathType || 0,
+                transitCount: data.transitCount || 0,
+                subPath: data.subPath || [],
               };
           })
           .catch((caughtError: unknown) => {
@@ -146,9 +153,13 @@ export function useTransitMatrix() {
                   : "경로 조회 중 요청 오류가 발생했습니다.",
               errorSource: "client",
             });
-          });
+          })
+          .then(resolve); // 최종 결과를 Promise resolve로 넘김
+          }, delayMs);
+        });
 
         fetchPromises.push(promise);
+        delayMs += 250; // ODsay API 429 에러 방지를 위해 0.25초 간격으로 요청 지연 출발
       });
     });
 

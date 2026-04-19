@@ -139,5 +139,6 @@ export async function GET(request: NextRequest) {
     payment: bestPath.info.payment,
     transitCount: bestPath.info.transitCount,
     pathType: bestPath.pathType,
+    subPath: bestPath.subPath,
   });
 }

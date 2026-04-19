@@ -6,9 +6,27 @@ export interface OdsayPathInfo {
   transitCount: number;      // 환승 횟수
 }
 
+export interface OdsayLane {
+  name?: string;     // 지하철 노선명 (예: "지하철2호선")
+  busNo?: string;    // 버스 번호 (예: "721")
+  type?: number;     // 버스 타입
+  subwayCode?: number; // 지하철 코드
+}
+
+export interface OdsaySubPath {
+  trafficType: number; // 1:지하철, 2:버스, 3:도보
+  distance: number;
+  sectionTime: number;
+  stationCount?: number;
+  lane?: OdsayLane[];
+  startName?: string;
+  endName?: string;
+}
+
 export interface OdsayPath {
   pathType: number;          // 1:지하철, 2:버스, 3:버스+지하철
   info: OdsayPathInfo;
+  subPath: OdsaySubPath[];
 }
 
 export interface OdsayErrorEntry {
@@ -40,6 +58,8 @@ export interface TransitFetchResult {
   timeMn: number;
   payment: number;
   pathType: number;
+  transitCount?: number;
+  subPath?: OdsaySubPath[];
   error?: boolean;
   errorMessage?: string;
   errorCode?: string;

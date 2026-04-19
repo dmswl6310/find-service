@@ -14,7 +14,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex-1 w-full max-w-5xl mx-auto p-6 md:p-12 mb-20">
+    <main className="flex-1 w-full max-w-5xl mx-auto p-4 sm:p-6 md:p-12 mb-20">
       <header className="mb-10 lg:mb-16 text-center pt-8">
         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">
           다대다 최적 경로 <span className="text-primary">비교기</span>
