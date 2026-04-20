@@ -45,7 +45,9 @@ export async function fetchTransitRoute(
   sx: string,
   sy: string,
   ex: string,
-  ey: string
+  ey: string,
+  date?: string,
+  time?: string
 ): Promise<OdsayTransitResponse> {
   const apiKey = process.env.ODSAY_API_KEY;
   if (!apiKey) {
@@ -66,6 +68,9 @@ export async function fetchTransitRoute(
     EY: ey,
     apiKey: apiKey, 
   });
+  
+  if (date) queryParams.set("date", date);
+  if (time) queryParams.set("time", time);
 
   try {
     const url = `${ODSAY_API_BASE_URL}?${queryParams.toString()}`;

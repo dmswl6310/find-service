@@ -4,6 +4,7 @@ export interface OdsayPathInfo {
   firstStartStation: string; // 출발 정류장/역
   lastEndStation: string;    // 도착 정류장/역
   transitCount: number;      // 환승 횟수
+  mapObj?: string;           // 그래픽 데이터 노선 조회를 위한 키값
 }
 
 export interface OdsayLane {
@@ -60,6 +61,7 @@ export interface TransitFetchResult {
   pathType: number;
   transitCount?: number;
   subPath?: OdsaySubPath[];
+  mapObj?: string;
   error?: boolean;
   errorMessage?: string;
   errorCode?: string;

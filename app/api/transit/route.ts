@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
   const sy = searchParams.get("sy");
   const ex = searchParams.get("ex");
   const ey = searchParams.get("ey");
+  const date = searchParams.get("date");
+  const time = searchParams.get("time");
 
   if (!sx || !sy || !ex || !ey) {
     return NextResponse.json(
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
   let data;
 
   try {
-    data = await fetchTransitRoute(sx, sy, ex, ey);
+    data = await fetchTransitRoute(sx, sy, ex, ey, date || undefined, time || undefined);
   } catch (error) {
     if (error instanceof TransitApiError) {
       const errorPayload: TransitApiErrorPayload = {
@@ -140,5 +142,6 @@ export async function GET(request: NextRequest) {
     transitCount: bestPath.info.transitCount,
     pathType: bestPath.pathType,
     subPath: bestPath.subPath,
+    mapObj: bestPath.info.mapObj,
   });
 }

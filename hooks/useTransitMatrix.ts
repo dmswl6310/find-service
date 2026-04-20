@@ -11,6 +11,7 @@ interface TransitApiSuccessPayload {
   transitCount?: number;
   subPath?: OdsaySubPath[];
   walkOnly?: boolean;
+  mapObj?: string;
 }
 
 function isTransitApiErrorPayload(data: unknown): data is TransitApiErrorPayload {
@@ -50,7 +51,12 @@ export function useTransitMatrix() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const calculateMatrix = async (starts: KakaoLocation[], ends: KakaoLocation[]) => {
+  const calculateMatrix = async (
+    starts: KakaoLocation[],
+    ends: KakaoLocation[],
+    targetDate?: string,
+    targetTime?: string
+  ) => {
     if (starts.length === 0 || ends.length === 0) {
       setError("출발지와 도착지를 각각 1개 이상 설정해주세요.");
       return;
@@ -67,7 +73,8 @@ export function useTransitMatrix() {
       ends.forEach((end) => {
         const promise = new Promise<TransitFetchResult>((resolve) => {
           setTimeout(() => {
-            fetch(`/api/transit?sx=${start.x}&sy=${start.y}&ex=${end.x}&ey=${end.y}`)
+            const timeParams = targetDate && targetTime ? `&date=${targetDate}&time=${targetTime}` : "";
+            fetch(`/api/transit?sx=${start.x}&sy=${start.y}&ex=${end.x}&ey=${end.y}${timeParams}`)
               .then(async (res) => {
             const data = await res.json().catch(() => null);
 
@@ -133,6 +140,7 @@ export function useTransitMatrix() {
                 pathType: data.pathType || 0,
                 transitCount: data.transitCount || 0,
                 subPath: data.subPath || [],
+                mapObj: data.mapObj,
               };
           })
           .catch((caughtError: unknown) => {

@@ -11,9 +11,11 @@ interface ResultTableProps {
   ends: KakaoLocation[];
   matrixData: TransitFetchResult[];
   isCalculating: boolean;
+  onSelectRoute?: (res: TransitFetchResult) => void;
+  activeMapRouteId?: string; // fromId-toId 조합
 }
 
-export default function ResultTable({ starts, ends, matrixData, isCalculating }: ResultTableProps) {
+export default function ResultTable({ starts, ends, matrixData, isCalculating, onSelectRoute, activeMapRouteId }: ResultTableProps) {
   const [selectedResult, setSelectedResult] = useState<{ res: TransitFetchResult, startName: string, endName: string } | null>(null);
 
   if (starts.length === 0 || ends.length === 0) {
@@ -135,14 +137,18 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating }:
                     const res = getResult(start.id, end.id);
                     const isMinTime = res && res.timeMn === minTimeForStart && res.timeMn >= 0;
                     const summary = res ? getShortSummary(res.subPath) : null;
+                    const isMapActive = res && activeMapRouteId === `${res.fromId}-${res.toId}`;
 
                     return (
                       <td key={`${start.id}-${end.id}`} className="p-0 border-r border-border last:border-0">
                         {res ? (
                           res.timeMn >= 0 ? (
                             <button
-                              onClick={() => setSelectedResult({ res, startName: start.place_name, endName: end.place_name })}
-                              className="w-full h-full p-4 flex flex-col gap-1.5 items-center justify-center hover:bg-primary/10 transition-colors focus:outline-none relative min-h-[90px]"
+                              onClick={() => {
+                                setSelectedResult({ res, startName: start.place_name, endName: end.place_name });
+                                if (onSelectRoute) onSelectRoute(res);
+                              }}
+                              className={`w-full h-full p-4 flex flex-col gap-1.5 items-center justify-center transition-colors focus:outline-none relative min-h-[90px] ${isMapActive ? "bg-primary/20 hover:bg-primary/30 ring-2 ring-primary ring-inset" : "hover:bg-primary/10"}`}
                             >
                               {isMinTime && (
                                 <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">

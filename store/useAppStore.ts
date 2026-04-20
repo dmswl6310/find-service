@@ -4,19 +4,33 @@ import { KakaoLocation } from "@/types/kakao";
 interface AppState {
   starts: KakaoLocation[];
   ends: KakaoLocation[];
+  targetDate: string; // YYYYMMDD
+  targetTime: string; // HHMM
   
   addStart: (location: KakaoLocation) => void;
   removeStart: (id: string) => void;
+  setStarts: (locations: KakaoLocation[]) => void;
   
   addEnd: (location: KakaoLocation) => void;
   removeEnd: (id: string) => void;
+  setEnds: (locations: KakaoLocation[]) => void;
   
+  setTargetDate: (date: string) => void;
+  setTargetTime: (time: string) => void;
+
   clearAll: () => void;
 }
+
+// 기본값은 오늘 날짜와 현재 시간
+const now = new Date();
+const defaultDate = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+const defaultTime = `${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
 
 export const useAppStore = create<AppState>((set) => ({
   starts: [],
   ends: [],
+  targetDate: defaultDate,
+  targetTime: defaultTime,
 
   addStart: (location) =>
     set((state) => ({
@@ -30,6 +44,8 @@ export const useAppStore = create<AppState>((set) => ({
       starts: state.starts.filter((loc) => loc.id !== id),
     })),
 
+  setStarts: (locations) => set({ starts: locations }),
+
   addEnd: (location) =>
     set((state) => ({
       ends: state.ends.some((loc) => loc.id === location.id)
@@ -41,6 +57,11 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       ends: state.ends.filter((loc) => loc.id !== id),
     })),
+    
+  setEnds: (locations) => set({ ends: locations }),
+  
+  setTargetDate: (date) => set({ targetDate: date }),
+  setTargetTime: (time) => set({ targetTime: time }),
 
   clearAll: () => set({ starts: [], ends: [] }),
 }));
