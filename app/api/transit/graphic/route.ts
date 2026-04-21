@@ -1,4 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { OdsayErrorEntry, OdsayGraphicResponse } from "@/types/odsay";
+
+function getOdsayErrorEntry(error: OdsayGraphicResponse["error"]): OdsayErrorEntry | undefined {
+  if (!error) {
+    return undefined;
+  }
+
+  return Array.isArray(error) ? error[0] : error;
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -30,7 +39,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "그래픽 노선 조회 실패" }, { status: response.status });
     }
 
-    const data = await response.json();
+    const data: OdsayGraphicResponse = await response.json();
+
+    const errorEntry = getOdsayErrorEntry(data.error);
+    if (errorEntry) {
+      return NextResponse.json(
+        {
+          error: errorEntry.msg || errorEntry.message || "그래픽 노선 조회 실패",
+          errorCode: errorEntry.code,
+        },
+        { status: 502 }
+      );
+    }
+
+    const lanes = Array.isArray(data.result?.lane) ? data.result.lane : [];
+    if (lanes.length === 0) {
+      return NextResponse.json({ error: "그래픽 노선 데이터가 비어 있습니다." }, { status: 502 });
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error("Graphic load error:", error);

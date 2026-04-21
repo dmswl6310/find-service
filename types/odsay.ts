@@ -14,6 +14,18 @@ export interface OdsayLane {
   subwayCode?: number; // 지하철 코드
 }
 
+export interface OdsayPassStopStation {
+  index?: number;
+  stationID?: number;
+  stationName?: string;
+  x: string | number;
+  y: string | number;
+}
+
+export interface OdsayPassStopList {
+  stations?: OdsayPassStopStation[];
+}
+
 export interface OdsaySubPath {
   trafficType: number; // 1:지하철, 2:버스, 3:도보
   distance: number;
@@ -22,6 +34,11 @@ export interface OdsaySubPath {
   lane?: OdsayLane[];
   startName?: string;
   endName?: string;
+  startX?: string | number;
+  startY?: string | number;
+  endX?: string | number;
+  endY?: string | number;
+  passStopList?: OdsayPassStopList;
 }
 
 export interface OdsayPath {
@@ -39,6 +56,26 @@ export interface OdsayErrorEntry {
 export interface OdsayTransitResponse {
   result?: {
     path?: OdsayPath[];
+  };
+  error?: OdsayErrorEntry | OdsayErrorEntry[];
+}
+
+export interface OdsayGraphicPosition {
+  x: string | number;
+  y: string | number;
+}
+
+export interface OdsayGraphicSection {
+  graphPos?: OdsayGraphicPosition[];
+}
+
+export interface OdsayGraphicLane {
+  section?: OdsayGraphicSection[];
+}
+
+export interface OdsayGraphicResponse {
+  result?: {
+    lane?: OdsayGraphicLane[];
   };
   error?: OdsayErrorEntry | OdsayErrorEntry[];
 }
