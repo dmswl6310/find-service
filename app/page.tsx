@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense, useCallback } from "react";
+import { useEffect, Suspense, useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import LocationInput from "@/components/search/LocationInput";
 import ResultTable from "@/components/result/ResultTable";
@@ -10,6 +10,75 @@ import MiniMap from "@/components/map/MiniMap";
 import { useAppStore } from "@/store/useAppStore";
 import { useTransitMatrix } from "@/hooks/useTransitMatrix";
 import { KakaoLocation } from "@/types/kakao";
+import { OdsayGraphicResponse, TransitFetchResult } from "@/types/odsay";
+
+type MapPathPoint = { lat: number; lng: number };
+
+function toMapPathPoint(lat: string | number | undefined, lng: string | number | undefined): MapPathPoint | null {
+  if (lat === undefined || lng === undefined) return null;
+
+  const parsedLat = Number(lat);
+  const parsedLng = Number(lng);
+
+  if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng)) return null;
+
+  return { lat: parsedLat, lng: parsedLng };
+}
+
+function pushUniquePoint(points: MapPathPoint[], point: MapPathPoint | null) {
+  if (!point) return;
+
+  const lastPoint = points[points.length - 1];
+  if (lastPoint?.lat === point.lat && lastPoint.lng === point.lng) return;
+
+  points.push(point);
+}
+
+function extractGraphicPath(data: OdsayGraphicResponse): MapPathPoint[] {
+  const points: MapPathPoint[] = [];
+  const lanes = Array.isArray(data.result?.lane) ? data.result.lane : [];
+
+  lanes.forEach((lane) => {
+    lane.section?.forEach((section) => {
+      section.graphPos?.forEach((pos) => {
+        pushUniquePoint(points, toMapPathPoint(pos.y, pos.x));
+      });
+    });
+  });
+
+  return points;
+}
+
+function buildFallbackPath(
+  route: TransitFetchResult,
+  starts: KakaoLocation[],
+  ends: KakaoLocation[]
+): MapPathPoint[] {
+  const points: MapPathPoint[] = [];
+  const startLocation = starts.find((loc) => loc.id === route.fromId);
+  const endLocation = ends.find((loc) => loc.id === route.toId);
+
+  pushUniquePoint(points, toMapPathPoint(startLocation?.y, startLocation?.x));
+
+  route.subPath?.forEach((path) => {
+    pushUniquePoint(points, toMapPathPoint(path.startY, path.startX));
+
+    path.passStopList?.stations?.forEach((station) => {
+      pushUniquePoint(points, toMapPathPoint(station.y, station.x));
+    });
+
+    pushUniquePoint(points, toMapPathPoint(path.endY, path.endX));
+  });
+
+  pushUniquePoint(points, toMapPathPoint(endLocation?.y, endLocation?.x));
+
+  if (points.length >= 2) return points;
+
+  const directStart = toMapPathPoint(startLocation?.y, startLocation?.x);
+  const directEnd = toMapPathPoint(endLocation?.y, endLocation?.x);
+
+  return [directStart, directEnd].filter((point): point is MapPathPoint => point !== null);
+}
 
 // URL 쿼리 동기화 및 자동 실행 담당 컴포넌트
 function RouteSync() {
@@ -70,68 +139,104 @@ function MainContent() {
   const { starts, ends, addStart, removeStart, addEnd, removeEnd, targetDate, targetTime } = useAppStore();
   const { matrixData, isCalculating, calculateMatrix, error } = useTransitMatrix();
   const [activeMapRouteId, setActiveMapRouteId] = useState<string | null>(null);
-  const [selectedMapObj, setSelectedMapObj] = useState<string | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<TransitFetchResult | null>(null);
   const [polylinePath, setPolylinePath] = useState<{ lat: number; lng: number }[]>([]);
+
+  const getFairestEndId = () => {
+    if (starts.length < 2 || ends.length < 2 || matrixData.length === 0) return null;
+
+    const scores = ends.map((end) => {
+      const colResults = matrixData.filter((d) => d.toId === end.id && !d.error && d.timeMn >= 0);
+      if (colResults.length !== starts.length) return { id: end.id, score: Infinity };
+
+      const times = colResults.map((d) => d.timeMn);
+      const max = Math.max(...times);
+      const avg = times.reduce((a, b) => a + b, 0) / times.length;
+
+      return { id: end.id, score: max + avg };
+    });
+
+    const validScores = scores.filter((s) => s.score !== Infinity);
+    if (validScores.length === 0) return null;
+
+    const minScore = Math.min(...validScores.map((s) => s.score));
+    return validScores.find((s) => s.score === minScore)?.id ?? null;
+  };
 
   // 길찾기 계산 완료 후 최적 경로 자동 선택
   useEffect(() => {
     if (!isCalculating && matrixData.length > 0) {
-      // 에러가 없고 timeMn이 정상인 것 중 가장 짧은 시간 찾기
-      const validResults = matrixData.filter(d => !d.error && d.timeMn >= 0);
+      const validResults = matrixData.filter((d) => !d.error && d.timeMn >= 0);
       if (validResults.length > 0) {
-        const bestRoute = validResults.reduce((prev, curr) => (prev.timeMn < curr.timeMn ? prev : curr));
+        const fairestEndId = getFairestEndId();
+        const defaultResults = fairestEndId
+          ? validResults.filter((d) => d.toId === fairestEndId)
+          : validResults;
+        const drawableResults = defaultResults.filter((d) => d.mapObj);
+        const candidateResults = drawableResults.length > 0 ? drawableResults : defaultResults;
+        const bestRoute = candidateResults.reduce((prev, curr) => (prev.timeMn < curr.timeMn ? prev : curr));
+
         setActiveMapRouteId(`${bestRoute.fromId}-${bestRoute.toId}`);
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore : ODsayPathInfo 등에 mapObj가 추가됨
-        setSelectedMapObj(bestRoute.mapObj || null);
+        setSelectedRoute(bestRoute);
+      } else {
+        setActiveMapRouteId(null);
+        setSelectedRoute(null);
+        setPolylinePath([]);
       }
     } else if (isCalculating) {
       setActiveMapRouteId(null);
-      setSelectedMapObj(null);
+      setSelectedRoute(null);
       setPolylinePath([]);
     }
   }, [isCalculating, matrixData]);
 
   // 선택된 경로의 Graphic data 로드
   useEffect(() => {
-    if (!selectedMapObj) {
+    if (!selectedRoute) {
       setPolylinePath([]);
       return;
     }
 
+    const fallbackPath = buildFallbackPath(selectedRoute, starts, ends);
+    setPolylinePath(fallbackPath);
+
+    if (!selectedRoute.mapObj) {
+      return;
+    }
+
+    let isCancelled = false;
+
     const fetchGraphic = async () => {
       try {
-        const res = await fetch(`/api/transit/graphic?mapObj=${selectedMapObj}`);
+        const res = await fetch(`/api/transit/graphic?mapObj=${selectedRoute.mapObj}`);
         if (!res.ok) throw new Error("그래픽 노선 조회 실패");
-        const data = await res.json();
-        
-        // ODsay 레퍼런스 기준: result.lane[...].section[0].graphPos
-        if (data?.result?.lane) {
-          const newPath: { lat: number; lng: number }[] = [];
-          data.result.lane.forEach((lane: any) => {
-            lane.section?.forEach((sec: any) => {
-              sec.graphPos?.forEach((pos: { x: number; y: number }) => {
-                newPath.push({ lat: pos.y, lng: pos.x });
-              });
-            });
-          });
-          setPolylinePath(newPath);
+        const data: OdsayGraphicResponse = await res.json();
+        const detailedPath = extractGraphicPath(data);
+
+        if (!isCancelled && detailedPath.length >= 2) {
+          setPolylinePath(detailedPath);
         }
       } catch (err) {
-        console.error(err);
+        if (!isCancelled) {
+          console.error(err);
+        }
       }
     };
 
     fetchGraphic();
-  }, [selectedMapObj]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedRoute, starts, ends]);
 
   const handleCalculateClick = () => {
     calculateMatrix(starts, ends, targetDate, targetTime);
   };
 
-  const handleSelectRoute = (res: any) => {
+  const handleSelectRoute = (res: TransitFetchResult) => {
     setActiveMapRouteId(`${res.fromId}-${res.toId}`);
-    setSelectedMapObj(res.mapObj || null);
+    setSelectedRoute(res);
   };
 
   return (
