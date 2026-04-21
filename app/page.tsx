@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense, useCallback, useState } from "react";
+import { useEffect, Suspense, useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import LocationInput from "@/components/search/LocationInput";
 import ResultTable from "@/components/result/ResultTable";
@@ -142,7 +142,7 @@ function MainContent() {
   const [selectedRoute, setSelectedRoute] = useState<TransitFetchResult | null>(null);
   const [polylinePath, setPolylinePath] = useState<{ lat: number; lng: number }[]>([]);
 
-  const getFairestEndId = () => {
+  const fairestEndId = useMemo(() => {
     if (starts.length < 2 || ends.length < 2 || matrixData.length === 0) return null;
 
     const scores = ends.map((end) => {
@@ -161,20 +161,17 @@ function MainContent() {
 
     const minScore = Math.min(...validScores.map((s) => s.score));
     return validScores.find((s) => s.score === minScore)?.id ?? null;
-  };
+  }, [starts, ends, matrixData]);
 
   // 길찾기 계산 완료 후 최적 경로 자동 선택
   useEffect(() => {
     if (!isCalculating && matrixData.length > 0) {
       const validResults = matrixData.filter((d) => !d.error && d.timeMn >= 0);
       if (validResults.length > 0) {
-        const fairestEndId = getFairestEndId();
         const defaultResults = fairestEndId
           ? validResults.filter((d) => d.toId === fairestEndId)
           : validResults;
-        const drawableResults = defaultResults.filter((d) => d.mapObj);
-        const candidateResults = drawableResults.length > 0 ? drawableResults : defaultResults;
-        const bestRoute = candidateResults.reduce((prev, curr) => (prev.timeMn < curr.timeMn ? prev : curr));
+        const bestRoute = defaultResults.reduce((prev, curr) => (prev.timeMn < curr.timeMn ? prev : curr));
 
         setActiveMapRouteId(`${bestRoute.fromId}-${bestRoute.toId}`);
         setSelectedRoute(bestRoute);
@@ -188,7 +185,7 @@ function MainContent() {
       setSelectedRoute(null);
       setPolylinePath([]);
     }
-  }, [isCalculating, matrixData]);
+  }, [isCalculating, matrixData, fairestEndId]);
 
   // 선택된 경로의 Graphic data 로드
   useEffect(() => {
