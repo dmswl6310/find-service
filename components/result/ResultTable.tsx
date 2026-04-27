@@ -18,6 +18,10 @@ interface ResultTableProps {
 export default function ResultTable({ starts, ends, matrixData, isCalculating, onSelectRoute, activeMapRouteId }: ResultTableProps) {
   const [selectedResult, setSelectedResult] = useState<{ res: TransitFetchResult, startName: string, endName: string } | null>(null);
 
+  const openRouteDetail = (res: TransitFetchResult, startName: string, endName: string) => {
+    setSelectedResult({ res, startName, endName });
+  };
+
   if (starts.length === 0 || ends.length === 0) {
     return (
       <div className="w-full h-40 flex items-center justify-center text-foreground/50 border-2 border-dashed border-border rounded-xl">
@@ -144,8 +148,8 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
                         {res ? (
                           res.timeMn >= 0 ? (
                             <button
+                              type="button"
                               onClick={() => {
-                                setSelectedResult({ res, startName: start.place_name, endName: end.place_name });
                                 if (onSelectRoute) onSelectRoute(res);
                               }}
                               className={`w-full h-full p-4 flex flex-col gap-1.5 items-center justify-center transition-colors focus:outline-none relative min-h-[90px] ${isMapActive ? "bg-primary/20 hover:bg-primary/30 ring-2 ring-primary ring-inset" : "hover:bg-primary/10"}`}
@@ -173,6 +177,10 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
                                   </span>
                                 )}
                               </div>
+
+                              <span className="mt-1 text-[10px] font-medium text-foreground/50">
+                                클릭하면 지도에서 경로가 바뀝니다
+                              </span>
                             </button>
                           ) : (
                             <div className="p-4 flex items-center justify-center h-full">
@@ -187,6 +195,18 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
                         ) : (
                           <div className="p-4 flex items-center justify-center h-full">
                             <span className="text-foreground/30">-</span>
+                          </div>
+                        )}
+
+                        {res && res.timeMn >= 0 && (
+                          <div className="border-t border-border/70 bg-background/70 px-2 py-2">
+                            <button
+                              type="button"
+                              onClick={() => openRouteDetail(res, start.place_name, end.place_name)}
+                              className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-[11px] font-medium text-foreground/80 transition-colors hover:bg-primary/10 hover:text-primary"
+                            >
+                              상세 경로 보기
+                            </button>
                           </div>
                         )}
                       </td>
