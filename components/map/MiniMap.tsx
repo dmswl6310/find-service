@@ -4,10 +4,17 @@ import { useEffect, useState } from "react";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import { KakaoLocation } from "@/types/kakao";
 
+type MapPathPoint = { lat: number; lng: number };
+type MapRouteSegment = {
+  kind: "walk" | "bus" | "subway";
+  path: MapPathPoint[];
+};
+
 interface MiniMapProps {
   starts: KakaoLocation[];
   ends: KakaoLocation[];
-  polylinePath?: { lat: number; lng: number }[];
+  routeSegments?: MapRouteSegment[];
+  detailedPath?: MapPathPoint[];
   selectedStartId?: string;
   selectedEndId?: string;
 }
@@ -40,13 +47,15 @@ function createMarkerImage(
 export default function MiniMap({
   starts,
   ends,
-  polylinePath = [],
+  routeSegments = [],
+  detailedPath = [],
   selectedStartId,
   selectedEndId,
 }: MiniMapProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [map, setMap] = useState<kakao.maps.Map | null>(null);
   const hasSelectedRoute = Boolean(selectedStartId && selectedEndId);
+  const segmentPoints = routeSegments.flatMap((segment) => segment.path);
 
   useEffect(() => {
     // kakao.maps가 로드되었는지 확인
@@ -59,13 +68,13 @@ export default function MiniMap({
 
   // 마커나 폴리라인이 변경될 때마다 지도의 중심과 확대 레벨을 조정
   useEffect(() => {
-    if (!map || (starts.length === 0 && ends.length === 0 && polylinePath.length === 0)) return;
+    if (!map || (starts.length === 0 && ends.length === 0 && segmentPoints.length === 0 && detailedPath.length === 0)) return;
 
     const bounds = new window.kakao.maps.LatLngBounds();
     let hasPoint = false;
 
-    if (polylinePath.length > 1) {
-      polylinePath.forEach((pos) => {
+    if (detailedPath.length > 1) {
+      detailedPath.forEach((pos) => {
         bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
       });
 
@@ -84,8 +93,8 @@ export default function MiniMap({
     });
 
     // 선택된 경로가 아직 선으로 그려지지 않은 경우에는 전체 출발지/목적지를 기준으로 보여줍니다.
-    if (polylinePath.length > 0) {
-      polylinePath.forEach((pos) => {
+    if (segmentPoints.length > 0) {
+      segmentPoints.forEach((pos) => {
         bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
       });
       hasPoint = true;
@@ -97,7 +106,13 @@ export default function MiniMap({
       // 약간의 여백을 두기 위해 확대 레벨을 조정할 수 있다면 좋겠지만 
       // setBounds 자체로 충분한 패딩이 적용됩니다.
     }
-  }, [map, starts, ends, polylinePath]);
+  }, [map, starts, ends, segmentPoints, detailedPath]);
+
+  const segmentStyles: Record<MapRouteSegment["kind"], { color: string; opacity: number; weight: number; style: kakao.maps.StrokeStyles }> = {
+    walk: { color: "#6B7280", opacity: 0.8, weight: 4, style: "shortdash" },
+    bus: { color: "#16A34A", opacity: 0.9, weight: 5, style: "solid" },
+    subway: { color: "#2563EB", opacity: 0.9, weight: 5, style: "solid" },
+  };
 
   if (!isLoaded) {
     return (
@@ -156,16 +171,30 @@ export default function MiniMap({
           );
         })}
         
-        {/* 그려질 경로 선 */}
-        {polylinePath && polylinePath.length > 0 && (
+        {detailedPath.length > 1 && (
           <Polyline
-            path={polylinePath}
-            strokeWeight={5} // 선의 두께
-            strokeColor={"#4F46E5"} // Indigo 색상 기반 (primary)
-            strokeOpacity={0.8} // 선의 불투명도
-            strokeStyle={"solid"} // 선의 스타일
+            path={detailedPath}
+            strokeWeight={7}
+            strokeColor={"#111827"}
+            strokeOpacity={0.12}
+            strokeStyle={"solid"}
           />
         )}
+
+        {routeSegments.map((segment, index) => {
+          const style = segmentStyles[segment.kind];
+
+          return (
+            <Polyline
+              key={`${segment.kind}-${index}`}
+              path={segment.path}
+              strokeWeight={style.weight}
+              strokeColor={style.color}
+              strokeOpacity={style.opacity}
+              strokeStyle={style.style}
+            />
+          );
+        })}
       </Map>
     </div>
   );

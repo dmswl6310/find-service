@@ -10,9 +10,13 @@ import MiniMap from "@/components/map/MiniMap";
 import { useAppStore } from "@/store/useAppStore";
 import { useTransitMatrix } from "@/hooks/useTransitMatrix";
 import { KakaoLocation } from "@/types/kakao";
-import { OdsayGraphicResponse, TransitFetchResult } from "@/types/odsay";
+import { OdsayGraphicResponse, OdsaySubPath, TransitFetchResult } from "@/types/odsay";
 
 type MapPathPoint = { lat: number; lng: number };
+type MapRouteSegment = {
+  kind: "walk" | "bus" | "subway";
+  path: MapPathPoint[];
+};
 
 function toMapPathPoint(lat: string | number | undefined, lng: string | number | undefined): MapPathPoint | null {
   if (lat === undefined || lng === undefined) return null;
@@ -80,6 +84,62 @@ function buildFallbackPath(
   return [directStart, directEnd].filter((point): point is MapPathPoint => point !== null);
 }
 
+function getSegmentKind(path: OdsaySubPath): MapRouteSegment["kind"] {
+  if (path.trafficType === 1) return "subway";
+  if (path.trafficType === 2) return "bus";
+  return "walk";
+}
+
+function buildSegmentPath(
+  path: OdsaySubPath,
+  previousPath: OdsaySubPath | undefined,
+  nextPath: OdsaySubPath | undefined,
+  startLocation?: KakaoLocation,
+  endLocation?: KakaoLocation
+): MapPathPoint[] {
+  const points: MapPathPoint[] = [];
+
+  const fallbackStart =
+    toMapPathPoint(path.startY, path.startX) ??
+    toMapPathPoint(previousPath?.endY, previousPath?.endX) ??
+    toMapPathPoint(nextPath?.startY, nextPath?.startX) ??
+    toMapPathPoint(startLocation?.y, startLocation?.x);
+
+  const fallbackEnd =
+    toMapPathPoint(path.endY, path.endX) ??
+    toMapPathPoint(nextPath?.startY, nextPath?.startX) ??
+    toMapPathPoint(previousPath?.endY, previousPath?.endX) ??
+    toMapPathPoint(endLocation?.y, endLocation?.x);
+
+  pushUniquePoint(points, fallbackStart);
+
+  path.passStopList?.stations?.forEach((station) => {
+    pushUniquePoint(points, toMapPathPoint(station.y, station.x));
+  });
+
+  pushUniquePoint(points, fallbackEnd);
+
+  return points;
+}
+
+function buildRouteSegments(
+  route: TransitFetchResult,
+  starts: KakaoLocation[],
+  ends: KakaoLocation[]
+): MapRouteSegment[] {
+  const startLocation = starts.find((loc) => loc.id === route.fromId);
+  const endLocation = ends.find((loc) => loc.id === route.toId);
+
+  return (
+    route.subPath
+      ?.map((path, index, allPaths) => ({
+        kind: getSegmentKind(path),
+        path: buildSegmentPath(path, allPaths[index - 1], allPaths[index + 1], startLocation, endLocation),
+      }))
+      .filter((segment) => segment.path.length >= 2) ?? []
+  );
+}
+
 // URL 쿼리 동기화 및 자동 실행 담당 컴포넌트
 function RouteSync() {
   const searchParams = useSearchParams();
@@ -140,7 +200,8 @@ function MainContent() {
   const { matrixData, isCalculating, calculateMatrix, error } = useTransitMatrix();
   const [activeMapRouteId, setActiveMapRouteId] = useState<string | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<TransitFetchResult | null>(null);
-  const [polylinePath, setPolylinePath] = useState<{ lat: number; lng: number }[]>([]);
+  const [routeSegments, setRouteSegments] = useState<MapRouteSegment[]>([]);
+  const [detailedPath, setDetailedPath] = useState<MapPathPoint[]>([]);
 
   const fairestEndId = useMemo(() => {
     if (starts.length < 2 || ends.length < 2 || matrixData.length === 0) return null;
@@ -178,24 +239,28 @@ function MainContent() {
       } else {
         setActiveMapRouteId(null);
         setSelectedRoute(null);
-        setPolylinePath([]);
+        setRouteSegments([]);
+        setDetailedPath([]);
       }
     } else if (isCalculating) {
       setActiveMapRouteId(null);
       setSelectedRoute(null);
-      setPolylinePath([]);
+      setRouteSegments([]);
+      setDetailedPath([]);
     }
   }, [isCalculating, matrixData, fairestEndId]);
 
   // 선택된 경로의 Graphic data 로드
   useEffect(() => {
     if (!selectedRoute) {
-      setPolylinePath([]);
+      setRouteSegments([]);
+      setDetailedPath([]);
       return;
     }
 
-    const fallbackPath = buildFallbackPath(selectedRoute, starts, ends);
-    setPolylinePath(fallbackPath);
+    const fallbackSegments = buildRouteSegments(selectedRoute, starts, ends);
+    setRouteSegments(fallbackSegments);
+    setDetailedPath([]);
 
     if (!selectedRoute.mapObj) {
       return;
@@ -213,10 +278,10 @@ function MainContent() {
         if (!res.ok) throw new Error("그래픽 노선 조회 실패");
 
         const data: OdsayGraphicResponse = await res.json();
-        const detailedPath = extractGraphicPath(data);
+        const nextDetailedPath = extractGraphicPath(data);
 
-        if (!isCancelled && detailedPath.length >= 2) {
-          setPolylinePath(detailedPath);
+        if (!isCancelled && nextDetailedPath.length >= 2) {
+          setDetailedPath(nextDetailedPath);
         }
       } catch (err) {
         if (!isCancelled && process.env.NODE_ENV === "development") {
@@ -388,10 +453,11 @@ function MainContent() {
         </div>
         {/* top-8은 헤더/여백 고려한 스티키 위치 설정. calc(100vh - 4rem)으로 화면에 꽉차게 유지 */}
         <div className="sticky top-8 h-[400px] lg:h-[calc(100vh-4rem)] rounded-xl overflow-hidden shadow-lg border border-border">
-          <MiniMap
+            <MiniMap
               starts={starts}
               ends={ends}
-              polylinePath={polylinePath}
+              routeSegments={routeSegments}
+              detailedPath={detailedPath}
               selectedStartId={selectedRoute?.fromId}
               selectedEndId={selectedRoute?.toId}
             />
