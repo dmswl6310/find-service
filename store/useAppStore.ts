@@ -4,6 +4,7 @@ import { KakaoLocation } from "@/types/kakao";
 interface AppState {
   starts: KakaoLocation[];
   ends: KakaoLocation[];
+  useDepartureTime: boolean;
   targetDate: string; // YYYYMMDD
   targetTime: string; // HHMM
   
@@ -15,6 +16,7 @@ interface AppState {
   removeEnd: (id: string) => void;
   setEnds: (locations: KakaoLocation[]) => void;
   
+  setUseDepartureTime: (enabled: boolean) => void;
   setTargetDate: (date: string) => void;
   setTargetTime: (time: string) => void;
 
@@ -29,6 +31,7 @@ const defaultTime = `${String(now.getHours()).padStart(2, "0")}${String(now.getM
 export const useAppStore = create<AppState>((set) => ({
   starts: [],
   ends: [],
+  useDepartureTime: true,
   targetDate: defaultDate,
   targetTime: defaultTime,
 
@@ -60,6 +63,7 @@ export const useAppStore = create<AppState>((set) => ({
     
   setEnds: (locations) => set({ ends: locations }),
   
+  setUseDepartureTime: (enabled) => set({ useDepartureTime: enabled }),
   setTargetDate: (date) => set({ targetDate: date }),
   setTargetTime: (time) => set({ targetTime: time }),
 

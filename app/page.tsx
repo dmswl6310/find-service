@@ -83,14 +83,14 @@ function buildFallbackPath(
 // URL 쿼리 동기화 및 자동 실행 담당 컴포넌트
 function RouteSync() {
   const searchParams = useSearchParams();
-  const { starts, ends, setStarts, setEnds, targetDate, targetTime } = useAppStore();
+  const { setStarts, setEnds, useDepartureTime, targetDate, targetTime } = useAppStore();
   const { calculateMatrix } = useTransitMatrix();
 
   const handleCalculate = useCallback((s: KakaoLocation[], e: KakaoLocation[]) => {
     if (s.length > 0 && e.length > 0) {
-      calculateMatrix(s, e, targetDate, targetTime);
+      calculateMatrix(s, e, useDepartureTime ? targetDate : undefined, useDepartureTime ? targetTime : undefined);
     }
-  }, [calculateMatrix, targetDate, targetTime]);
+  }, [calculateMatrix, targetDate, targetTime, useDepartureTime]);
 
   useEffect(() => {
     // URL에 데이터가 있으면 디코딩해서 불러오기
@@ -136,7 +136,7 @@ function RouteSync() {
 }
 
 function MainContent() {
-  const { starts, ends, addStart, removeStart, addEnd, removeEnd, targetDate, targetTime } = useAppStore();
+  const { starts, ends, addStart, removeStart, addEnd, removeEnd, useDepartureTime, targetDate, targetTime } = useAppStore();
   const { matrixData, isCalculating, calculateMatrix, error } = useTransitMatrix();
   const [activeMapRouteId, setActiveMapRouteId] = useState<string | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<TransitFetchResult | null>(null);
@@ -233,7 +233,7 @@ function MainContent() {
   }, [selectedRoute, starts, ends]);
 
   const handleCalculateClick = () => {
-    calculateMatrix(starts, ends, targetDate, targetTime);
+    calculateMatrix(starts, ends, useDepartureTime ? targetDate : undefined, useDepartureTime ? targetTime : undefined);
   };
 
   const handleSelectRoute = (res: TransitFetchResult) => {
@@ -263,11 +263,18 @@ function MainContent() {
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* 출발지 입력 세션 */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h2 className="text-xl font-bold">🏠 출발지 ({starts.length})</h2>
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary whitespace-nowrap">
+                여러 개 추가 가능
+              </span>
             </div>
-            <LocationInput placeholder="예: 강남역, 우리집" onSelect={addStart} />
-            <ul className="flex flex-wrap gap-2 mt-2">
+            <LocationInput
+              placeholder="출발지를 검색해서 추가하세요 (예: 강남역, 우리집)"
+              helperText="선택하면 아래에 계속 추가됩니다. 약속에 참여하는 모든 출발지를 넣어보세요."
+              onSelect={addStart}
+            />
+            <ul className={`flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 mt-2 ${starts.length > 0 ? "border-primary/30 bg-primary/5" : "border-border bg-background/60"}`}>
               {starts.map((start) => (
                 <li
                   key={start.id}
@@ -286,16 +293,24 @@ function MainContent() {
                   </button>
                 </li>
               ))}
+              {starts.length === 0 && <li className="text-sm text-foreground/45">여러 사람의 출발지를 추가하면 더 정확하게 비교할 수 있어요.</li>}
             </ul>
           </div>
 
           {/* 목적지 입력 세션 */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h2 className="text-xl font-bold">🏁 목적지 후보 ({ends.length})</h2>
+              <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-[11px] font-medium text-foreground/70 whitespace-nowrap">
+                여러 개 추가 가능
+              </span>
             </div>
-            <LocationInput placeholder="예: 홍대입구, 여의도 한강공원" onSelect={addEnd} />
-            <ul className="flex flex-wrap gap-2 mt-2">
+            <LocationInput
+              placeholder="목적지 후보를 검색해서 추가하세요 (예: 홍대입구, 여의도 한강공원)"
+              helperText="비교하고 싶은 약속 장소를 여러 개 담아두면 황금 밸런스를 찾아드려요."
+              onSelect={addEnd}
+            />
+            <ul className={`flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 mt-2 ${ends.length > 0 ? "border-foreground/20 bg-foreground/5" : "border-border bg-background/60"}`}>
               {ends.map((end) => (
                 <li
                   key={end.id}
@@ -314,6 +329,7 @@ function MainContent() {
                   </button>
                 </li>
               ))}
+              {ends.length === 0 && <li className="text-sm text-foreground/45">여러 후보를 넣으면 가장 공평한 목적지를 골라드려요.</li>}
             </ul>
           </div>
         </section>
