@@ -8,9 +8,15 @@ interface LocationInputProps {
   placeholder?: string;
   onSelect: (location: KakaoLocation) => void;
   selectedName?: string;
+  helperText?: string;
 }
 
-export default function LocationInput({ placeholder = "장소 검색", onSelect, selectedName }: LocationInputProps) {
+export default function LocationInput({
+  placeholder = "장소 검색",
+  onSelect,
+  selectedName,
+  helperText,
+}: LocationInputProps) {
   const { query, setQuery, results, isLoading, isOpen, setIsOpen } = useLocationSearch();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +39,7 @@ export default function LocationInput({ placeholder = "장소 검색", onSelect,
   }, [selectedName, setQuery]);
 
   const handleSelect = (loc: KakaoLocation) => {
-    setQuery(loc.place_name);
+    setQuery("");
     setIsOpen(false);
     onSelect(loc);
   };
@@ -57,6 +63,8 @@ export default function LocationInput({ placeholder = "장소 검색", onSelect,
           </div>
         )}
       </div>
+
+      {helperText && <p className="mt-2 text-xs text-foreground/55">{helperText}</p>}
 
       {/* 자동완성 드롭다운 */}
       {isOpen && results.length > 0 && (
