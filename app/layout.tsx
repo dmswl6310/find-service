@@ -10,8 +10,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "경로 비교기 | 다대다 대중교통",
+  title: "모두비교 | 여러 출발지와 목적지를 위한 최적의 경로 찾기",
   description: "여러 출발지와 목적지의 대중교통 소요시간을 한눈에 비교해보세요.",
+  verification:{
+    google: "HUSgzc9mTkH6R7bmdOrJmCaCwcnfOsjKEGnLcWjK5FA"
+  }
 };
 
 export default function RootLayout({

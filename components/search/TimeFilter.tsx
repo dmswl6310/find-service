@@ -44,18 +44,7 @@ export default function TimeFilter() {
   return (
     <div className="flex flex-col gap-3 bg-surface border border-border p-4 rounded-2xl shadow-sm mb-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold whitespace-nowrap">⏳ 출발 시간 반영</span>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-              선택 사항
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-foreground/60">
-            켜면 특정 날짜와 시간 기준으로, 끄면 시간 조건 없이 비교해요.
-          </p>
-        </div>
-
+        <span className="text-sm font-semibold whitespace-nowrap">⏳ 출발 시간 반영</span>
         <button
           type="button"
           onClick={() => setUseDepartureTime(!useDepartureTime)}
@@ -66,7 +55,7 @@ export default function TimeFilter() {
           }`}
           aria-pressed={useDepartureTime}
         >
-          <span>{useDepartureTime ? "시간 조건 사용 중" : "시간 조건 사용 안 함"}</span>
+          <span>{useDepartureTime ? "켜짐" : "꺼짐"}</span>
           <span
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
               useDepartureTime ? "bg-primary" : "bg-foreground/20"
