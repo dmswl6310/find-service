@@ -206,7 +206,12 @@ function MainContent() {
     const fetchGraphic = async () => {
       try {
         const res = await fetch(`/api/transit/graphic?mapObj=${selectedRoute.mapObj}`);
+        if (res.status === 502) {
+          return;
+        }
+
         if (!res.ok) throw new Error("그래픽 노선 조회 실패");
+
         const data: OdsayGraphicResponse = await res.json();
         const detailedPath = extractGraphicPath(data);
 
@@ -214,8 +219,8 @@ function MainContent() {
           setPolylinePath(detailedPath);
         }
       } catch (err) {
-        if (!isCancelled) {
-          console.error(err);
+        if (!isCancelled && process.env.NODE_ENV === "development") {
+          console.warn("그래픽 노선 상세 좌표를 불러오지 못해 대체 경로선을 유지합니다.", err);
         }
       }
     };
