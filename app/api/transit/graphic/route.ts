@@ -9,6 +9,13 @@ function getOdsayErrorEntry(error: OdsayGraphicResponse["error"]): OdsayErrorEnt
   return Array.isArray(error) ? error[0] : error;
 }
 
+function normalizeMapObject(mapObj: string) {
+  const [firstSegment] = mapObj.split("@");
+  const isAlreadyPrefixed = firstSegment.split(":").length === 2;
+
+  return isAlreadyPrefixed ? mapObj : `0:0@${mapObj}`;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const mapObj = searchParams.get("mapObj");
@@ -22,7 +29,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "API 키가 설정되지 않았습니다." }, { status: 500 });
   }
 
-  const url = `https://api.odsay.com/v1/api/loadLane?mapObject=${mapObj}&apiKey=${encodeURIComponent(apiKey)}`;
+  const normalizedMapObject = normalizeMapObject(mapObj);
+  const url = `https://api.odsay.com/v1/api/loadLane?mapObject=${normalizedMapObject}&apiKey=${encodeURIComponent(apiKey)}`;
 
   try {
     const response = await fetch(url, {

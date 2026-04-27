@@ -262,29 +262,33 @@ function MainContent() {
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* 출발지 입력 세션 */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 rounded-3xl border border-sky-300/50 bg-sky-500/[0.06] p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-bold">🏠 출발지 ({starts.length})</h2>
-              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary whitespace-nowrap">
-                여러 개 추가 가능
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/15 text-lg">🏠</span>
+                <div>
+                  <h2 className="text-xl font-bold text-sky-950/90">출발지</h2>
+                </div>
+              </div>
+              <span className="rounded-full border border-sky-400/30 bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-sky-700 whitespace-nowrap">
+                {starts.length}개
               </span>
             </div>
             <LocationInput
-              placeholder="출발지를 검색해서 추가하세요 (예: 강남역, 우리집)"
-              helperText="선택하면 아래에 계속 추가됩니다. 약속에 참여하는 모든 출발지를 넣어보세요."
+              placeholder="출발지 추가"
               onSelect={addStart}
             />
-            <ul className={`flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 mt-2 ${starts.length > 0 ? "border-primary/30 bg-primary/5" : "border-border bg-background/60"}`}>
+            <ul className={`mt-1 flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 ${starts.length > 0 ? "border-sky-400/30 bg-white/60" : "border-sky-300/30 bg-white/40"}`}>
               {starts.map((start) => (
                 <li
                   key={start.id}
-                  className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium border border-primary/20"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1.5 text-sm font-medium text-sky-800"
                 >
                   {start.place_name}
                   <button
                     type="button"
                     onClick={() => removeStart(start.id)}
-                    className="hover:bg-primary/20 rounded-full p-0.5"
+                    className="rounded-full p-0.5 hover:bg-sky-500/15"
                     aria-label="제거"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,34 +297,38 @@ function MainContent() {
                   </button>
                 </li>
               ))}
-              {starts.length === 0 && <li className="text-sm text-foreground/45">여러 사람의 출발지를 추가하면 더 정확하게 비교할 수 있어요.</li>}
+              {starts.length === 0 && <li className="text-sm text-sky-900/45">출발지 추가</li>}
             </ul>
           </div>
 
           {/* 목적지 입력 세션 */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 rounded-3xl border border-emerald-300/50 bg-emerald-500/[0.06] p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-bold">🏁 목적지 후보 ({ends.length})</h2>
-              <span className="rounded-full bg-foreground/10 px-2.5 py-1 text-[11px] font-medium text-foreground/70 whitespace-nowrap">
-                여러 개 추가 가능
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/15 text-lg">🏁</span>
+                <div>
+                  <h2 className="text-xl font-bold text-emerald-950/90">목적지 후보</h2>
+                </div>
+              </div>
+              <span className="rounded-full border border-emerald-400/30 bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 whitespace-nowrap">
+                {ends.length}개
               </span>
             </div>
             <LocationInput
-              placeholder="목적지 후보를 검색해서 추가하세요 (예: 홍대입구, 여의도 한강공원)"
-              helperText="비교하고 싶은 약속 장소를 여러 개 담아두면 황금 밸런스를 찾아드려요."
+              placeholder="목적지 후보 추가"
               onSelect={addEnd}
             />
-            <ul className={`flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 mt-2 ${ends.length > 0 ? "border-foreground/20 bg-foreground/5" : "border-border bg-background/60"}`}>
+            <ul className={`mt-1 flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 ${ends.length > 0 ? "border-emerald-400/30 bg-white/60" : "border-emerald-300/30 bg-white/40"}`}>
               {ends.map((end) => (
                 <li
                   key={end.id}
-                  className="inline-flex items-center gap-1.5 bg-foreground/10 text-foreground px-3 py-1.5 rounded-full text-sm font-medium border border-border"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-sm font-medium text-emerald-800"
                 >
                   {end.place_name}
                   <button
                     type="button"
                     onClick={() => removeEnd(end.id)}
-                    className="hover:bg-foreground/20 rounded-full p-0.5"
+                    className="rounded-full p-0.5 hover:bg-emerald-500/15"
                     aria-label="제거"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,7 +337,7 @@ function MainContent() {
                   </button>
                 </li>
               ))}
-              {ends.length === 0 && <li className="text-sm text-foreground/45">여러 후보를 넣으면 가장 공평한 목적지를 골라드려요.</li>}
+              {ends.length === 0 && <li className="text-sm text-emerald-900/45">목적지 후보 추가</li>}
             </ul>
           </div>
         </section>
@@ -364,11 +372,31 @@ function MainContent() {
 
       {/* 2. 우측 지도 영역 (PC에서는 고정, 모바일에서는 하단) */}
       <div className="w-full lg:w-[400px] xl:w-[500px] shrink-0">
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground/70 shadow-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-sky-800">
+            <span className="h-2.5 w-2.5 rounded-full bg-sky-500" />
+            출발지
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-800">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            목적지
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-primary">
+            <span className="h-0.5 w-4 rounded-full bg-primary" />
+            선택 경로
+          </span>
+        </div>
         {/* top-8은 헤더/여백 고려한 스티키 위치 설정. calc(100vh - 4rem)으로 화면에 꽉차게 유지 */}
         <div className="sticky top-8 h-[400px] lg:h-[calc(100vh-4rem)] rounded-xl overflow-hidden shadow-lg border border-border">
-          <MiniMap starts={starts} ends={ends} polylinePath={polylinePath} />
+          <MiniMap
+              starts={starts}
+              ends={ends}
+              polylinePath={polylinePath}
+              selectedStartId={selectedRoute?.fromId}
+              selectedEndId={selectedRoute?.toId}
+            />
+          </div>
         </div>
-      </div>
     </div>
   );
 }

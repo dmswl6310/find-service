@@ -8,11 +8,45 @@ interface MiniMapProps {
   starts: KakaoLocation[];
   ends: KakaoLocation[];
   polylinePath?: { lat: number; lng: number }[];
+  selectedStartId?: string;
+  selectedEndId?: string;
 }
 
-export default function MiniMap({ starts, ends, polylinePath = [] }: MiniMapProps) {
+function createMarkerImage(
+  kind: "start" | "end",
+  order: number,
+  state: "default" | "active" | "muted"
+) {
+  const palette = {
+    start: { fill: "#0EA5E9", stroke: "#0369A1" },
+    end: { fill: "#10B981", stroke: "#047857" },
+  }[kind];
+  const opacity = state === "muted" ? 0.55 : 1;
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46">
+      <path d="M18 2C9.716 2 3 8.716 3 17c0 11.25 15 27 15 27s15-15.75 15-27C33 8.716 26.284 2 18 2z" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="2" opacity="${opacity}"/>
+      <circle cx="18" cy="17" r="10" fill="white" fill-opacity="0.96"/>
+      <text x="18" y="21" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="${palette.stroke}">${order}</text>
+    </svg>
+  `.trim();
+
+  return {
+    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+    size: { width: 36, height: 46 },
+  };
+}
+
+export default function MiniMap({
+  starts,
+  ends,
+  polylinePath = [],
+  selectedStartId,
+  selectedEndId,
+}: MiniMapProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [map, setMap] = useState<kakao.maps.Map | null>(null);
+  const hasSelectedRoute = Boolean(selectedStartId && selectedEndId);
 
   useEffect(() => {
     // kakao.maps가 로드되었는지 확인
@@ -30,6 +64,15 @@ export default function MiniMap({ starts, ends, polylinePath = [] }: MiniMapProp
     const bounds = new window.kakao.maps.LatLngBounds();
     let hasPoint = false;
 
+    if (polylinePath.length > 1) {
+      polylinePath.forEach((pos) => {
+        bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
+      });
+
+      map.setBounds(bounds);
+      return;
+    }
+
     starts.forEach((loc) => {
       bounds.extend(new window.kakao.maps.LatLng(Number(loc.y), Number(loc.x)));
       hasPoint = true;
@@ -40,8 +83,8 @@ export default function MiniMap({ starts, ends, polylinePath = [] }: MiniMapProp
       hasPoint = true;
     });
 
-    // 선택된 경로가 있을 경우 해당 경로가 잘 보이도록 마진(패딩)을 줄 수 있게 포인트를 포함
-    if (polylinePath && polylinePath.length > 0) {
+    // 선택된 경로가 아직 선으로 그려지지 않은 경우에는 전체 출발지/목적지를 기준으로 보여줍니다.
+    if (polylinePath.length > 0) {
       polylinePath.forEach((pos) => {
         bounds.extend(new window.kakao.maps.LatLng(pos.lat, pos.lng));
       });
@@ -74,36 +117,44 @@ export default function MiniMap({ starts, ends, polylinePath = [] }: MiniMapProp
         level={6}
         onCreate={setMap}
       >
-        {starts.map((loc) => (
+        {starts.map((loc, index) => {
+          const isActive = loc.id === selectedStartId;
+          const markerState = hasSelectedRoute ? (isActive ? "active" : "muted") : "default";
+
+          return (
           <MapMarker
             key={`start-${loc.id}`}
             position={{ lat: Number(loc.y), lng: Number(loc.x) }}
             title={loc.place_name}
-            image={{
-              src: "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png", // 카카오맵 기본 빨간 마커
-              size: { width: 24, height: 35 },
-            }}
+            image={createMarkerImage("start", index + 1, markerState)}
           >
-            <div className="px-2 py-1 bg-white text-black text-xs font-semibold whitespace-nowrap border-blue-500 border rounded shadow-md">
-              {loc.place_name}
-            </div>
+            {isActive && (
+              <div className="rounded-xl border border-sky-500 bg-white px-2 py-1 text-xs font-semibold whitespace-nowrap text-sky-950 shadow-md">
+                {loc.place_name}
+              </div>
+            )}
           </MapMarker>
-        ))}
-        {ends.map((loc) => (
+          );
+        })}
+        {ends.map((loc, index) => {
+          const isActive = loc.id === selectedEndId;
+          const markerState = hasSelectedRoute ? (isActive ? "active" : "muted") : "default";
+
+          return (
           <MapMarker
             key={`end-${loc.id}`}
             position={{ lat: Number(loc.y), lng: Number(loc.x) }}
             title={loc.place_name}
-            image={{
-              src: "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png", // 별모양 마커 (도착지)
-              size: { width: 24, height: 35 },
-            }}
+            image={createMarkerImage("end", index + 1, markerState)}
           >
-            <div className="px-2 py-1 bg-white text-black text-xs font-semibold whitespace-nowrap border-red-500 border rounded shadow-md">
-              {loc.place_name}
-            </div>
+            {isActive && (
+              <div className="rounded-xl border border-emerald-500 bg-white px-2 py-1 text-xs font-semibold whitespace-nowrap text-emerald-950 shadow-md">
+                {loc.place_name}
+              </div>
+            )}
           </MapMarker>
-        ))}
+          );
+        })}
         
         {/* 그려질 경로 선 */}
         {polylinePath && polylinePath.length > 0 && (
