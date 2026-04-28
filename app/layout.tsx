@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   verification: {
-    google: "HUSgzc9mTkH6R7bmdOrJmCaCwcnfOsjKEGnLcWjK5FA",
+    google: "8YO-2rvhcMiS-9OOaivqlNOhJG67WGPPtRh6IbVq3rM",
   },
 };
 
@@ -119,7 +119,7 @@ export default function RootLayout({
           </div>
         </footer>
         <Analytics />
-        <GoogleAnalytics gaId="G-BX8G8SHB0Q" />
+        <GoogleAnalytics gaId="G-0H0N7H4EFN" />
       </body>
     </html>
   );
