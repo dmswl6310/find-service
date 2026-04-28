@@ -19,6 +19,7 @@ export default function LocationInput({
 }: LocationInputProps) {
   const { query, setQuery, results, isLoading, isOpen, setIsOpen } = useLocationSearch();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const shouldShowDropdown = isOpen && results.length > 0;
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -44,6 +45,12 @@ export default function LocationInput({
     onSelect(loc);
   };
 
+  const handleFocus = () => {
+    if (query.trim() && results.length > 0) {
+      setIsOpen(true);
+    }
+  };
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <div className="relative">
@@ -51,9 +58,7 @@ export default function LocationInput({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => {
-            if (query.trim() && results.length > 0) setIsOpen(true);
-          }}
+          onFocus={handleFocus}
           placeholder={placeholder}
           className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-foreground focus-ring shadow-sm transition-all"
         />
@@ -67,7 +72,7 @@ export default function LocationInput({
       {helperText && <p className="mt-2 text-xs text-foreground/55">{helperText}</p>}
 
       {/* 자동완성 드롭다운 */}
-      {isOpen && results.length > 0 && (
+      {shouldShowDropdown && (
         <div className="absolute z-10 w-full mt-2 bg-surface border border-border rounded-xl shadow-lg overflow-hidden glass mix-blend-normal">
           <ul className="max-h-60 overflow-y-auto w-full">
             {results.map((loc) => (

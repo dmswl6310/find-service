@@ -1,6 +1,7 @@
 import { KakaoSearchResponse } from "@/types/kakao";
+import { getKakaoRestApiKey, KAKAO_LOCAL_SEARCH_URL } from "@/lib/external-config";
 
-const KAKAO_API_BASE_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+const KAKAO_API_BASE_URL = KAKAO_LOCAL_SEARCH_URL;
 
 export async function searchPlaces(keyword: string): Promise<KakaoSearchResponse | null> {
   if (!keyword) return null;
@@ -9,7 +10,7 @@ export async function searchPlaces(keyword: string): Promise<KakaoSearchResponse
     const response = await fetch(`${KAKAO_API_BASE_URL}?query=${encodeURIComponent(keyword)}`, {
       method: "GET",
       headers: {
-        Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
+        Authorization: `KakaoAK ${getKakaoRestApiKey()}`,
       },
       // 서버에서 실시간 검색을 위해 캐시하지 않음
       cache: "no-store",
