@@ -1,0 +1,279 @@
+import { test, expect } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
+
+type SharedLocation = {
+  id: string;
+  place_name: string;
+  x: string;
+  y: string;
+};
+
+function encodeShareParam(locations: SharedLocation[]) {
+  const minimal = locations.map((item) => ({ id: item.id, p: item.place_name, x: item.x, y: item.y }));
+  return encodeURIComponent(Buffer.from(JSON.stringify(minimal), "utf8").toString("base64"));
+}
+
+test("share URL round-trip restores chips and auto-runs calculation", async ({ page }: { page: Page }) => {
+  let transitCalls = 0;
+  let graphicCalls = 0;
+
+  await page.route("**/api/transit?**", async (route: Route) => {
+    transitCalls += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        totalTime: 15,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [{ trafficType: 3, distance: 120, sectionTime: 4 }],
+        mapObj: "shared-route",
+      }),
+    });
+  });
+
+  await page.route("**/api/transit/graphic?**", async (route: Route) => {
+    graphicCalls += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        result: {
+          lane: [
+            {
+              section: [
+                {
+                  graphPos: [
+                    { x: "127.0276", y: "37.4979" },
+                    { x: "126.9237", y: "37.5563" },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    });
+  });
+
+  const starts = [{ id: "s1", place_name: "start-a", x: "127.0276", y: "37.4979" }];
+  const ends = [{ id: "e1", place_name: "end-b", x: "126.9237", y: "37.5563" }];
+  const s = encodeShareParam(starts);
+  const e = encodeShareParam(ends);
+
+  await page.goto(`/?s=${s}&e=${e}`);
+
+  await expect(page.locator("li", { hasText: "start-a" }).first()).toBeVisible();
+  await expect(page.locator("li", { hasText: "end-b" }).first()).toBeVisible();
+  await expect(page.getByText("15분")).toBeVisible();
+  await expect.poll(() => transitCalls).toBeGreaterThan(0);
+  expect(graphicCalls).toBeGreaterThanOrEqual(0);
+});
+
+test("result cell selection updates active map-synced route", async ({ page }: { page: Page }) => {
+  await page.route("**/api/search?**", async (route: Route) => {
+    const url = new URL(route.request().url());
+    const query = url.searchParams.get("q") || "";
+
+    const coordsByQuery: Record<string, { x: string; y: string }> = {
+      강남: { x: "127.0276", y: "37.4979" },
+      잠실: { x: "127.1025", y: "37.5133" },
+      홍대: { x: "126.9237", y: "37.5563" },
+      성수: { x: "127.0447", y: "37.5447" },
+    };
+
+    const coords = coordsByQuery[query] ?? { x: "127.0000", y: "37.5000" };
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        meta: { total_count: 1, pageable_count: 1, is_end: true },
+        documents: [
+          {
+            id: `${query}-id`,
+            place_name: `${query}-result`,
+            address_name: "서울",
+            road_address_name: "서울",
+            x: coords.x,
+            y: coords.y,
+          },
+        ],
+      }),
+    });
+  });
+
+  await page.route("**/api/transit?**", async (route: Route) => {
+    const url = new URL(route.request().url());
+    const sx = url.searchParams.get("sx");
+    const ex = url.searchParams.get("ex");
+
+    const matrix: Record<string, { totalTime: number; mapObj: string }> = {
+      "127.0276-126.9237": { totalTime: 11, mapObj: "m-a" },
+      "127.0276-127.0447": { totalTime: 22, mapObj: "m-b" },
+      "127.1025-126.9237": { totalTime: 33, mapObj: "m-c" },
+      "127.1025-127.0447": { totalTime: 44, mapObj: "m-d" },
+    };
+
+    const result = matrix[`${sx}-${ex}`];
+    if (!result) {
+      await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "not found" }) });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        totalTime: result.totalTime,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [{ trafficType: 3, distance: 100, sectionTime: 3 }],
+        mapObj: result.mapObj,
+      }),
+    });
+  });
+
+  await page.route("**/api/transit/graphic?**", async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        result: {
+          lane: [
+            {
+              section: [{ graphPos: [{ x: "127.0", y: "37.5" }, { x: "127.1", y: "37.6" }] }],
+            },
+          ],
+        },
+      }),
+    });
+  });
+
+  await page.goto("/");
+
+  await page.getByPlaceholder("출발지 추가").fill("강남");
+  await expect(page.getByText("강남-result", { exact: true })).toBeVisible();
+  await page.getByText("강남-result", { exact: true }).click();
+
+  await page.getByPlaceholder("출발지 추가").fill("잠실");
+  await expect(page.getByText("잠실-result", { exact: true })).toBeVisible();
+  await page.getByText("잠실-result", { exact: true }).click();
+
+  await page.getByPlaceholder("목적지 후보 추가").fill("홍대");
+  await expect(page.getByText("홍대-result", { exact: true })).toBeVisible();
+  await page.getByText("홍대-result", { exact: true }).click();
+
+  await page.getByPlaceholder("목적지 후보 추가").fill("성수");
+  await expect(page.getByText("성수-result", { exact: true })).toBeVisible();
+  await page.getByText("성수-result", { exact: true }).click();
+
+  await page.getByRole("button", { name: "소요시간 비교하기 🚀" }).click();
+
+  const button44 = page.getByRole("button", { name: /44분/ });
+  const button11 = page.getByRole("button", { name: /11분/ });
+
+  await expect(button44).toBeVisible();
+  await button44.click();
+  await expect(button44).toHaveClass(/ring-2/);
+
+  await button11.click();
+  await expect(button11).toHaveClass(/ring-2/);
+});
+
+test("search + transit matrix keeps successful cells on partial failure", async ({ page }: { page: Page }) => {
+  let graphicCalls = 0;
+
+  await page.route("**/api/search?**", async (route: Route) => {
+    const url = new URL(route.request().url());
+    const query = url.searchParams.get("q") || "";
+
+    const payload = {
+      meta: { total_count: 1, pageable_count: 1, is_end: true },
+      documents: [
+        {
+          id: `${query}-id`,
+          place_name: `${query}-result`,
+          address_name: "서울",
+          road_address_name: "서울",
+          x: query.includes("강남") ? "127.0276" : query.includes("홍대") ? "126.9237" : "127.1025",
+          y: query.includes("강남") ? "37.4979" : query.includes("홍대") ? "37.5563" : "37.5133",
+        },
+      ],
+    };
+
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) });
+  });
+
+  await page.route("**/api/transit?**", async (route: Route) => {
+    const url = new URL(route.request().url());
+    const ex = url.searchParams.get("ex");
+
+    if (ex === "126.9237") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          totalTime: 21,
+          payment: 1400,
+          pathType: 3,
+          transitCount: 1,
+          subPath: [{ trafficType: 3, distance: 100, sectionTime: 3 }],
+          mapObj: "ok-route",
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: "이용 가능한 대중교통 경로가 없습니다.",
+        errorCode: "4",
+        errorStatus: 404,
+        errorSource: "odsay",
+      }),
+    });
+  });
+
+  await page.route("**/api/transit/graphic?**", async (route: Route) => {
+    graphicCalls += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        result: {
+          lane: [
+            {
+              section: [{ graphPos: [{ x: "127.0276", y: "37.4979" }, { x: "126.9237", y: "37.5563" }] }],
+            },
+          ],
+        },
+      }),
+    });
+  });
+
+  await page.goto("/");
+
+  await page.getByPlaceholder("출발지 추가").fill("강남");
+  await expect(page.getByText("강남-result", { exact: true })).toBeVisible();
+  await page.getByText("강남-result", { exact: true }).click();
+
+  await page.getByPlaceholder("목적지 후보 추가").fill("홍대");
+  await expect(page.getByText("홍대-result", { exact: true })).toBeVisible();
+  await page.getByText("홍대-result", { exact: true }).click();
+
+  await page.getByPlaceholder("목적지 후보 추가").fill("잠실");
+  await expect(page.getByText("잠실-result", { exact: true })).toBeVisible();
+  await page.getByText("잠실-result", { exact: true }).click();
+
+  await page.getByRole("button", { name: "소요시간 비교하기 🚀" }).click();
+
+  await expect(page.getByText("일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.")).toBeVisible();
+  await expect(page.getByText("21분")).toBeVisible();
+  await expect(page.getByText("이용 가능한 대중교통 경로가 없습니다.")).toBeVisible();
+  await expect.poll(() => graphicCalls).toBeGreaterThan(0);
+});
