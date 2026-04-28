@@ -2,7 +2,7 @@
 
 import { TransitFetchResult } from "@/types/odsay";
 import { formatTime } from "@/utils/formatTime";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 interface RouteDetailModalProps {
   isOpen: boolean;
@@ -19,10 +19,7 @@ export default function RouteDetailModal({
   startName,
   endName,
 }: RouteDetailModalProps) {
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -33,7 +30,7 @@ export default function RouteDetailModal({
     };
   }, [isOpen]);
 
-  if (!mounted || !isOpen || !result) return null;
+  if (!isOpen || !result) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center sm:items-end">

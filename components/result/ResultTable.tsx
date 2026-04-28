@@ -67,8 +67,6 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
       
       const times = colResults.map(d => d.timeMn);
       const max = Math.max(...times);
-      const min = Math.min(...times);
-      const diff = max - min;
       const avg = times.reduce((a, b) => a + b, 0) / times.length;
       
       // 새로운 가중치 로직: 

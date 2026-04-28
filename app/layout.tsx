@@ -4,6 +4,7 @@ import Script from "next/script";
 import { Analytics } from "@vercel/analytics/react"
 import "./globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { buildKakaoSdkScriptUrl, getKakaoJsApiKey } from "@/lib/external-config";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,7 +29,7 @@ export default function RootLayout({
       <head>
         <Script
           strategy="beforeInteractive"
-          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JS_API_KEY}&autoload=false&libraries=services,clusterer,drawing`}
+          src={buildKakaoSdkScriptUrl(getKakaoJsApiKey())}
         />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
