@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/store/useAppStore";
+import { encodeSharedLocations } from "@/utils/shareUrl";
 import { useState } from "react";
 
 export default function ShareButton() {
@@ -8,14 +9,8 @@ export default function ShareButton() {
   const [copied, setCopied] = useState(false);
 
   const handleShare = () => {
-    // 직렬화를 위해 최소한의 데이터만 사용 (이름,x,y,id)
-    const encodeLocations = (locs: any[]) => {
-      const minimal = locs.map((l) => ({ id: l.id, p: l.place_name, x: l.x, y: l.y }));
-      return encodeURIComponent(btoa(JSON.stringify(minimal)));
-    };
-
-    const s = encodeLocations(starts);
-    const e = encodeLocations(ends);
+    const s = encodeSharedLocations(starts);
+    const e = encodeSharedLocations(ends);
 
     const url = new URL(window.location.href);
     url.searchParams.set("s", s);

@@ -1,6 +1,13 @@
 "use client";
 
 import { useAppStore } from "@/store/useAppStore";
+import {
+  fromDateInputValue,
+  fromTimeInputValue,
+  getCurrentDateTime,
+  toDateInputValue,
+  toTimeInputValue,
+} from "@/utils/dateTime";
 
 export default function TimeFilter() {
   const {
@@ -12,33 +19,27 @@ export default function TimeFilter() {
     setTargetTime,
   } = useAppStore();
 
-  const dateInputValue = targetDate
-    ? `${targetDate.slice(0, 4)}-${targetDate.slice(4, 6)}-${targetDate.slice(6, 8)}`
-    : "";
-  const timeInputValue = targetTime
-    ? `${targetTime.slice(0, 2)}:${targetTime.slice(2, 4)}`
-    : "";
+  const dateInputValue = toDateInputValue(targetDate);
+  const timeInputValue = toTimeInputValue(targetTime);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value; // YYYY-MM-DD
     if (val) {
-      setTargetDate(val.replace(/-/g, ""));
+      setTargetDate(fromDateInputValue(val));
     }
   };
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value; // HH:mm
     if (val) {
-      setTargetTime(val.replace(":", ""));
+      setTargetTime(fromTimeInputValue(val));
     }
   };
 
   const resetToNow = () => {
-    const now = new Date();
-    const d = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const t = `${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-    setTargetDate(d);
-    setTargetTime(t);
+    const now = getCurrentDateTime();
+    setTargetDate(now.date);
+    setTargetTime(now.time);
   };
 
   return (

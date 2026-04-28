@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { KakaoLocation } from "@/types/kakao";
+import { getCurrentDateTime } from "@/utils/dateTime";
 
 interface AppState {
   starts: KakaoLocation[];
@@ -24,9 +25,9 @@ interface AppState {
 }
 
 // 기본값은 오늘 날짜와 현재 시간
-const now = new Date();
-const defaultDate = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-const defaultTime = `${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+const now = getCurrentDateTime();
+const defaultDate = now.date;
+const defaultTime = now.time;
 
 export const useAppStore = create<AppState>((set) => ({
   starts: [],
