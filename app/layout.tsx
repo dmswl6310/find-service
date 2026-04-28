@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { buildKakaoSdkScriptUrl, getKakaoJsApiKey } from "@/lib/external-config";
+import {
+  buildKakaoSdkScriptUrl,
+  getKakaoJsApiKey,
+} from "@/lib/external-config";
+import AdSenseScript from "@/components/ads/AdSenseScript";
+import Link from "next/link";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,10 +18,21 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "모두비교 | 여러 출발지와 목적지를 위한 최적의 경로 찾기",
-  description: "여러 출발지와 목적지의 대중교통 소요시간을 한눈에 비교해보세요.",
-  verification:{
-    google: "HUSgzc9mTkH6R7bmdOrJmCaCwcnfOsjKEGnLcWjK5FA"
-  }
+  description:
+    "여러 출발지와 목적지의 대중교통 소요시간을 한눈에 비교해보세요. 다중 출발지 최단거리, 대중교통 중간지점 찾기 서비스.",
+  keywords: ["중간지점", "경로비교", "대중교통", "모임장소", "최적경로"],
+  openGraph: {
+    title: "모두비교 | 최적의 약속장소 찾기",
+    description:
+      "여러 출발지와 목적지의 대중교통 소요시간을 한눈에 비교해보세요.",
+    url: "https://find-service.vercel.app", // 추후 실제 도메인으로 변경 가능
+    siteName: "모두비교",
+    locale: "ko_KR",
+    type: "website",
+  },
+  verification: {
+    google: "HUSgzc9mTkH6R7bmdOrJmCaCwcnfOsjKEGnLcWjK5FA",
+  },
 };
 
 export default function RootLayout({
@@ -31,9 +47,39 @@ export default function RootLayout({
           strategy="beforeInteractive"
           src={buildKakaoSdkScriptUrl(getKakaoJsApiKey())}
         />
+        <AdSenseScript />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
+        <footer className="w-full py-10 mt-auto border-t border-border bg-surface/50">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-foreground/60">
+              <p>© {new Date().getFullYear()} 모두비교. All rights reserved.</p>
+              <div className="flex items-center gap-4 flex-wrap justify-center">
+                <Link
+                  href="/privacy"
+                  className="hover:text-primary transition-colors"
+                >
+                  개인정보처리방침
+                </Link>
+                <span className="text-border">|</span>
+                <Link
+                  href="/terms"
+                  className="hover:text-primary transition-colors"
+                >
+                  이용약관
+                </Link>
+                <span className="text-border">|</span>
+                <Link
+                  href="/tips"
+                  className="hover:text-primary transition-colors font-medium"
+                >
+                  애드센스 가이드
+                </Link>
+              </div>
+            </div>
+          </div>
+        </footer>
         <Analytics />
         <GoogleAnalytics gaId="G-BX8G8SHB0Q" />
       </body>
