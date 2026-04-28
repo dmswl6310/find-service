@@ -1,11 +1,12 @@
-import LocationInput from "@/components/search/LocationInput";
-import ResultTable from "@/components/result/ResultTable";
-import TimeFilter from "@/components/search/TimeFilter";
-import ShareButton from "@/components/search/ShareButton";
+import Link from "next/link";
 import MiniMap from "@/components/map/MiniMap";
+import ResultTable from "@/components/result/ResultTable";
+import LocationInput from "@/components/search/LocationInput";
+import ShareButton from "@/components/search/ShareButton";
+import TimeFilter from "@/components/search/TimeFilter";
 import { useAppStore } from "@/store/useAppStore";
-import { TransitFetchResult } from "@/types/odsay";
-import { KakaoLocation } from "@/types/kakao";
+import type { KakaoLocation } from "@/types/kakao";
+import type { TransitFetchResult } from "@/types/odsay";
 import { useSelectedRouteMapState } from "./useSelectedRouteMapState";
 
 type MainContentProps = {
@@ -34,11 +35,45 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
         <header className="mb-10 text-center lg:text-left pt-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground">
-              최적 경로 <span className="text-primary">비교기</span>
+              약속 장소 <span className="text-primary">대중교통 비교기</span>
             </h1>
             <ShareButton />
           </div>
-          <p className="text-foreground/70 text-lg md:text-xl">약속 장소 정하기 힘드신가요? 친구들 검색 한 번으로 다 해결하세요.</p>
+          <p className="text-foreground/70 text-lg md:text-xl leading-relaxed">
+            여러 명의 출발지와 후보 장소를 입력하면 각 조합의 대중교통
+            소요시간을 비교해 모두에게 부담이 적은 만남 장소를 찾을 수
+            있습니다.
+          </p>
+          <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+              <p className="text-sm font-bold text-foreground">실제 이동시간 비교</p>
+              <p className="mt-1 text-sm leading-6 text-foreground/65">
+                카카오 장소 검색과 ODSAY 대중교통 데이터를 이용해 후보별
+                시간을 표와 지도에서 함께 보여줍니다.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+              <p className="text-sm font-bold text-foreground">회원가입 없는 사용</p>
+              <p className="mt-1 text-sm leading-6 text-foreground/65">
+                이름, 연락처, 계정을 요구하지 않고 입력한 장소 정보로만
+                비교 결과를 계산합니다.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+              <p className="text-sm font-bold text-foreground">공유 가능한 결과</p>
+              <p className="mt-1 text-sm leading-6 text-foreground/65">
+                비교 조건을 URL로 공유해 모임 구성원이 같은 후보와 결과를
+                확인할 수 있습니다.
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm leading-6 text-foreground/55">
+            서비스의 데이터 처리 방식은{" "}
+            <Link href="/privacy" className="font-semibold text-primary hover:underline">
+              개인정보처리방침
+            </Link>
+            에서 확인할 수 있습니다.
+          </p>
         </header>
 
         <TimeFilter />
@@ -72,7 +107,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                     className="rounded-full p-0.5 hover:bg-sky-500/15"
                     aria-label="제거"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -110,7 +145,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                     className="rounded-full p-0.5 hover:bg-emerald-500/15"
                     aria-label="제거"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -123,6 +158,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
 
         <div className="flex flex-col gap-4 mb-16">
           <button
+            type="button"
             onClick={handleCalculateClick}
             disabled={isCalculating || starts.length === 0 || ends.length === 0}
             className="w-full py-4 bg-primary text-white text-lg font-bold rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-0.5 transform transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-primary/30"
