@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OdsayErrorEntry, OdsayGraphicResponse } from "@/types/odsay";
-
-function getOdsayErrorEntry(error: OdsayGraphicResponse["error"]): OdsayErrorEntry | undefined {
-  if (!error) {
-    return undefined;
-  }
-
-  return Array.isArray(error) ? error[0] : error;
-}
+import { OdsayGraphicResponse } from "@/types/odsay";
+import { getOdsayErrorEntry, normalizeOdsayErrorPayload } from "@/lib/odsay-error";
+import { getAppOriginHeaders, getOdsayApiKey, ODSAY_LOAD_LANE_URL } from "@/lib/external-config";
 
 function normalizeMapObject(mapObj: string) {
   const [firstSegment] = mapObj.split("@");
@@ -24,23 +18,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "mapObj 파라미터가 필요합니다." }, { status: 400 });
   }
 
-  const apiKey = process.env.ODSAY_API_KEY;
+  const apiKey = getOdsayApiKey();
   if (!apiKey) {
     return NextResponse.json({ error: "API 키가 설정되지 않았습니다." }, { status: 500 });
   }
 
   const normalizedMapObject = normalizeMapObject(mapObj);
-  const url = `https://api.odsay.com/v1/api/loadLane?mapObject=${normalizedMapObject}&apiKey=${encodeURIComponent(apiKey)}`;
+  const url = `${ODSAY_LOAD_LANE_URL}?mapObject=${normalizedMapObject}&apiKey=${encodeURIComponent(apiKey)}`;
 
   try {
     const response = await fetch(url, {
       method: "GET",
       // 실시간 통신이나 빠른 반영을 위해 no-store
       cache: "no-store",
-      headers: {
-        "Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "Origin": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-      }
+      headers: getAppOriginHeaders(),
     });
 
     if (!response.ok) {
@@ -51,13 +42,7 @@ export async function GET(request: NextRequest) {
 
     const errorEntry = getOdsayErrorEntry(data.error);
     if (errorEntry) {
-      return NextResponse.json(
-        {
-          error: errorEntry.msg || errorEntry.message || "그래픽 노선 조회 실패",
-          errorCode: errorEntry.code,
-        },
-        { status: 502 }
-      );
+      return NextResponse.json(normalizeOdsayErrorPayload(data.error, "그래픽 노선 조회 실패"), { status: 502 });
     }
 
     const lanes = Array.isArray(data.result?.lane) ? data.result.lane : [];

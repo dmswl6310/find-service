@@ -1,30 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TransitApiError, fetchTransitRoute } from "@/lib/odsay";
-import { OdsayErrorEntry, OdsayPath, TransitApiErrorPayload, OdsayTransitResponse } from "@/types/odsay";
-
-function getOdsayErrorEntry(error: OdsayTransitResponse["error"]): OdsayErrorEntry | undefined {
-  if (!error) {
-    return undefined;
-  }
-
-  return Array.isArray(error) ? error[0] : error;
-}
-
-function getOdsayErrorStatus(code?: string): number {
-  switch (code) {
-    case "-8":
-    case "-9":
-      return 400;
-    case "3":
-    case "4":
-    case "5":
-    case "6":
-    case "-99":
-      return 404;
-    default:
-      return 502;
-  }
-}
+import { getOdsayErrorEntry, getOdsayRouteErrorStatus, normalizeOdsayErrorPayload } from "@/lib/odsay-error";
+import { OdsayPath, TransitApiErrorPayload } from "@/types/odsay";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -80,7 +57,7 @@ export async function GET(request: NextRequest) {
   // ODsay 에러 코드 반환 (ex: 500 "출발지와 도착지가 700m 이내입니다.")
   if (data.error) {
     const errorEntry = getOdsayErrorEntry(data.error);
-    const errorStatus = getOdsayErrorStatus(errorEntry?.code);
+    const errorStatus = getOdsayRouteErrorStatus(errorEntry?.code);
 
     // 700m 이내 등 도보 이동 가능 거리일 경우의 에러 코드 대응
     if (errorEntry?.code === "-98") {
@@ -104,8 +81,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: errorEntry?.msg || errorEntry?.message || "길찾기 결과를 찾을 수 없습니다.",
-        errorCode: errorEntry?.code,
+        ...normalizeOdsayErrorPayload(data.error, "길찾기 결과를 찾을 수 없습니다."),
         errorStatus: errorStatus,
         errorSource: "odsay",
       } satisfies TransitApiErrorPayload,

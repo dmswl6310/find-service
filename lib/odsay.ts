@@ -1,6 +1,8 @@
-import { OdsayErrorEntry, OdsayTransitResponse, TransitErrorSource } from "@/types/odsay";
+import { OdsayTransitResponse, TransitErrorSource } from "@/types/odsay";
+import { getAppOriginHeaders, getOdsayApiKey, ODSAY_SEARCH_TRANSIT_PATH_URL } from "@/lib/external-config";
+import { getOdsayErrorEntry } from "@/lib/odsay-error";
 
-const ODSAY_API_BASE_URL = "https://api.odsay.com/v1/api/searchPubTransPathT";
+const ODSAY_API_BASE_URL = ODSAY_SEARCH_TRANSIT_PATH_URL;
 
 export class TransitApiError extends Error {
   constructor(
@@ -13,14 +15,6 @@ export class TransitApiError extends Error {
     super(message);
     this.name = "TransitApiError";
   }
-}
-
-function getOdsayErrorEntry(error: OdsayTransitResponse["error"]): OdsayErrorEntry | undefined {
-  if (!error) {
-    return undefined;
-  }
-
-  return Array.isArray(error) ? error[0] : error;
 }
 
 function parseErrorPayload(rawText: string): { code?: string; message?: string } {
@@ -49,7 +43,7 @@ export async function fetchTransitRoute(
   date?: string,
   time?: string
 ): Promise<OdsayTransitResponse> {
-  const apiKey = process.env.ODSAY_API_KEY;
+  const apiKey = getOdsayApiKey();
   if (!apiKey) {
     console.error("[transit][odsay] Missing ODSAY_API_KEY", {
       sx,
@@ -78,12 +72,7 @@ export async function fetchTransitRoute(
       method: "GET",
       // 실시간 교통 정보 또는 다중 조회 시 캐시가 혼선을 줄 수 있으므로 무효화
       cache: "no-store", 
-      headers: {
-        // Vercel 동적 IP 에러 방지 트릭: 
-        // ODsay 웹(Web) 키를 서버에서 사용할 수 있도록 브라우저인 것처럼 Referer를 속입니다.
-        "Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "Origin": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-      }
+      headers: getAppOriginHeaders(),
     });
 
     if (!response.ok) {
