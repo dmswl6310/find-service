@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "이용약관 | 모두비교",
-  description: "모두비교 서비스의 이용약관입니다.",
+  title: "이용약관 | 모두스팟",
+  description: "모두스팟 서비스의 이용약관입니다.",
 };
 
 export default function TermsPage() {
@@ -14,7 +14,7 @@ export default function TermsPage() {
             이용약관
           </h1>
           <p className="text-sm text-foreground/50">
-            마지막 업데이트: {new Date().toLocaleDateString('ko-KR')}
+            마지막 업데이트: 2026년 4월 28일
           </p>
         </header>
 
@@ -22,7 +22,7 @@ export default function TermsPage() {
           <div>
             <h2 className="text-xl font-bold text-foreground mb-3">제1조 (목적)</h2>
             <p>
-              본 약관은 '모두비교'(이하 "웹사이트"라 합니다)가 제공하는 제반 서비스의 이용과 관련하여 웹사이트와 이용자의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
+              본 약관은 모두스팟이 제공하는 제반 서비스의 이용과 관련하여 웹사이트와 이용자의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
             </p>
           </div>
 

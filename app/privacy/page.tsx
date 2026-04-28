@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "개인정보처리방침 | 모두비교",
-  description: "모두비교 서비스의 개인정보처리방침입니다.",
+  title: "개인정보처리방침 | 모두스팟",
+  description: "모두스팟 서비스의 개인정보처리방침입니다.",
 };
 
 export default function PrivacyPage() {
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
             개인정보처리방침
           </h1>
           <p className="text-sm text-foreground/50">
-            마지막 업데이트: {new Date().toLocaleDateString('ko-KR')}
+            마지막 업데이트: 2026년 4월 28일
           </p>
         </header>
 
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           <div>
             <h2 className="text-xl font-bold text-foreground mb-3">1. 개인정보의 처리 목적</h2>
             <p>
-              '모두비교'는 다음의 목적을 위하여 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 관련 법령에 따라 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.
+              모두스팟은 다음의 목적을 위하여 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 관련 법령에 따라 별도의 동의를 받는 등 필요한 조치를 이행할 예정입니다.
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>사용자 경험 향상 및 서비스 최적화</li>
@@ -52,14 +52,14 @@ export default function PrivacyPage() {
           <div>
             <h2 className="text-xl font-bold text-foreground mb-3">4. 이용자 및 법정대리인의 권리와 그 행사방법</h2>
             <p>
-              이용자는 언제든지 등록되어 있는 자신의 개인정보를 조회하거나 수정할 수 있으며 가입해지를 요청할 수도 있습니다. 쿠키 정보의 경우 웹 브라우저의 옵션을 설정함으로써 모든 쿠키를 허용하거나, 쿠키가 저장될 때마다 확인을 거치거나, 아니면 모든 쿠키의 저장을 거부할 수도 있습니다.
+              모두스팟은 별도의 회원가입 기능을 제공하지 않으므로 사용자가 직접 등록한 계정 정보를 보관하지 않습니다. 서비스 이용 중 자동 생성되는 쿠키 정보는 웹 브라우저의 옵션을 설정하여 허용, 확인, 거부 또는 삭제할 수 있습니다. 개인정보 처리와 관련한 문의가 있는 경우 문의 페이지의 공식 채널을 통해 요청할 수 있습니다.
             </p>
           </div>
 
           <div>
             <h2 className="text-xl font-bold text-foreground mb-3">5. 기타</h2>
             <p>
-              이 개인정보처리방침은 법령, 정책 또는 보안기술의 변경에 따라 내용이 추가, 삭제 및 수정될 수 있습니다. 본 내용은 참고용으로 제공되며, 실제 운영 방침에 맞게 수정하여 사용하시기 바랍니다.
+              이 개인정보처리방침은 법령, 정책 또는 보안기술의 변경에 따라 내용이 추가, 삭제 및 수정될 수 있습니다. 변경 사항이 있는 경우 본 페이지를 통해 최신 내용을 안내합니다.
             </p>
           </div>
         </section>
