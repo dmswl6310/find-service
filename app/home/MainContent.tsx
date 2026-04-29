@@ -55,13 +55,17 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
         <header className="mb-10 text-center lg:text-left pt-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground">
-              약속 장소 <span className="text-primary">대중교통 비교기</span>
+              여러명 <span className="text-primary">중간지점·중간거리</span> 비교
             </h1>
             <ShareButton />
           </div>
           <p className="text-foreground/70 text-lg md:text-xl leading-relaxed">
-            출발지와 후보 장소를 추가하고 바로 비교해보세요. 각 조합의
-            대중교통 소요시간을 표와 지도에서 한 번에 확인할 수 있습니다.
+            여러 출발지와 여러 목적지를 추가하고 바로 비교해보세요. 다대다
+            대중교통 소요시간을 표와 지도에서 확인해 중간 약속 장소를 고를 수 있습니다.
+          </p>
+          <p className="mt-3 text-sm leading-6 text-foreground/55">
+            친구 모임, 스터디, 회식처럼 출발지가 제각각일 때 여러명 거리비교와
+            후보 장소별 중간거리 판단을 한 번에 도와줍니다.
           </p>
         </header>
 
