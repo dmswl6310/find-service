@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
 import type { Page, Route } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 type SharedLocation = {
   id: string;
@@ -71,6 +71,76 @@ test("share URL round-trip restores chips and auto-runs calculation", async ({ p
   expect(graphicCalls).toBeGreaterThanOrEqual(0);
 });
 
+test("share button copies a restorable URL with Korean place names", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+  await page.route("**/api/search?**", async (route: Route) => {
+    const url = new URL(route.request().url());
+    const query = url.searchParams.get("q") || "";
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        meta: { total_count: 1, pageable_count: 1, is_end: true },
+        documents: [
+          {
+            address_name: "서울",
+            id: `${query}-id`,
+            place_name: `${query}-result`,
+            road_address_name: "서울",
+            x: query === "강남" ? "127.0276" : "126.9237",
+            y: query === "강남" ? "37.4979" : "37.5563",
+          },
+        ],
+      }),
+    });
+  });
+  await page.route("**/api/transit?**", async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        totalTime: 19,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [{ trafficType: 3, distance: 100, sectionTime: 3 }],
+        mapObj: "copied-route",
+      }),
+    });
+  });
+  await page.route("**/api/transit/graphic?**", async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ result: { lane: [] } }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByPlaceholder("출발지 추가").fill("강남");
+  await expect(page.getByText("강남-result", { exact: true })).toBeVisible();
+  await page.getByText("강남-result", { exact: true }).click();
+
+  await page.getByPlaceholder("목적지 후보 추가").fill("홍대");
+  await expect(page.getByText("홍대-result", { exact: true })).toBeVisible();
+  await page.getByText("홍대-result", { exact: true }).click();
+
+  await page.getByRole("button", { name: "결과 공유 링크 복사" }).click();
+  await expect(page.getByRole("button", { name: "링크 복사됨!" })).toBeVisible();
+
+  const copiedUrl = await page.evaluate(() => navigator.clipboard.readText());
+  const copied = new URL(copiedUrl);
+
+  expect(copied.searchParams.has("s")).toBe(true);
+  expect(copied.searchParams.has("e")).toBe(true);
+
+  await page.goto(copiedUrl);
+  await expect(page.locator("li", { hasText: "강남-result" }).first()).toBeVisible();
+  await expect(page.locator("li", { hasText: "홍대-result" }).first()).toBeVisible();
+});
+
 test("result cell selection updates active map-synced route", async ({ page }: { page: Page }) => {
   await page.route("**/api/search?**", async (route: Route) => {
     const url = new URL(route.request().url());
@@ -108,6 +178,8 @@ test("result cell selection updates active map-synced route", async ({ page }: {
     const url = new URL(route.request().url());
     const sx = url.searchParams.get("sx");
     const ex = url.searchParams.get("ex");
+    expect(url.searchParams.get("date")).toMatch(/^\d{8}$/);
+    expect(url.searchParams.get("time")).toMatch(/^\d{4}$/);
 
     const matrix: Record<string, { totalTime: number; mapObj: string }> = {
       "127.0276-126.9237": { totalTime: 11, mapObj: "m-a" },
@@ -181,6 +253,15 @@ test("result cell selection updates active map-synced route", async ({ page }: {
 
   await button11.click();
   await expect(button11).toHaveClass(/ring-2/);
+
+  await page.locator("li", { hasText: "강남-result" }).getByRole("button", { name: "제거" }).click();
+  await expect(page.locator("li", { hasText: "강남-result" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /44분/ })).toHaveCount(0);
+
+  await page.getByPlaceholder("목적지 후보 추가").fill("건대");
+  await expect(page.getByText("건대-result", { exact: true })).toBeVisible();
+  await page.getByText("건대-result", { exact: true }).click();
+  await expect(page.locator("li", { hasText: "건대-result" }).first()).toBeVisible();
 });
 
 test("search + transit matrix keeps successful cells on partial failure", async ({ page }: { page: Page }) => {
