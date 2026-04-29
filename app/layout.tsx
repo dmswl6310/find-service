@@ -78,7 +78,7 @@ export default function RootLayout({
         <footer className="w-full py-10 mt-auto border-t border-border bg-surface/50">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-foreground/60">
-              <p>© {new Date().getFullYear()} 모두스팟. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} 모두스팟. Made by Eunji.</p>
               <div className="flex items-center gap-4 flex-wrap justify-center">
                 <Link
                   href="/privacy"
