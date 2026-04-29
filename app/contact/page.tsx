@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ContactForm from "./ContactForm";
 
 export const metadata: Metadata = {
   title: "문의 | 모두스팟",
@@ -20,25 +21,13 @@ export default function ContactPage() {
             문의하기
           </h1>
           <p className="text-foreground/65 leading-8">
-            서비스 오류, 경로 데이터 문제, 개인정보 및 광고 관련 문의는 아래
-            공식 저장소 이슈로 보내주세요. 재현 가능한 입력값이나 화면 캡처를 함께 보내면
-            더 빠르게 확인할 수 있습니다.
+            서비스 오류, 경로 데이터 문제, 개인정보 및 광고 관련 문의를 익명으로
+            보낼 수 있습니다. 답변이 필요하면 이메일만 선택적으로 남겨주세요.
           </p>
         </header>
 
         <section className="space-y-8 text-foreground/80">
-          <div className="rounded-3xl border border-primary/15 bg-primary/5 p-6">
-            <h2 className="mt-0 text-xl font-bold text-foreground">공식 문의 채널</h2>
-            <p className="mb-2">
-              <a href="https://github.com/dmswl6310" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:underline">
-                GitHub 프로필로 문의 채널 확인하기
-              </a>
-            </p>
-            <p className="text-sm text-foreground/60">
-              공개 저장소 이슈에 민감한 개인정보를 포함하지 마세요. 개인정보와
-              관련된 상세 문의가 필요한 경우, 운영자가 별도 비공개 연락 수단을 안내합니다.
-            </p>
-          </div>
+          <ContactForm />
 
           <div>
             <h2 className="text-xl font-bold text-foreground">문의 시 포함하면 좋은 정보</h2>

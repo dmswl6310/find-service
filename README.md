@@ -73,6 +73,12 @@ NEXT_PUBLIC_KAKAO_JS_API_KEY=
 KAKAO_REST_API_KEY=
 ODSAY_API_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+CONTACT_SMTP_HOST=
+CONTACT_SMTP_PORT=465
+CONTACT_SMTP_SECURE=true
+CONTACT_SMTP_USER=
+CONTACT_SMTP_PASS=
+CONTACT_FROM_EMAIL=
 ```
 
 설명:
@@ -81,11 +87,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - `KAKAO_REST_API_KEY`: 서버에서 카카오 장소 검색 API를 호출할 때 사용하는 REST API 키
 - `ODSAY_API_KEY`: 서버에서 ODSAY 대중교통 API를 호출할 때 사용하는 키
 - `NEXT_PUBLIC_APP_URL`: ODSAY 요청 헤더의 `Referer`/`Origin` 및 앱 기준 URL fallback에 사용
+- `CONTACT_SMTP_HOST`, `CONTACT_SMTP_PORT`, `CONTACT_SMTP_SECURE`, `CONTACT_SMTP_USER`, `CONTACT_SMTP_PASS`: 문의 폼 메일 전송에 사용하는 SMTP 설정. Gmail 기준 `CONTACT_SMTP_HOST=smtp.gmail.com`, `CONTACT_SMTP_PORT=465`, `CONTACT_SMTP_SECURE=true`를 사용합니다.
+- `CONTACT_FROM_EMAIL`: 선택값입니다. 비워두면 `CONTACT_SMTP_USER`를 발신자 주소로 사용합니다.
 
 주의:
 
 - 카카오 지도는 JavaScript 키가 필요합니다. REST 키만으로는 지도 SDK가 동작하지 않습니다.
 - 카카오 개발자 콘솔에 현재 도메인(`localhost:3000`, 배포 도메인)을 등록해야 합니다.
+- 문의 폼은 SMTP 환경 변수가 설정되어야 `dmswl6310@gmail.com`으로 메일을 전송합니다. Gmail을 사용할 경우 일반 비밀번호가 아닌 앱 비밀번호 또는 SMTP 전용 인증 정보를 `CONTACT_SMTP_PASS`에 넣으세요.
 
 ## 실행 방법
 
