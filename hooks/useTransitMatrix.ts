@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { KakaoLocation } from "@/types/kakao";
-import { TransitFetchResult } from "@/types/odsay";
+import { useRef, useState } from "react";
 import { createTransitClientExceptionResult, parseTransitApiResult } from "@/lib/transitFetchAdapter";
+import type { KakaoLocation } from "@/types/kakao";
+import type { TransitFetchResult } from "@/types/odsay";
 
 const TRANSIT_REQUEST_STAGGER_MS = 250;
 const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.";
@@ -104,6 +104,14 @@ export function useTransitMatrix() {
   const [matrixData, setMatrixData] = useState<TransitFetchResult[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const calculationSeqRef = useRef(0);
+
+  const resetMatrix = () => {
+    calculationSeqRef.current += 1;
+    setMatrixData([]);
+    setError(null);
+    setIsCalculating(false);
+  };
 
   const calculateMatrix = async (
     starts: KakaoLocation[],
@@ -118,6 +126,7 @@ export function useTransitMatrix() {
 
     setIsCalculating(true);
     setError(null);
+    const calculationSeq = ++calculationSeqRef.current;
 
     const fetchPromises = createStaggeredTransitRequests({
       starts,
@@ -129,17 +138,25 @@ export function useTransitMatrix() {
     try {
       // 병렬 요청으로 시간 단축 (최적화 포인트)
       const results = await Promise.all(fetchPromises);
+      if (calculationSeq !== calculationSeqRef.current) {
+        return;
+      }
+
       setMatrixData(results);
 
       if (results.some((result) => result.error)) {
         setError(PARTIAL_FAILURE_MESSAGE);
       }
     } catch {
-      setError("경로 계산 중 오류가 발생했습니다.");
+      if (calculationSeq === calculationSeqRef.current) {
+        setError("경로 계산 중 오류가 발생했습니다.");
+      }
     } finally {
-      setIsCalculating(false);
+      if (calculationSeq === calculationSeqRef.current) {
+        setIsCalculating(false);
+      }
     }
   };
 
-  return { matrixData, isCalculating, calculateMatrix, error, setMatrixData };
+  return { matrixData, isCalculating, calculateMatrix, error, resetMatrix, setMatrixData };
 }

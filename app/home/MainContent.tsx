@@ -1,4 +1,3 @@
-import Link from "next/link";
 import MiniMap from "@/components/map/MiniMap";
 import ResultTable from "@/components/result/ResultTable";
 import LocationInput from "@/components/search/LocationInput";
@@ -14,9 +13,10 @@ type MainContentProps = {
   isCalculating: boolean;
   calculateMatrix: (starts: KakaoLocation[], ends: KakaoLocation[], targetDate?: string, targetTime?: string) => Promise<void>;
   error: string | null;
+  resetMatrix: () => void;
 };
 
-export default function MainContent({ matrixData, isCalculating, calculateMatrix, error }: MainContentProps) {
+export default function MainContent({ matrixData, isCalculating, calculateMatrix, error, resetMatrix }: MainContentProps) {
   const { starts, ends, addStart, removeStart, addEnd, removeEnd, useDepartureTime, targetDate, targetTime } = useAppStore();
   const { activeMapRouteId, selectedRoute, routeSegments, detailedPath, handleSelectRoute } = useSelectedRouteMapState({
     starts,
@@ -27,6 +27,26 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
 
   const handleCalculateClick = () => {
     calculateMatrix(starts, ends, useDepartureTime ? targetDate : undefined, useDepartureTime ? targetTime : undefined);
+  };
+
+  const handleAddStart = (location: KakaoLocation) => {
+    resetMatrix();
+    addStart(location);
+  };
+
+  const handleRemoveStart = (id: string) => {
+    resetMatrix();
+    removeStart(id);
+  };
+
+  const handleAddEnd = (location: KakaoLocation) => {
+    resetMatrix();
+    addEnd(location);
+  };
+
+  const handleRemoveEnd = (id: string) => {
+    resetMatrix();
+    removeEnd(id);
   };
 
   return (
@@ -40,39 +60,8 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
             <ShareButton />
           </div>
           <p className="text-foreground/70 text-lg md:text-xl leading-relaxed">
-            여러 명의 출발지와 후보 장소를 입력하면 각 조합의 대중교통
-            소요시간을 비교해 모두에게 부담이 적은 만남 장소를 찾을 수
-            있습니다.
-          </p>
-          <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-              <p className="text-sm font-bold text-foreground">실제 이동시간 비교</p>
-              <p className="mt-1 text-sm leading-6 text-foreground/65">
-                카카오 장소 검색과 ODSAY 대중교통 데이터를 이용해 후보별
-                시간을 표와 지도에서 함께 보여줍니다.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-              <p className="text-sm font-bold text-foreground">회원가입 없는 사용</p>
-              <p className="mt-1 text-sm leading-6 text-foreground/65">
-                이름, 연락처, 계정을 요구하지 않고 입력한 장소 정보로만
-                비교 결과를 계산합니다.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-              <p className="text-sm font-bold text-foreground">공유 가능한 결과</p>
-              <p className="mt-1 text-sm leading-6 text-foreground/65">
-                비교 조건을 URL로 공유해 모임 구성원이 같은 후보와 결과를
-                확인할 수 있습니다.
-              </p>
-            </div>
-          </div>
-          <p className="mt-4 text-sm leading-6 text-foreground/55">
-            서비스의 데이터 처리 방식은{" "}
-            <Link href="/privacy" className="font-semibold text-primary hover:underline">
-              개인정보처리방침
-            </Link>
-            에서 확인할 수 있습니다.
+            출발지와 후보 장소를 추가하고 바로 비교해보세요. 각 조합의
+            대중교통 소요시간을 표와 지도에서 한 번에 확인할 수 있습니다.
           </p>
         </header>
 
@@ -91,7 +80,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                 {starts.length}개
               </span>
             </div>
-            <LocationInput placeholder="출발지 추가" onSelect={addStart} />
+            <LocationInput placeholder="출발지 추가" onSelect={handleAddStart} />
             <ul
               className={`mt-1 flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 ${starts.length > 0 ? "border-sky-400/30 bg-white/60" : "border-sky-300/30 bg-white/40"}`}
             >
@@ -103,7 +92,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                   {start.place_name}
                   <button
                     type="button"
-                    onClick={() => removeStart(start.id)}
+                    onClick={() => handleRemoveStart(start.id)}
                     className="rounded-full p-0.5 hover:bg-sky-500/15"
                     aria-label="제거"
                   >
@@ -129,7 +118,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                 {ends.length}개
               </span>
             </div>
-            <LocationInput placeholder="목적지 후보 추가" onSelect={addEnd} />
+            <LocationInput placeholder="목적지 후보 추가" onSelect={handleAddEnd} />
             <ul
               className={`mt-1 flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 ${ends.length > 0 ? "border-emerald-400/30 bg-white/60" : "border-emerald-300/30 bg-white/40"}`}
             >
@@ -141,7 +130,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                   {end.place_name}
                   <button
                     type="button"
-                    onClick={() => removeEnd(end.id)}
+                    onClick={() => handleRemoveEnd(end.id)}
                     className="rounded-full p-0.5 hover:bg-emerald-500/15"
                     aria-label="제거"
                   >
