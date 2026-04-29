@@ -7,6 +7,24 @@ export type SharedLocationPayload = {
   y: string;
 };
 
+function encodeBase64Utf8(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  return btoa(binary);
+}
+
+function decodeBase64Utf8(value: string) {
+  const binary = atob(value);
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+
+  return new TextDecoder().decode(bytes);
+}
+
 export function encodeSharedLocations(locations: KakaoLocation[]): string {
   const minimalPayload: SharedLocationPayload[] = locations.map((item) => ({
     id: item.id,
@@ -15,11 +33,11 @@ export function encodeSharedLocations(locations: KakaoLocation[]): string {
     y: item.y,
   }));
 
-  return encodeURIComponent(btoa(JSON.stringify(minimalPayload)));
+  return encodeURIComponent(encodeBase64Utf8(JSON.stringify(minimalPayload)));
 }
 
 export function decodeSharedLocations(param: string): SharedLocationPayload[] {
-  return JSON.parse(atob(decodeURIComponent(param))) as SharedLocationPayload[];
+  return JSON.parse(decodeBase64Utf8(decodeURIComponent(param))) as SharedLocationPayload[];
 }
 
 export function toKakaoLocations(payload: SharedLocationPayload[]): KakaoLocation[] {
