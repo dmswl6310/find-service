@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "약속 장소 고르는 법 | 모두스팟",
+  title: "중간 약속 장소 고르는 법 | 중간지점·중간거리 비교",
   description:
-    "여러 출발지가 있는 모임에서 공정한 약속 장소를 고르는 기준과 대중교통 소요시간 비교 방법을 정리했습니다.",
+    "여러 출발지가 있는 모임에서 중간지점, 중간거리, 여러명 거리비교 기준으로 공정한 약속 장소를 고르는 방법을 정리했습니다.",
+  keywords: ["중간 약속 장소", "중간지점", "중간거리", "여러명 거리비교", "여러 출발지", "약속 장소"],
   alternates: {
     canonical: "/tips",
   },
   openGraph: {
-    title: "약속 장소 고르는 법 | 모두스팟",
+    title: "중간 약속 장소 고르는 법 | 모두스팟",
     description:
       "모임 장소를 정할 때 이동시간, 환승, 막차, 접근성을 함께 비교하는 실전 가이드입니다.",
     url: "/tips",
@@ -31,13 +32,15 @@ export default function TipsPage() {
         <header className="mb-10 border-b border-border pb-8">
           <p className="mb-3 text-sm font-bold text-primary">모두스팟 활용 가이드</p>
           <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 text-foreground leading-tight">
-            여러 출발지가 있을 때 약속 장소를 공정하게 고르는 방법
+              여러 출발지가 있을 때 중간 약속 장소를 공정하게 고르는 방법
           </h1>
           <p className="text-base md:text-lg text-foreground/65 leading-8">
             모임 장소를 정할 때 한 사람에게만 이동 부담이 몰리면 약속 자체가
             피곤해집니다. 모두스팟은 출발지와 후보 목적지를 여러 개 넣고
             대중교통 소요시간을 비교해, 대화로 결정하기 어려운 부분을 숫자와
             지도로 확인할 수 있게 돕습니다.
+            여러명 거리비교, 중간지점 찾기, 중간거리 비교가 필요한 상황에 맞춰
+            평균 이동시간과 가장 오래 걸리는 사람의 시간을 함께 보는 것이 핵심입니다.
           </p>
           <p className="mt-4 text-sm text-foreground/50">마지막 업데이트: 2026년 4월 28일</p>
         </header>
@@ -57,6 +60,16 @@ export default function TipsPage() {
         </section>
 
         <section className="space-y-10 text-foreground/80">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">0. 중간지점은 지도상 가운데가 아니라 실제 이동시간 기준입니다</h2>
+            <p>
+              서울 지도에서 직선거리로 가운데인 곳이 실제 중간 약속 장소가 되는 것은
+              아닙니다. 지하철 노선, 버스 환승, 도보 구간 때문에 같은 중간거리라도
+              사람마다 체감 이동시간이 달라질 수 있습니다. 그래서 여러 출발지의
+              대중교통 소요시간을 함께 비교하는 방식이 더 실용적입니다.
+            </p>
+          </div>
+
           <div>
             <h2 className="text-2xl font-bold text-foreground">1. 평균보다 편차를 먼저 봅니다</h2>
             <p>
@@ -115,6 +128,22 @@ export default function TipsPage() {
             <li>소요시간 비교 결과에서 평균, 최대 이동시간, 지도 위치를 함께 봅니다.</li>
             <li>공유 버튼으로 결과를 보내고 최종 후보를 정합니다.</li>
           </ol>
+        </section>
+
+        <section className="mt-12 rounded-3xl border border-primary/15 bg-primary/5 p-6 md:p-8">
+          <h2 className="mt-0 text-2xl font-bold text-foreground">관련 가이드</h2>
+          <ul className="space-y-3 pl-0 list-none text-foreground/75">
+            <li>
+              <Link href="/middle-point" className="font-bold text-primary hover:underline">
+                중간지점·중간거리 비교 기준 보기
+              </Link>
+            </li>
+            <li>
+              <Link href="/multi-route" className="font-bold text-primary hover:underline">
+                여러 출발지·여러 목적지 다대다 비교 방법 보기
+              </Link>
+            </li>
+          </ul>
         </section>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
