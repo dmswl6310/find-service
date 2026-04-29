@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 
@@ -90,5 +90,29 @@ describe("useLocationSearch", () => {
     });
 
     expect(result.current.results[0]?.place_name).toBe("new-result");
+  });
+
+  it("surfaces search API failures to the input UI", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "카카오 API 연동 중 오류가 발생했습니다." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+
+    const { result } = renderHook(() => useLocationSearch());
+
+    act(() => {
+      result.current.setQuery("강남");
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+      await Promise.resolve();
+    });
+
+    expect(result.current.results).toEqual([]);
+    expect(result.current.isOpen).toBe(false);
+    expect(result.current.error).toBe("카카오 API 연동 중 오류가 발생했습니다.");
   });
 });

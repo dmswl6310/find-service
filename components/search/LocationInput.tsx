@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
-import { KakaoLocation } from "@/types/kakao";
-import { useRef, useEffect } from "react";
+import type { KakaoLocation } from "@/types/kakao";
 
 interface LocationInputProps {
   placeholder?: string;
@@ -17,7 +17,7 @@ export default function LocationInput({
   selectedName,
   helperText,
 }: LocationInputProps) {
-  const { query, setQuery, results, isLoading, isOpen, setIsOpen } = useLocationSearch();
+  const { query, setQuery, results, isLoading, isOpen, setIsOpen, error } = useLocationSearch();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const shouldShowDropdown = isOpen && results.length > 0;
 
@@ -70,19 +70,22 @@ export default function LocationInput({
       </div>
 
       {helperText && <p className="mt-2 text-xs text-foreground/55">{helperText}</p>}
+      {error && <p className="mt-2 text-xs font-medium text-red-500">{error}</p>}
 
       {/* 자동완성 드롭다운 */}
       {shouldShowDropdown && (
         <div className="absolute z-10 w-full mt-2 bg-surface border border-border rounded-xl shadow-lg overflow-hidden glass mix-blend-normal">
           <ul className="max-h-60 overflow-y-auto w-full">
             {results.map((loc) => (
-              <li
-                key={loc.id}
-                onClick={() => handleSelect(loc)}
-                className="px-4 py-3 hover:bg-primary/10 cursor-pointer transition-colors border-b border-border/50 last:border-0"
-              >
-                <p className="font-medium text-foreground">{loc.place_name}</p>
-                <p className="text-xs text-foreground/60 mt-0.5">{loc.road_address_name || loc.address_name}</p>
+              <li key={loc.id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(loc)}
+                  className="w-full px-4 py-3 text-left hover:bg-primary/10 cursor-pointer transition-colors border-b border-border/50 last:border-0"
+                >
+                  <p className="font-medium text-foreground">{loc.place_name}</p>
+                  <p className="text-xs text-foreground/60 mt-0.5">{loc.road_address_name || loc.address_name}</p>
+                </button>
               </li>
             ))}
           </ul>
