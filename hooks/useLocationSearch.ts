@@ -12,6 +12,7 @@ export function useLocationSearch() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const requestSeqRef = useRef(0);
 
   useEffect(() => {
@@ -31,14 +32,18 @@ export function useLocationSearch() {
       setIsOpen(false);
       setIsLoading(false);
       setError(null);
+      setHasSearched(false);
       return;
     }
 
     const requestSeq = ++requestSeqRef.current;
+    const abortController = new AbortController();
     const fetchLocations = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmedQuery)}`, {
+          signal: abortController.signal,
+        });
         if (requestSeq !== requestSeqRef.current) {
           return;
         }
@@ -48,18 +53,25 @@ export function useLocationSearch() {
           setResults(data.documents);
           setIsOpen(true);
           setError(null);
+          setHasSearched(true);
           return;
         }
 
         setResults([]);
         setIsOpen(false);
+        setHasSearched(true);
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
         setError(data?.error || "장소 검색 중 오류가 발생했습니다.");
       } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
         console.error("Failed to fetch locations:", error);
         if (requestSeq === requestSeqRef.current) {
           setResults([]);
           setIsOpen(false);
+          setHasSearched(true);
           setError("장소 검색 중 오류가 발생했습니다.");
         }
       } finally {
@@ -70,7 +82,9 @@ export function useLocationSearch() {
     };
 
     void fetchLocations();
+
+    return () => abortController.abort();
   }, [debouncedQuery]);
 
-  return { query, setQuery, results, isLoading, isOpen, setIsOpen, error };
+  return { query, setQuery, results, isLoading, isOpen, setIsOpen, error, hasSearched };
 }

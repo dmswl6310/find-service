@@ -3,8 +3,18 @@ import type { KakaoSearchResponse } from "@/types/kakao";
 
 const KAKAO_API_BASE_URL = KAKAO_LOCAL_SEARCH_URL;
 
+function isKakaoSearchResponse(data: unknown): data is KakaoSearchResponse {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "documents" in data &&
+    Array.isArray((data as KakaoSearchResponse).documents)
+  );
+}
+
 export async function searchPlaces(keyword: string): Promise<KakaoSearchResponse | null> {
-  if (!keyword) return null;
+  const trimmedKeyword = keyword.trim();
+  if (!trimmedKeyword) return null;
 
   const apiKey = getKakaoRestApiKey();
   if (!apiKey) {
@@ -13,7 +23,7 @@ export async function searchPlaces(keyword: string): Promise<KakaoSearchResponse
   }
 
   try {
-    const response = await fetch(`${KAKAO_API_BASE_URL}?query=${encodeURIComponent(keyword)}`, {
+    const response = await fetch(`${KAKAO_API_BASE_URL}?query=${encodeURIComponent(trimmedKeyword)}`, {
       method: "GET",
       headers: {
         Authorization: `KakaoAK ${apiKey}`,
@@ -27,7 +37,12 @@ export async function searchPlaces(keyword: string): Promise<KakaoSearchResponse
       return null;
     }
 
-    const data: KakaoSearchResponse = await response.json();
+    const data = await response.json();
+    if (!isKakaoSearchResponse(data)) {
+      console.error("Kakao API returned invalid payload:", data);
+      return null;
+    }
+
     return data;
   } catch (error) {
     console.error("Kakao API Request Failed:", error);
