@@ -3,6 +3,7 @@
 import { KakaoLocation } from "@/types/kakao";
 import { TransitFetchResult, OdsaySubPath } from "@/types/odsay";
 import { formatTime } from "@/utils/formatTime";
+import { getFairestEndId } from "@/utils/fairness";
 import { useState } from "react";
 import RouteDetailModal from "./RouteDetailModal";
 
@@ -17,6 +18,7 @@ interface ResultTableProps {
 
 export default function ResultTable({ starts, ends, matrixData, isCalculating, onSelectRoute, activeMapRouteId }: ResultTableProps) {
   const [selectedResult, setSelectedResult] = useState<{ res: TransitFetchResult, startName: string, endName: string } | null>(null);
+  const [openTooltipEndId, setOpenTooltipEndId] = useState<string | null>(null);
 
   const openRouteDetail = (res: TransitFetchResult, startName: string, endName: string) => {
     setSelectedResult({ res, startName, endName });
@@ -57,37 +59,7 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
     return transitNames.join(" → ");
   };
 
-  // 공평함 계산 로직: 편차(Max-Min)가 적고, 평균이 짧을수록 유리
-  const getFairestEndId = () => {
-    if (starts.length < 2 || ends.length < 2 || matrixData.length === 0) return null;
-
-    const scores = ends.map(end => {
-      const colResults = matrixData.filter(d => d.toId === end.id && !d.error && d.timeMn >= 0);
-      if (colResults.length !== starts.length) return { id: end.id, score: Infinity }; // 한 명이라도 못 가면 제외
-      
-      const times = colResults.map(d => d.timeMn);
-      const max = Math.max(...times);
-      const avg = times.reduce((a, b) => a + b, 0) / times.length;
-      
-      // 새로운 가중치 로직: 
-      // 이전에는 단순히 둘의 '차이(diff)'에 집착해서 모두가 손해보는(더 오래걸리는) 성수점(34, 51 -> 차이 17)이 
-      // 논현점(13, 44 -> 차이 31)보다 점수가 높게 나왔습니다. (하향 평준화 오류)
-      //
-      // 개선된 로직: "모두 모이는데 걸리는 최장 시간(Max)" + "모두의 평균 이동 시간(Avg)"
-      // 이 공식을 쓰면 논현(Max:44, Avg:28.5 = 72.5)이 성수(Max:51, Avg:42.5 = 93.5)를 완벽히 이기고 추천됩니다!
-      return { id: end.id, score: max + avg };
-    });
-
-    const validScores = scores.filter(s => s.score !== Infinity);
-    if (validScores.length === 0) return null;
-    
-    // 가장 낮은 점수가 최고로 공평한 목적지
-    const minScore = Math.min(...validScores.map(s => s.score));
-    const fairest = validScores.find(s => s.score === minScore);
-    return fairest?.id;
-  };
-
-  const fairestEndId = getFairestEndId();
+  const fairestEndId = getFairestEndId(starts, ends, matrixData);
 
   return (
     <>
@@ -119,12 +91,15 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
                           <button
                             type="button"
                             aria-label="황금 밸런스 설명 보기"
+                            aria-expanded={openTooltipEndId === end.id}
+                            aria-describedby={`golden-balance-${end.id}`}
+                            onClick={() => setOpenTooltipEndId((current) => current === end.id ? null : end.id)}
                             className="flex h-4 w-4 items-center justify-center rounded-full border border-amber-300/80 bg-white/90 text-[10px] font-bold leading-none text-amber-700 shadow-sm transition-colors hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-400/70"
                           >
                             i
                           </button>
-                          <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-44 -translate-x-1/2 rounded-lg border border-border bg-popover px-3 py-2 text-left text-[11px] font-medium leading-relaxed text-popover-foreground shadow-lg opacity-0 transition-all duration-150 group-hover/tooltip:translate-y-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:translate-y-0 group-focus-within/tooltip:opacity-100">
-                            가장 빠른 곳이 아니라, 여러 출발지 기준으로 가장 균형이 좋은 도착지예요.
+                          <div id={`golden-balance-${end.id}`} className={`pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-52 -translate-x-1/2 rounded-lg border border-border bg-popover px-3 py-2 text-left text-[11px] font-medium leading-relaxed text-popover-foreground shadow-lg transition-all duration-150 group-hover/tooltip:translate-y-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:translate-y-0 group-focus-within/tooltip:opacity-100 ${openTooltipEndId === end.id ? "opacity-100" : "opacity-0"}`}>
+                            최단은 각 출발지별 가장 빠른 경로, 황금 밸런스는 최대 소요시간과 평균 소요시간을 함께 본 가장 균형 잡힌 도착지예요.
                           </div>
                         </div>
                       </div>
@@ -230,6 +205,12 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
           </tbody>
         </table>
       </div>
+
+      {matrixData.length > 0 && (
+        <p className="text-xs leading-5 text-foreground/55">
+          최단은 각 출발지 행에서 가장 빠른 경로이고, 황금 밸런스는 여러 출발지 전체의 균형을 고려한 도착지입니다.
+        </p>
+      )}
 
       <RouteDetailModal
         isOpen={!!selectedResult}
