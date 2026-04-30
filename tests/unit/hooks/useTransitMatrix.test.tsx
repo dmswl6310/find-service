@@ -139,7 +139,8 @@ describe("useTransitMatrix", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/transit?sx=126.1&sy=37.1&ex=126.2&ey=37.2&date=20260429&time=1830"
+      "/api/transit?sx=126.1&sy=37.1&ex=126.2&ey=37.2&date=20260429&time=1830",
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
     );
   });
 

@@ -3,7 +3,7 @@ import { searchPlaces } from "@/lib/kakao";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const query = searchParams.get("q");
+  const query = searchParams.get("q")?.trim();
 
   if (!query) {
     return NextResponse.json(

@@ -32,5 +32,9 @@ export function getAppOriginHeaders(): { Referer: string; Origin: string } {
 }
 
 export function buildKakaoSdkScriptUrl(appKey: string | undefined): string {
+  if (!appKey) {
+    console.error("NEXT_PUBLIC_KAKAO_JS_API_KEY is missing");
+  }
+
   return `${KAKAO_MAP_SDK_URL}?appkey=${appKey}&autoload=false&libraries=services,clusterer,drawing`;
 }

@@ -6,7 +6,7 @@ import MainContent from "./MainContent";
 import RouteSync from "./RouteSync";
 
 export default function HomePageClient() {
-  const { matrixData, isCalculating, calculateMatrix, error, resetMatrix } =
+  const { matrixData, isCalculating, calculateMatrix, error, resetMatrix, calculationProgress } =
     useTransitMatrix();
 
   return (
@@ -19,6 +19,7 @@ export default function HomePageClient() {
           calculateMatrix={calculateMatrix}
           error={error}
           resetMatrix={resetMatrix}
+          calculationProgress={calculationProgress}
         />
       </Suspense>
     </main>

@@ -2,7 +2,7 @@
 
 import { TransitFetchResult } from "@/types/odsay";
 import { formatTime } from "@/utils/formatTime";
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 
 interface RouteDetailModalProps {
   isOpen: boolean;
@@ -19,16 +19,69 @@ export default function RouteDetailModal({
   startName,
   endName,
 }: RouteDetailModalProps) {
+  const titleId = useId();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (isOpen) {
+      previouslyFocusedElementRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       document.body.style.overflow = "hidden";
+      const timeoutId = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+
+      return () => {
+        window.clearTimeout(timeoutId);
+        document.body.style.overflow = "auto";
+      };
     } else {
       document.body.style.overflow = "auto";
+      previouslyFocusedElementRef.current?.focus();
     }
     return () => {
       document.body.style.overflow = "auto";
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+
+      const focusableElements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => !element.hasAttribute("disabled") && element.getAttribute("aria-hidden") !== "true");
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !result) return null;
 
@@ -38,17 +91,22 @@ export default function RouteDetailModal({
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal/Drawer Content */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="relative z-10 w-full sm:w-[400px] h-[80vh] sm:h-[600px] bg-surface rounded-t-2xl sm:rounded-2xl sm:mb-8 shadow-xl flex flex-col transform transition-transform overflow-hidden animate-in slide-in-from-bottom"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="p-5 border-b border-border flex justify-between items-center bg-surface sticky top-0 z-20">
           <div>
-            <h3 className="text-lg font-bold text-foreground truncate max-w-[280px]">
+            <h3 id={titleId} className="text-lg font-bold text-foreground truncate max-w-[280px]">
               {startName} ➡️ {endName}
             </h3>
             <p className="text-sm text-foreground/60 mt-1">
@@ -56,7 +114,10 @@ export default function RouteDetailModal({
             </p>
           </div>
           <button
+            ref={closeButtonRef}
+            type="button"
             onClick={onClose}
+            aria-label="상세 경로 닫기"
             className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           >
             ✕

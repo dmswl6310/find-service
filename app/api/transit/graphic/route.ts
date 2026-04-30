@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   const normalizedMapObject = normalizeMapObject(mapObj);
-  const url = `${ODSAY_LOAD_LANE_URL}?mapObject=${normalizedMapObject}&apiKey=${encodeURIComponent(apiKey)}`;
+  const url = `${ODSAY_LOAD_LANE_URL}?mapObject=${encodeURIComponent(normalizedMapObject)}&apiKey=${encodeURIComponent(apiKey)}`;
 
   try {
     const response = await fetch(url, {

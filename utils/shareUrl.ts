@@ -7,6 +7,12 @@ export type SharedLocationPayload = {
   y: string;
 };
 
+export type SharedDepartureTimePayload = {
+  enabled: boolean;
+  date?: string;
+  time?: string;
+};
+
 function encodeBase64Utf8(value: string) {
   const bytes = new TextEncoder().encode(value);
   let binary = "";
@@ -49,4 +55,41 @@ export function toKakaoLocations(payload: SharedLocationPayload[]): KakaoLocatio
     address_name: "",
     road_address_name: "",
   }));
+}
+
+export function writeSharedDepartureTimeParams(
+  searchParams: URLSearchParams,
+  payload: SharedDepartureTimePayload
+) {
+  searchParams.set("dt", payload.enabled ? "1" : "0");
+
+  if (payload.date) {
+    searchParams.set("d", payload.date);
+  } else {
+    searchParams.delete("d");
+  }
+
+  if (payload.time) {
+    searchParams.set("t", payload.time);
+  } else {
+    searchParams.delete("t");
+  }
+}
+
+export function readSharedDepartureTimeParams(searchParams: URLSearchParams): SharedDepartureTimePayload | null {
+  const dt = searchParams.get("dt");
+  const rawDate = searchParams.get("d") || undefined;
+  const rawTime = searchParams.get("t") || undefined;
+  const date = rawDate && /^\d{8}$/.test(rawDate) ? rawDate : undefined;
+  const time = rawTime && /^\d{4}$/.test(rawTime) ? rawTime : undefined;
+
+  if (dt === null && !rawDate && !rawTime) {
+    return null;
+  }
+
+  return {
+    enabled: dt !== "0",
+    date,
+    time,
+  };
 }

@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Script from "next/script";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import { KakaoLocation } from "@/types/kakao";
+import { buildKakaoSdkScriptUrl, getKakaoJsApiKey } from "@/lib/external-config";
+
+const MAP_LOAD_TIMEOUT_MS = 8000;
 
 type MapPathPoint = { lat: number; lng: number };
 type MapRouteSegment = {
@@ -53,18 +57,28 @@ export default function MiniMap({
   selectedEndId,
 }: MiniMapProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [scriptReady, setScriptReady] = useState(false);
   const [map, setMap] = useState<kakao.maps.Map | null>(null);
+  const kakaoScriptUrl = buildKakaoSdkScriptUrl(getKakaoJsApiKey());
   const hasSelectedRoute = Boolean(selectedStartId && selectedEndId);
   const segmentPoints = routeSegments.flatMap((segment) => segment.path);
 
   useEffect(() => {
-    // kakao.maps가 로드되었는지 확인
-    if (typeof window !== "undefined" && window.kakao && window.kakao.maps) {
+    const timeoutId = window.setTimeout(() => {
+      setLoadFailed(true);
+    }, MAP_LOAD_TIMEOUT_MS);
+
+    if (scriptReady && typeof window !== "undefined" && window.kakao && window.kakao.maps) {
       window.kakao.maps.load(() => {
+        window.clearTimeout(timeoutId);
         setIsLoaded(true);
+        setLoadFailed(false);
       });
     }
-  }, []);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [scriptReady]);
 
   // 마커나 폴리라인이 변경될 때마다 지도의 중심과 확대 레벨을 조정
   useEffect(() => {
@@ -114,11 +128,27 @@ export default function MiniMap({
     subway: { color: "#2563EB", opacity: 0.9, weight: 5, style: "solid" },
   };
 
+  if (loadFailed) {
+    return (
+      <>
+        <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-surface border border-border rounded-xl aspect-square md:aspect-auto px-6 text-center" role="status" aria-live="polite">
+          <p className="text-sm font-semibold text-foreground">지도를 불러오지 못했습니다.</p>
+          <p className="text-xs leading-5 text-foreground/60">네트워크 상태를 확인하거나 잠시 후 다시 시도해 주세요.</p>
+        </div>
+      </>
+    );
+  }
+
   if (!isLoaded) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-surface border border-border rounded-xl aspect-square md:aspect-auto">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <>
+        <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
+        <div className="w-full h-full flex items-center justify-center bg-surface border border-border rounded-xl aspect-square md:aspect-auto" role="status" aria-live="polite" aria-busy="true">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="sr-only">지도를 불러오는 중입니다.</span>
+        </div>
+      </>
     );
   }
 
@@ -126,6 +156,7 @@ export default function MiniMap({
 
   return (
     <div className="w-full h-full rounded-xl overflow-hidden border border-border shadow-sm min-h-[400px]">
+      <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
       <Map
         center={defaultCenter}
         style={{ width: "100%", height: "100%" }}

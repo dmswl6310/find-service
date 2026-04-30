@@ -55,7 +55,7 @@ describe("GET /api/transit/graphic", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [calledUrl] = fetchMock.mock.calls[0];
-    expect(String(calledUrl)).toContain("mapObject=0:0@abc");
+    expect(String(calledUrl)).toContain("mapObject=0%3A0%40abc");
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toMatchObject({ result: { lane: expect.any(Array) } });
   });
