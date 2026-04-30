@@ -31,8 +31,23 @@ export const metadata: Metadata = {
       "여러 출발지와 목적지 후보의 대중교통 소요시간을 한눈에 비교해보세요.",
     url: "/",
     siteName: "모두스팟",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "모두스팟 - 여러 출발지와 목적지 후보의 대중교통 소요시간 비교",
+      },
+    ],
     locale: "ko_KR",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "모두스팟 | 대중교통 약속 장소 비교",
+    description:
+      "여러 출발지와 목적지 후보의 대중교통 소요시간을 한눈에 비교해보세요.",
+    images: ["/opengraph-image"],
   },
   verification: {
     google: "8YO-2rvhcMiS-9OOaivqlNOhJG67WGPPtRh6IbVq3rM",

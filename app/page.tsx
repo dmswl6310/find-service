@@ -26,6 +26,12 @@ export const metadata: Metadata = {
     url: "/",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "모두스팟 | 여러명 중간지점·중간거리 약속 장소 비교",
+    description:
+      "여러 출발지와 여러 목적지 후보를 다대다로 계산해 공정한 중간 약속 장소를 고르세요.",
+  },
 };
 
 const jsonLd = {
@@ -33,17 +39,19 @@ const jsonLd = {
   "@type": "WebApplication",
   applicationCategory: "TravelApplication",
   description: metadata.description,
+  featureList: [
+    "여러 출발지와 목적지 후보 다대다 비교",
+    "대중교통 소요시간과 요금 비교",
+    "황금 밸런스 목적지 추천",
+    "공유 URL 생성과 복원",
+  ],
   inLanguage: "ko-KR",
   name: "모두스팟",
+  operatingSystem: "Web",
   offers: {
     "@type": "Offer",
     price: "0",
     priceCurrency: "KRW",
-  },
-  potentialAction: {
-    "@type": "SearchAction",
-    query: "여러 출발지와 여러 목적지를 입력해 대중교통 중간지점 비교",
-    target: "/",
   },
   url: "https://moduspot.vercel.app",
 };
