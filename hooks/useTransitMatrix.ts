@@ -107,44 +107,52 @@ function createStaggeredTransitRequests(params: {
 }): Promise<TransitFetchResult>[] {
   const { starts, ends, targetDate, targetTime, signal, timeoutIds, cancelers } = params;
   const requests: Promise<TransitFetchResult>[] = [];
-  let delayMs = 0;
+  let currentChain = Promise.resolve();
 
   starts.forEach((start) => {
     ends.forEach((end) => {
-      requests.push(
-        new Promise<TransitFetchResult>((resolve) => {
-          let settled = false;
-          const resolveCancelled = () => {
-            if (settled) return;
-            settled = true;
-            resolve(createTransitClientExceptionResult({
-              fromId: start.id,
-              toId: end.id,
-              caughtError: new Error("요청이 취소되었습니다."),
-            }));
-          };
+      let isSettled = false;
+      let resolvePromise: (value: TransitFetchResult) => void;
 
-          if (signal?.aborted) {
-            resolveCancelled();
-            return;
-          }
+      const promise = new Promise<TransitFetchResult>((resolve) => {
+        resolvePromise = resolve;
+      });
 
-          const timeoutId = setTimeout(() => {
-            void fetchTransitCell({ start, end, targetDate, targetTime, signal }).then((result) => {
-              if (settled) return;
-              settled = true;
-              resolve(result);
-            });
-          }, delayMs);
+      requests.push(promise);
 
+      const resolveCancelled = () => {
+        if (isSettled) return;
+        isSettled = true;
+        resolvePromise(
+          createTransitClientExceptionResult({
+            fromId: start.id,
+            toId: end.id,
+            caughtError: new Error("요청이 취소되었습니다."),
+          })
+        );
+      };
+
+      cancelers.push(resolveCancelled);
+
+      currentChain = currentChain.then(async () => {
+        if (isSettled || signal?.aborted) {
+          if (!isSettled) resolveCancelled();
+          return;
+        }
+
+        const result = await fetchTransitCell({ start, end, targetDate, targetTime, signal });
+        
+        if (!isSettled) {
+          isSettled = true;
+          resolvePromise(result);
+        }
+
+        // ODsay API 동시성 에러(컴포넌트 에러 -1)를 방지하기 위해 다음 요청 전 대기
+        await new Promise<void>((res) => {
+          const timeoutId = setTimeout(res, TRANSIT_REQUEST_STAGGER_MS);
           timeoutIds.push(timeoutId);
-          cancelers.push(() => {
-            clearTimeout(timeoutId);
-            resolveCancelled();
-          });
-        })
-      );
-      delayMs += TRANSIT_REQUEST_STAGGER_MS;
+        });
+      });
     });
   });
 
