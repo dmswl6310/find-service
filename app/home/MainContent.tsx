@@ -150,6 +150,9 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
         </section>
 
         <div className="flex flex-col gap-4 mb-16">
+          <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-foreground/60">
+            대중교통 경로는 카카오 장소 검색과 ODSAY 경로 데이터를 기준으로 계산됩니다. 일부 지역·시간대·짧은 거리 조합은 결과가 없거나 달라질 수 있습니다.
+          </p>
           <button
             type="button"
             onClick={handleCalculateClick}
