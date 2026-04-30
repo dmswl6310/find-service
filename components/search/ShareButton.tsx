@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
-import { encodeSharedLocations } from "@/utils/shareUrl";
+import { encodeSharedLocations, writeSharedDepartureTimeParams } from "@/utils/shareUrl";
 
 function copyTextWithFallback(text: string) {
   if (navigator.clipboard?.writeText) {
@@ -30,7 +30,7 @@ function copyTextWithFallback(text: string) {
 }
 
 export default function ShareButton() {
-  const { starts, ends } = useAppStore();
+  const { starts, ends, useDepartureTime, targetDate, targetTime } = useAppStore();
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
 
@@ -41,6 +41,11 @@ export default function ShareButton() {
     const url = new URL(window.location.href);
     url.searchParams.set("s", s);
     url.searchParams.set("e", e);
+    writeSharedDepartureTimeParams(url.searchParams, {
+      enabled: useDepartureTime,
+      date: targetDate,
+      time: targetTime,
+    });
 
     copyTextWithFallback(url.toString())
       .then(() => {
