@@ -3,12 +3,7 @@ import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Link from "next/link";
-import Script from "next/script";
 import AdSenseScript from "@/components/ads/AdSenseScript";
-import {
-  buildKakaoSdkScriptUrl,
-  getKakaoJsApiKey,
-} from "@/lib/external-config";
 import "./globals.css";
 
 const inter = Inter({
@@ -52,10 +47,6 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${inter.variable} h-full antialiased`}>
       <head>
-        <Script
-          strategy="beforeInteractive"
-          src={buildKakaoSdkScriptUrl(getKakaoJsApiKey())}
-        />
         <AdSenseScript />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">

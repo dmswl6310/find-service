@@ -1,4 +1,6 @@
-import MiniMap from "@/components/map/MiniMap";
+"use client";
+
+import dynamic from "next/dynamic";
 import ResultTable from "@/components/result/ResultTable";
 import LocationInput from "@/components/search/LocationInput";
 import ShareButton from "@/components/search/ShareButton";
@@ -8,6 +10,16 @@ import type { KakaoLocation } from "@/types/kakao";
 import type { TransitFetchResult } from "@/types/odsay";
 import type { CalculationProgress } from "@/hooks/useTransitMatrix";
 import { useSelectedRouteMapState } from "./useSelectedRouteMapState";
+
+const MiniMap = dynamic(() => import("@/components/map/MiniMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full min-h-[400px] w-full items-center justify-center rounded-xl border border-border bg-surface" role="status" aria-live="polite" aria-busy="true">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <span className="sr-only">지도를 준비하는 중입니다.</span>
+    </div>
+  ),
+});
 
 type MainContentProps = {
   matrixData: TransitFetchResult[];
