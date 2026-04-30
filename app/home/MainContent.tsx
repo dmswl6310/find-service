@@ -6,6 +6,7 @@ import TimeFilter from "@/components/search/TimeFilter";
 import { useAppStore } from "@/store/useAppStore";
 import type { KakaoLocation } from "@/types/kakao";
 import type { TransitFetchResult } from "@/types/odsay";
+import type { CalculationProgress } from "@/hooks/useTransitMatrix";
 import { useSelectedRouteMapState } from "./useSelectedRouteMapState";
 
 type MainContentProps = {
@@ -14,9 +15,10 @@ type MainContentProps = {
   calculateMatrix: (starts: KakaoLocation[], ends: KakaoLocation[], targetDate?: string, targetTime?: string) => Promise<void>;
   error: string | null;
   resetMatrix: () => void;
+  calculationProgress: CalculationProgress;
 };
 
-export default function MainContent({ matrixData, isCalculating, calculateMatrix, error, resetMatrix }: MainContentProps) {
+export default function MainContent({ matrixData, isCalculating, calculateMatrix, error, resetMatrix, calculationProgress }: MainContentProps) {
   const { starts, ends, addStart, removeStart, addEnd, removeEnd, useDepartureTime, targetDate, targetTime } = useAppStore();
   const { activeMapRouteId, selectedRoute, routeSegments, detailedPath, handleSelectRoute } = useSelectedRouteMapState({
     starts,
@@ -49,6 +51,17 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
     removeEnd(id);
   };
 
+  const totalCombinations = starts.length * ends.length;
+  const selectedStartName = starts.find((start) => start.id === selectedRoute?.fromId)?.place_name;
+  const selectedEndName = ends.find((end) => end.id === selectedRoute?.toId)?.place_name;
+  const calculationStatus = isCalculating
+    ? calculationProgress.total > 0
+      ? `${calculationProgress.total}개 조합을 확인 중입니다. 완료 ${calculationProgress.completed}/${calculationProgress.total}`
+      : `${totalCombinations}개 조합을 확인할 준비 중입니다.`
+    : totalCombinations > 0
+      ? `${starts.length}개 출발지와 ${ends.length}개 후보, 총 ${totalCombinations}개 경로를 비교합니다.`
+      : "출발지와 목적지 후보를 추가하면 다대다 경로를 비교합니다.";
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 w-full">
       <div className="flex-1 flex flex-col min-w-0">
@@ -67,6 +80,11 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
             친구 모임, 스터디, 회식처럼 출발지가 제각각일 때 여러명 거리비교와
             후보 장소별 중간거리 판단을 한 번에 도와줍니다.
           </p>
+          <ol className="mt-5 grid gap-2 text-left text-xs font-medium text-foreground/65 sm:grid-cols-3">
+            <li className="rounded-2xl border border-border bg-surface px-3 py-2">1. 각자 출발지를 추가</li>
+            <li className="rounded-2xl border border-border bg-surface px-3 py-2">2. 만날 후보 장소를 추가</li>
+            <li className="rounded-2xl border border-border bg-surface px-3 py-2">3. 황금 밸런스와 상세 경로 비교</li>
+          </ol>
         </header>
 
         <TimeFilter />
@@ -84,7 +102,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                 {starts.length}개
               </span>
             </div>
-            <LocationInput placeholder="출발지 추가" onSelect={handleAddStart} />
+            <LocationInput placeholder="출발지 추가" helperText="예: 강남역, 홍대입구역, 회사 주소" onSelect={handleAddStart} />
             <ul
               className={`mt-1 flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 ${starts.length > 0 ? "border-sky-400/30 bg-white/60" : "border-sky-300/30 bg-white/40"}`}
             >
@@ -98,7 +116,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                     type="button"
                     onClick={() => handleRemoveStart(start.id)}
                     className="rounded-full p-0.5 hover:bg-sky-500/15"
-                    aria-label="제거"
+                    aria-label={`${start.place_name} 출발지 제거`}
                   >
                     <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -106,7 +124,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                   </button>
                 </li>
               ))}
-              {starts.length === 0 && <li className="text-sm text-sky-900/45">출발지 추가</li>}
+              {starts.length === 0 && <li className="text-sm text-sky-900/45">친구들이 출발하는 역이나 장소를 추가해 주세요.</li>}
             </ul>
           </div>
 
@@ -122,7 +140,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                 {ends.length}개
               </span>
             </div>
-            <LocationInput placeholder="목적지 후보 추가" onSelect={handleAddEnd} />
+            <LocationInput placeholder="목적지 후보 추가" helperText="예: 성수동, 종로3가역, 예약하려는 식당" onSelect={handleAddEnd} />
             <ul
               className={`mt-1 flex min-h-16 flex-wrap gap-2 rounded-2xl border border-dashed px-3 py-3 ${ends.length > 0 ? "border-emerald-400/30 bg-white/60" : "border-emerald-300/30 bg-white/40"}`}
             >
@@ -136,7 +154,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                     type="button"
                     onClick={() => handleRemoveEnd(end.id)}
                     className="rounded-full p-0.5 hover:bg-emerald-500/15"
-                    aria-label="제거"
+                    aria-label={`${end.place_name} 목적지 후보 제거`}
                   >
                     <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -144,7 +162,7 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
                   </button>
                 </li>
               ))}
-              {ends.length === 0 && <li className="text-sm text-emerald-900/45">목적지 후보 추가</li>}
+              {ends.length === 0 && <li className="text-sm text-emerald-900/45">비교하고 싶은 약속 장소 후보를 추가해 주세요.</li>}
             </ul>
           </div>
         </section>
@@ -152,6 +170,9 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
         <div className="flex flex-col gap-4 mb-16">
           <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-xs leading-5 text-foreground/60">
             대중교통 경로는 카카오 장소 검색과 ODSAY 경로 데이터를 기준으로 계산됩니다. 일부 지역·시간대·짧은 거리 조합은 결과가 없거나 달라질 수 있습니다.
+          </p>
+          <p className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm font-medium text-primary" role="status" aria-live="polite">
+            {calculationStatus}
           </p>
           <button
             type="button"
@@ -193,6 +214,11 @@ export default function MainContent({ matrixData, isCalculating, calculateMatrix
             <span className="h-0.5 w-4 rounded-full bg-primary" />
             선택 경로
           </span>
+          {selectedRoute && selectedStartName && selectedEndName && (
+            <span className="basis-full rounded-xl bg-primary/5 px-2.5 py-1.5 text-primary sm:basis-auto">
+              현재 선택: {selectedStartName} → {selectedEndName}
+            </span>
+          )}
         </div>
         <div className="sticky top-8 h-[400px] lg:h-[calc(100vh-4rem)] rounded-xl overflow-hidden shadow-lg border border-border">
           <MiniMap

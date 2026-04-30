@@ -8,6 +8,11 @@ import type { TransitFetchResult } from "@/types/odsay";
 const TRANSIT_REQUEST_STAGGER_MS = 250;
 const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.";
 
+export type CalculationProgress = {
+  completed: number;
+  total: number;
+};
+
 async function fetchTransitCell(params: {
   start: KakaoLocation;
   end: KakaoLocation;
@@ -150,6 +155,7 @@ export function useTransitMatrix() {
   const [matrixData, setMatrixData] = useState<TransitFetchResult[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [calculationProgress, setCalculationProgress] = useState<CalculationProgress>({ completed: 0, total: 0 });
   const calculationSeqRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const timeoutIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -174,6 +180,7 @@ export function useTransitMatrix() {
     setMatrixData([]);
     setError(null);
     setIsCalculating(false);
+    setCalculationProgress({ completed: 0, total: 0 });
   };
 
   const calculateMatrix = async (
@@ -189,6 +196,8 @@ export function useTransitMatrix() {
 
     setIsCalculating(true);
     setError(null);
+    setMatrixData([]);
+    setCalculationProgress({ completed: 0, total: starts.length * ends.length });
     const calculationSeq = ++calculationSeqRef.current;
     cancelPendingRequests();
     const abortController = new AbortController();
@@ -207,8 +216,20 @@ export function useTransitMatrix() {
     });
 
     try {
-      // 병렬 요청으로 시간 단축 (최적화 포인트)
-      const results = await Promise.all(fetchPromises);
+      const results = await Promise.all(
+        fetchPromises.map((promise) =>
+          promise.then((result) => {
+            if (calculationSeq === calculationSeqRef.current) {
+              setCalculationProgress((current) => ({
+                completed: Math.min(current.completed + 1, current.total),
+                total: current.total,
+              }));
+            }
+
+            return result;
+          })
+        )
+      );
       if (calculationSeq !== calculationSeqRef.current) {
         return;
       }
@@ -233,5 +254,5 @@ export function useTransitMatrix() {
     }
   };
 
-  return { matrixData, isCalculating, calculateMatrix, error, resetMatrix, setMatrixData };
+  return { matrixData, isCalculating, calculateMatrix, error, resetMatrix, setMatrixData, calculationProgress };
 }
