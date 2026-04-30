@@ -22,7 +22,12 @@ function isTransitApiErrorPayload(data: unknown): data is TransitApiErrorPayload
 }
 
 function isTransitApiSuccessPayload(data: unknown): data is TransitApiSuccessPayload {
-  return typeof data === "object" && data !== null;
+  if (typeof data !== "object" || data === null) return false;
+  const payload = data as TransitApiSuccessPayload;
+
+  if (payload.walkOnly) return true;
+
+  return typeof payload.totalTime === "number" && typeof payload.payment === "number";
 }
 
 function createErrorResult(params: {

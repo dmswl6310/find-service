@@ -3,6 +3,10 @@ import { TransitApiError, fetchTransitRoute } from "@/lib/odsay";
 import { getOdsayErrorEntry, getOdsayRouteErrorStatus, normalizeOdsayErrorPayload } from "@/lib/odsay-error";
 import { OdsayPath, TransitApiErrorPayload } from "@/types/odsay";
 
+function isValidOdsayPath(path: OdsayPath | undefined): path is OdsayPath {
+  return Boolean(path?.info && typeof path.info.totalTime === "number" && typeof path.info.payment === "number");
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const sx = searchParams.get("sx");
@@ -111,6 +115,23 @@ export async function GET(request: NextRequest) {
 
   // 첫 번째 추천 경로 반환 (보통 최단/최적 순)
   const bestPath = paths[0];
+  if (!isValidOdsayPath(bestPath)) {
+    const invalidPath = bestPath as { info?: unknown } | undefined;
+
+    console.error("[transit][route] Invalid ODsay route payload", {
+      hasPath: Boolean(bestPath),
+      hasInfo: Boolean(invalidPath?.info),
+    });
+
+    return NextResponse.json(
+      {
+        error: "대중교통 경로 응답 형식이 올바르지 않습니다.",
+        errorStatus: 502,
+        errorSource: "odsay",
+      } satisfies TransitApiErrorPayload,
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json({
     totalTime: bestPath.info.totalTime,
