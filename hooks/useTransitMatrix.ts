@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createTransitClientExceptionResult, parseTransitApiResult } from "@/lib/transitFetchAdapter";
 import type { KakaoLocation } from "@/types/kakao";
 import type { TransitFetchResult } from "@/types/odsay";
@@ -8,21 +8,30 @@ import type { TransitFetchResult } from "@/types/odsay";
 const TRANSIT_REQUEST_STAGGER_MS = 250;
 const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.";
 
-function buildTransitTimeParams(targetDate?: string, targetTime?: string) {
-  return targetDate && targetTime ? `&date=${targetDate}&time=${targetTime}` : "";
-}
-
 async function fetchTransitCell(params: {
   start: KakaoLocation;
   end: KakaoLocation;
   targetDate?: string;
   targetTime?: string;
+  signal?: AbortSignal;
 }): Promise<TransitFetchResult> {
-  const { start, end, targetDate, targetTime } = params;
-  const timeParams = buildTransitTimeParams(targetDate, targetTime);
+  const { start, end, targetDate, targetTime, signal } = params;
+  const searchParams = new URLSearchParams({
+    sx: start.x,
+    sy: start.y,
+    ex: end.x,
+    ey: end.y,
+  });
+
+  if (targetDate && targetTime) {
+    searchParams.set("date", targetDate);
+    searchParams.set("time", targetTime);
+  }
 
   try {
-    const response = await fetch(`/api/transit?sx=${start.x}&sy=${start.y}&ex=${end.x}&ey=${end.y}${timeParams}`);
+    const response = await fetch(`/api/transit?${searchParams.toString()}`, {
+      signal,
+    });
     const data = await response.json().catch(() => null);
     const parsedResult = parseTransitApiResult({
       fromId: start.id,
@@ -58,6 +67,14 @@ async function fetchTransitCell(params: {
 
     return parsedResult.result;
   } catch (caughtError: unknown) {
+    if (caughtError instanceof DOMException && caughtError.name === "AbortError") {
+      return createTransitClientExceptionResult({
+        fromId: start.id,
+        toId: end.id,
+        caughtError: new Error("요청이 취소되었습니다."),
+      });
+    }
+
     console.error("[transit] Transit request exception", {
       fromId: start.id,
       toId: end.id,
@@ -79,8 +96,11 @@ function createStaggeredTransitRequests(params: {
   ends: KakaoLocation[];
   targetDate?: string;
   targetTime?: string;
+  signal?: AbortSignal;
+  timeoutIds: ReturnType<typeof setTimeout>[];
+  cancelers: (() => void)[];
 }): Promise<TransitFetchResult>[] {
-  const { starts, ends, targetDate, targetTime } = params;
+  const { starts, ends, targetDate, targetTime, signal, timeoutIds, cancelers } = params;
   const requests: Promise<TransitFetchResult>[] = [];
   let delayMs = 0;
 
@@ -88,9 +108,35 @@ function createStaggeredTransitRequests(params: {
     ends.forEach((end) => {
       requests.push(
         new Promise<TransitFetchResult>((resolve) => {
-          setTimeout(() => {
-            void fetchTransitCell({ start, end, targetDate, targetTime }).then(resolve);
+          let settled = false;
+          const resolveCancelled = () => {
+            if (settled) return;
+            settled = true;
+            resolve(createTransitClientExceptionResult({
+              fromId: start.id,
+              toId: end.id,
+              caughtError: new Error("요청이 취소되었습니다."),
+            }));
+          };
+
+          if (signal?.aborted) {
+            resolveCancelled();
+            return;
+          }
+
+          const timeoutId = setTimeout(() => {
+            void fetchTransitCell({ start, end, targetDate, targetTime, signal }).then((result) => {
+              if (settled) return;
+              settled = true;
+              resolve(result);
+            });
           }, delayMs);
+
+          timeoutIds.push(timeoutId);
+          cancelers.push(() => {
+            clearTimeout(timeoutId);
+            resolveCancelled();
+          });
         })
       );
       delayMs += TRANSIT_REQUEST_STAGGER_MS;
@@ -105,9 +151,26 @@ export function useTransitMatrix() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const calculationSeqRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const timeoutIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const cancelersRef = useRef<(() => void)[]>([]);
+
+  const cancelPendingRequests = () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    timeoutIdsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+    timeoutIdsRef.current = [];
+    cancelersRef.current.forEach((cancel) => cancel());
+    cancelersRef.current = [];
+  };
+
+  useEffect(() => {
+    return () => cancelPendingRequests();
+  }, []);
 
   const resetMatrix = () => {
     calculationSeqRef.current += 1;
+    cancelPendingRequests();
     setMatrixData([]);
     setError(null);
     setIsCalculating(false);
@@ -127,12 +190,20 @@ export function useTransitMatrix() {
     setIsCalculating(true);
     setError(null);
     const calculationSeq = ++calculationSeqRef.current;
+    cancelPendingRequests();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    timeoutIdsRef.current = [];
+    cancelersRef.current = [];
 
     const fetchPromises = createStaggeredTransitRequests({
       starts,
       ends,
       targetDate,
       targetTime,
+      signal: abortController.signal,
+      timeoutIds: timeoutIdsRef.current,
+      cancelers: cancelersRef.current,
     });
 
     try {
@@ -141,6 +212,10 @@ export function useTransitMatrix() {
       if (calculationSeq !== calculationSeqRef.current) {
         return;
       }
+
+      abortControllerRef.current = null;
+      timeoutIdsRef.current = [];
+      cancelersRef.current = [];
 
       setMatrixData(results);
 
