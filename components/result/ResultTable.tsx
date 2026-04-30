@@ -111,9 +111,23 @@ export default function ResultTable({ starts, ends, matrixData, isCalculating, o
                 <th key={end.id} className="p-2 min-w-[140px] font-semibold border-r border-border last:border-0 align-bottom">
                   <div className="flex flex-col items-center justify-end h-full min-h-[48px] pb-2">
                     {fairestEndId === end.id ? (
-                      <span className="mb-1.5 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-bounce">
-                        👑 황금 밸런스
-                      </span>
+                      <div className="mb-1.5 flex items-center gap-1.5">
+                        <span className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-bounce">
+                          👑 황금 밸런스
+                        </span>
+                        <div className="group/tooltip relative">
+                          <button
+                            type="button"
+                            aria-label="황금 밸런스 설명 보기"
+                            className="flex h-4 w-4 items-center justify-center rounded-full border border-amber-300/80 bg-white/90 text-[10px] font-bold leading-none text-amber-700 shadow-sm transition-colors hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-400/70"
+                          >
+                            i
+                          </button>
+                          <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-44 -translate-x-1/2 rounded-lg border border-border bg-popover px-3 py-2 text-left text-[11px] font-medium leading-relaxed text-popover-foreground shadow-lg opacity-0 transition-all duration-150 group-hover/tooltip:translate-y-0 group-hover/tooltip:opacity-100 group-focus-within/tooltip:translate-y-0 group-focus-within/tooltip:opacity-100">
+                            가장 빠른 곳이 아니라, 여러 출발지 기준으로 가장 균형이 좋은 도착지예요.
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       // 높이 유지를 위한 빈 공간
                       <div className="h-5 mb-1.5"></div>
