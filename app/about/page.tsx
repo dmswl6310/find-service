@@ -10,9 +10,26 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  name: "서비스 소개 | 모두스팟",
+  description: "모두스팟이 제공하는 대중교통 약속 장소 비교 기능, 데이터 출처, 개인정보 처리 원칙을 소개합니다.",
+  url: "https://moduspot.vercel.app/about",
+  publisher: {
+    "@type": "Organization",
+    name: "모두스팟",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://moduspot.vercel.app/icon",
+    },
+  },
+};
+
 export default function AboutPage() {
   return (
     <main className="flex-1 w-full max-w-[900px] mx-auto p-6 md:p-10 mb-20 mt-4 md:mt-8 bg-surface rounded-3xl shadow-sm border border-border">
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       <article className="prose prose-slate prose-lg max-w-none">
         <header className="mb-10 border-b border-border pb-8">
           <p className="mb-3 text-sm font-bold text-primary">About</p>
