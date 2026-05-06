@@ -18,6 +18,26 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: "여러 출발지가 있을 때 중간 약속 장소를 공정하게 고르는 방법",
+  description: "모임 장소를 정할 때 이동시간, 환승, 막차, 접근성을 함께 비교하는 실전 가이드입니다.",
+  author: {
+    "@type": "Person",
+    name: "모두스팟",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "모두스팟",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://moduspot.vercel.app/icon",
+    },
+  },
+  datePublished: "2026-04-28",
+};
+
 const checklist = [
   "모든 참석자의 출발지를 같은 기준으로 입력합니다.",
   "후보 장소는 역 이름만이 아니라 실제 만나는 건물·상권명까지 확인합니다.",
@@ -28,6 +48,7 @@ const checklist = [
 export default function TipsPage() {
   return (
     <main className="flex-1 w-full max-w-[960px] mx-auto p-6 md:p-10 mb-20 mt-4 md:mt-8 bg-surface rounded-3xl shadow-sm border border-border">
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       <article className="prose prose-slate prose-lg max-w-none">
         <header className="mb-10 border-b border-border pb-8">
           <p className="mb-3 text-sm font-bold text-primary">모두스팟 활용 가이드</p>
