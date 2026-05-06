@@ -83,6 +83,9 @@ export default function RootLayout({
               <Link href="/multi-route" className="hover:text-primary transition-colors">
                 다대다 비교
               </Link>
+              <Link href="/story" className="hover:text-primary transition-colors">
+                모두스팟 이야기
+              </Link>
               <Link href="/about" className="hover:text-primary transition-colors">
                 서비스 소개
               </Link>
@@ -131,6 +134,13 @@ export default function RootLayout({
                   className="hover:text-primary transition-colors"
                 >
                   다대다 비교
+                </Link>
+                <span className="text-border">|</span>
+                <Link
+                  href="/story"
+                  className="hover:text-primary transition-colors"
+                >
+                  모두스팟 이야기
                 </Link>
                 <span className="text-border">|</span>
                 <Link

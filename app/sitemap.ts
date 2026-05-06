@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://moduspot.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-04-30");
+  const lastModified = new Date("2026-05-06");
 
   return [
     {
@@ -29,6 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "monthly",
       priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/story`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.75,
     },
     {
       url: `${baseUrl}/about`,
