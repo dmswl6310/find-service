@@ -73,6 +73,18 @@ export default function AboutPage() {
               정리되어 있습니다.
             </p>
           </div>
+
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">만들게 된 이야기</h2>
+            <p>
+              모두스팟은 여러 클라이밍장 후보를 대중교통으로 비교하고 싶었던 개인적인
+              불편함에서 시작했습니다. 왜 이 서비스를 만들게 되었는지는
+              <Link href="/story" className="font-bold text-primary hover:underline">
+                {" "}모두스팟 이야기
+              </Link>
+              에 정리해두었습니다.
+            </p>
+          </div>
         </section>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
