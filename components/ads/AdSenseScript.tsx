@@ -1,5 +1,3 @@
-import Script from "next/script";
-
 export default function AdSenseScript() {
   const adClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
@@ -9,11 +7,10 @@ export default function AdSenseScript() {
   }
 
   return (
-    <Script
+    <script
       async
       src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClientId}`}
       crossOrigin="anonymous"
-      strategy="afterInteractive"
     />
   );
 }
