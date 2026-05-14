@@ -88,6 +88,77 @@ export default function MultiRoutePage() {
           </div>
 
           <div>
+            <h2 className="text-2xl font-bold text-foreground">예시: 3개 출발지와 4개 후보지를 비교하면</h2>
+            <p>
+              출발지가 강남, 홍대, 잠실이고 목적지 후보가 성수, 을지로, 신촌, 왕십리라면
+              총 12개 경로를 비교하게 됩니다. 일반 지도 앱에서 이 조합을 하나씩 확인하면
+              같은 검색을 여러 번 반복해야 하지만, 모두스팟은 한 표에서 각 조합의 시간을
+              나란히 보여줍니다.
+            </p>
+            <div className="overflow-x-auto rounded-2xl border border-border bg-background/70 not-prose">
+              <table className="min-w-full text-sm text-foreground/75">
+                <thead className="bg-surface text-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold">출발지</th>
+                    <th className="px-4 py-3 text-left font-bold">성수</th>
+                    <th className="px-4 py-3 text-left font-bold">을지로</th>
+                    <th className="px-4 py-3 text-left font-bold">신촌</th>
+                    <th className="px-4 py-3 text-left font-bold">왕십리</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-semibold text-foreground">강남</td>
+                    <td className="px-4 py-3">28분</td>
+                    <td className="px-4 py-3">32분</td>
+                    <td className="px-4 py-3">41분</td>
+                    <td className="px-4 py-3">35분</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-semibold text-foreground">홍대</td>
+                    <td className="px-4 py-3">46분</td>
+                    <td className="px-4 py-3">34분</td>
+                    <td className="px-4 py-3">12분</td>
+                    <td className="px-4 py-3">42분</td>
+                  </tr>
+                  <tr className="border-t border-border">
+                    <td className="px-4 py-3 font-semibold text-foreground">잠실</td>
+                    <td className="px-4 py-3">30분</td>
+                    <td className="px-4 py-3">38분</td>
+                    <td className="px-4 py-3">58분</td>
+                    <td className="px-4 py-3">34분</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              위처럼 숫자를 나란히 보면 신촌은 홍대 출발자에게는 매우 가깝지만 잠실
+              출발자에게는 부담이 큽니다. 반대로 성수나 을지로는 평균과 최장 시간이 더
+              안정적일 수 있습니다. 실제 서비스에서는 사용자가 입력한 장소와 시간 기준으로
+              이런 판단을 도와줍니다.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">이 기능이 특히 유용한 경우</h2>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>친구 모임처럼 참석자들이 서로 다른 지역에서 출발할 때</li>
+              <li>클라이밍장, 식당, 카페, 스터디룸 후보를 여러 개 두고 고민할 때</li>
+              <li>한 사람이 계속 먼 곳까지 이동하는 상황을 피하고 싶을 때</li>
+              <li>공유 링크로 같은 조건을 보며 의견을 모아야 할 때</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">사용하지 않는 편이 나은 경우</h2>
+            <p>
+              이미 장소가 하나로 확정되어 있고 단순히 그 장소까지의 상세 길찾기만 필요하다면
+              일반 지도 앱이 더 적합합니다. 모두스팟은 “어디로 갈지 아직 정하지 못한 상황”에서
+              여러 후보를 공정하게 비교하기 위한 도구입니다.
+            </p>
+          </div>
+
+          <div>
             <h2 className="text-2xl font-bold text-foreground">검색어별로 찾는 기능</h2>
             <dl className="space-y-4">
               <div>

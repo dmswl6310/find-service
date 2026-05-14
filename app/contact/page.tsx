@@ -23,6 +23,7 @@ export default function ContactPage() {
           <p className="text-foreground/65 leading-8">
             서비스 오류, 경로 데이터 문제, 개인정보 및 광고 관련 문의를 익명으로
             보낼 수 있습니다. 답변이 필요하면 이메일만 선택적으로 남겨주세요.
+            메일 폼이 동작하지 않는 경우에는 아래 대체 연락처로도 문의할 수 있습니다.
           </p>
         </header>
 
@@ -36,6 +37,20 @@ export default function ContactPage() {
               <li>선택한 날짜와 시간</li>
               <li>오류 메시지 또는 문제가 발생한 화면</li>
               <li>브라우저와 기기 종류</li>
+            </ul>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-background/70 p-6">
+            <h2 className="mt-0 text-xl font-bold text-foreground">대체 연락처와 답변 기준</h2>
+            <p>
+              문의 폼 전송이 실패하거나 답변이 꼭 필요한 경우 아래 이메일로 직접 연락할 수
+              있습니다. 서비스 오류와 개인정보 관련 요청은 확인 후 가능한 범위에서 답변합니다.
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>운영자: Eunji</li>
+              <li>이메일: <a href="mailto:dmswl6310@gmail.com" className="font-bold text-primary hover:underline">dmswl6310@gmail.com</a></li>
+              <li>일반 문의 예상 답변 시간: 영업일 기준 3~5일</li>
+              <li>경로 결과 오류는 외부 API 상태와 입력 장소를 함께 확인한 뒤 검토합니다.</li>
             </ul>
           </div>
         </section>

@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "서비스 소개 | 모두스팟",
   description:
-    "모두스팟이 제공하는 대중교통 약속 장소 비교 기능, 데이터 출처, 개인정보 처리 원칙을 소개합니다.",
+    "모두스팟이 제공하는 대중교통 약속 장소 비교 기능, 운영 방식, 데이터 출처, 개인정보 처리 원칙을 소개합니다.",
   alternates: {
     canonical: "/about",
   },
@@ -14,7 +14,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "AboutPage",
   name: "서비스 소개 | 모두스팟",
-  description: "모두스팟이 제공하는 대중교통 약속 장소 비교 기능, 데이터 출처, 개인정보 처리 원칙을 소개합니다.",
+  description: "모두스팟이 제공하는 대중교통 약속 장소 비교 기능, 운영 방식, 데이터 출처, 개인정보 처리 원칙을 소개합니다.",
   url: "https://moduspot.vercel.app/about",
   publisher: {
     "@type": "Organization",
@@ -65,12 +65,36 @@ export default function AboutPage() {
           </div>
 
           <div>
+            <h2 className="text-2xl font-bold text-foreground">운영 방식</h2>
+            <p>
+              모두스팟은 개인 개발자 Eunji가 운영하는 무료 웹 서비스입니다. 회원가입 없이
+              사용할 수 있도록 만들었고, 약속 장소를 정할 때 반복되는 대중교통 검색을 줄이는
+              데 초점을 맞추고 있습니다. 서비스 품질 개선을 위해 오류 제보와 개선 의견을
+              문의 페이지에서 받고 있습니다.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">서비스의 한계</h2>
+            <p>
+              계산 결과는 외부 교통 데이터와 장소 검색 결과를 바탕으로 한 참고 정보입니다.
+              실제 배차, 지연, 막차, 도보 접근성, 엘리베이터나 에스컬레이터 이용 가능 여부는
+              현장 상황에 따라 달라질 수 있습니다. 중요한 일정에서는 최종 이동 전 공식 교통
+              정보를 함께 확인해주세요.
+            </p>
+          </div>
+
+          <div>
             <h2 className="text-2xl font-bold text-foreground">개인정보와 광고</h2>
             <p>
               모두스팟은 회원가입 없이 사용할 수 있으며, 이름이나 연락처를 직접
               입력받지 않습니다. 서비스 운영과 품질 개선을 위해 분석 도구와 광고
               서비스가 쿠키를 사용할 수 있으며 자세한 내용은 개인정보처리방침에
               정리되어 있습니다.
+            </p>
+            <p>
+              광고는 무료 서비스 운영비를 충당하기 위한 수단이며, 본문을 가리거나 주요
+              버튼 클릭을 방해하는 방식으로 배치하지 않는 것을 원칙으로 합니다.
             </p>
           </div>
 
