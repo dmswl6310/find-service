@@ -30,6 +30,10 @@ vi.mock("@/lib/odsay", () => ({
   fetchTransitRoute: mockFetchTransitRoute,
 }));
 
+vi.mock("@/lib/transitRequestLimiter", () => ({
+  scheduleTransitRequest: (task: () => Promise<unknown>) => task(),
+}));
+
 import { GET } from "@/app/api/transit/route";
 
 describe("GET /api/transit", () => {

@@ -71,6 +71,65 @@ test("share URL round-trip restores chips and auto-runs calculation", async ({ p
   expect(graphicCalls).toBeGreaterThanOrEqual(0);
 });
 
+test("transit matrix uses the stable C3/S500 browser schedule", async ({ page }: { page: Page }) => {
+  const startedAt: number[] = [];
+  const releaseRequests: Array<() => void> = [];
+  let activeRequests = 0;
+  let maxActiveRequests = 0;
+
+  await page.route("**/api/transit?**", async (route: Route) => {
+    startedAt.push(Date.now());
+    activeRequests += 1;
+    maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
+
+    await new Promise<void>((resolve) => {
+      releaseRequests.push(resolve);
+    });
+
+    activeRequests -= 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        totalTime: 15,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [],
+        mapObj: "scheduled-route",
+      }),
+    });
+  });
+
+  const starts = [{ id: "s1", place_name: "start-a", x: "127.0276", y: "37.4979" }];
+  const ends = [
+    { id: "e1", place_name: "end-1", x: "126.9237", y: "37.5563" },
+    { id: "e2", place_name: "end-2", x: "127.0447", y: "37.5447" },
+    { id: "e3", place_name: "end-3", x: "126.9707", y: "37.5546" },
+    { id: "e4", place_name: "end-4", x: "126.9240", y: "37.5216" },
+  ];
+
+  await page.goto(`/?s=${encodeShareParam(starts)}&e=${encodeShareParam(ends)}`);
+
+  await expect.poll(() => startedAt.length).toBe(3);
+  expect(startedAt[1] - startedAt[0]).toBeGreaterThanOrEqual(450);
+  expect(startedAt[2] - startedAt[1]).toBeGreaterThanOrEqual(450);
+  expect(maxActiveRequests).toBe(3);
+
+  await page.waitForTimeout(550);
+  expect(startedAt).toHaveLength(3);
+
+  releaseRequests.shift()?.();
+  await expect.poll(() => startedAt.length).toBe(4);
+  expect(maxActiveRequests).toBe(3);
+
+  while (releaseRequests.length > 0) {
+    releaseRequests.shift()?.();
+  }
+
+  await expect(page.getByText("15분").first()).toBeVisible();
+});
+
 test("share button copies a restorable URL with Korean place names", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 

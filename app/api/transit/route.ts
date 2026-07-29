@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { TransitApiError, fetchTransitRoute } from "@/lib/odsay";
 import { getOdsayErrorEntry, getOdsayRouteErrorStatus, normalizeOdsayErrorPayload } from "@/lib/odsay-error";
+import { scheduleTransitRequest } from "@/lib/transitRequestLimiter";
 import { OdsayPath, TransitApiErrorPayload } from "@/types/odsay";
 
 function isValidOdsayPath(path: OdsayPath | undefined): path is OdsayPath {
@@ -26,7 +27,10 @@ export async function GET(request: NextRequest) {
   let data;
 
   try {
-    data = await fetchTransitRoute(sx, sy, ex, ey, date || undefined, time || undefined);
+    data = await scheduleTransitRequest(
+      () => fetchTransitRoute(sx, sy, ex, ey, date || undefined, time || undefined),
+      request.signal
+    );
   } catch (error) {
     if (error instanceof TransitApiError) {
       const errorPayload: TransitApiErrorPayload = {

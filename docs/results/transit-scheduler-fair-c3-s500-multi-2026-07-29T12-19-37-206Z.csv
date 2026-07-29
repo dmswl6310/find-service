@@ -1,0 +1,3 @@
+runId,label,caseId,iteration,sessions,schedulerScope,concurrency,minStartGapMs,completionCooldownMs,maxStartsPerWindow,windowMs,totalRequests,unscheduledRequests,totalDurationMs,successCount,walkOnlyCount,noRouteCount,http429Count,odsayMinus1Count,http5xxCount,otherErrorCount,responseAverageMs,responseP50Ms,responseP95Ms,responseMaxMs,startGapMinMs,startGapP50Ms,startGapP95Ms,maxObservedGlobalConcurrency,maxObservedStartsPerSecond,stopReason
+fair-c3-s500-multi-3x3-1,fair-c3-s500-multi,3x3,1,2,global,3,500,0,0,1000,18,0,9110,18,0,0,0,0,0,0,675,457,1549,1549,500,510,530,3,2,
+fair-c3-s500-multi-3x3-2,fair-c3-s500-multi,3x3,2,2,global,3,500,0,0,1000,18,0,9034,18,0,0,0,0,0,0,642,433,1464,1464,500,503,515,3,2,

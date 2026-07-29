@@ -1,0 +1,4 @@
+runId,label,caseId,iteration,sessions,schedulerScope,concurrency,minStartGapMs,completionCooldownMs,maxStartsPerWindow,windowMs,totalRequests,unscheduledRequests,totalDurationMs,successCount,walkOnlyCount,noRouteCount,http429Count,odsayMinus1Count,http5xxCount,otherErrorCount,responseAverageMs,responseP50Ms,responseP95Ms,responseMaxMs,startGapMinMs,startGapP50Ms,startGapP95Ms,maxObservedGlobalConcurrency,maxObservedStartsPerSecond,stopReason
+fair-c2-s500-single-5x5-1,fair-c2-s500-single,5x5,1,1,global,2,500,0,0,1000,25,0,14338,25,0,0,0,0,0,0,699,610,2179,2417,500,511,610,2,2,
+fair-c2-s500-single-5x5-2,fair-c2-s500-single,5x5,2,1,global,2,500,0,0,1000,25,0,13335,25,0,0,0,0,0,0,582,442,1263,1500,500,511,515,2,2,
+fair-c2-s500-single-5x5-3,fair-c2-s500-single,5x5,3,1,global,2,500,0,0,1000,25,0,13222,25,0,0,0,0,0,0,586,442,1309,1478,500,502,515,2,2,

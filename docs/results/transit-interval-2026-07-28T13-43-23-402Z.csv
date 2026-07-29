@@ -1,0 +1,5 @@
+runId,caseId,intervalMs,iteration,starts,ends,totalRequests,totalDurationMs,successCount,walkOnlyCount,noRouteCount,http429Count,odsayMinus1Count,http5xxCount,otherErrorCount,responseAverageMs,responseP50Ms,responseP95Ms,responseMaxMs,startGapMinMs,startGapAverageMs,startGapMaxMs
+6x6-250ms-1,6x6,250,1,6,6,36,34795,36,0,0,0,0,0,0,716,634,1042,1645,675,966,1901
+8x8-250ms-1,8x8,250,1,8,8,64,70729,64,0,0,0,0,0,0,852,835,1279,1534,684,1110,1792
+6x6-0ms-1,6x6,0,1,6,6,36,21445,36,0,0,0,0,0,0,596,618,1023,1472,417,590,1472
+8x8-0ms-1,8x8,0,1,8,8,64,44637,64,0,0,0,0,0,0,697,638,1256,1515,423,699,1515

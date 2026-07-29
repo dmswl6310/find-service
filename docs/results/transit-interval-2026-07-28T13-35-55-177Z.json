@@ -1,0 +1,232 @@
+{
+  "experimentStartedAt": "2026-07-28T13:35:55.177Z",
+  "experimentCompletedAt": "2026-07-28T13:36:09.429Z",
+  "config": {
+    "baseUrl": "https://moduspot.vercel.app",
+    "intervals": [
+      1000,
+      500,
+      250,
+      150,
+      100,
+      50,
+      0
+    ],
+    "cases": [
+      "1x1"
+    ],
+    "repeats": 1,
+    "budget": 7,
+    "cooldownMs": 2000,
+    "timeoutMs": 30000,
+    "outputDir": "docs/results"
+  },
+  "plannedRequests": 7,
+  "executedRequests": 7,
+  "stoppedEarly": false,
+  "runs": [
+    {
+      "runId": "1x1-1000ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 1000,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:35:55.181Z",
+      "totalDurationMs": 1097,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:35:55.182Z",
+          "completedAt": "2026-07-28T13:35:55.274Z",
+          "startGapMs": null,
+          "durationMs": 92,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    },
+    {
+      "runId": "1x1-500ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 500,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:35:58.291Z",
+      "totalDurationMs": 514,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:35:58.291Z",
+          "completedAt": "2026-07-28T13:35:58.294Z",
+          "startGapMs": null,
+          "durationMs": 3,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    },
+    {
+      "runId": "1x1-250ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 250,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:00.807Z",
+      "totalDurationMs": 257,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:00.808Z",
+          "completedAt": "2026-07-28T13:36:00.810Z",
+          "startGapMs": null,
+          "durationMs": 2,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    },
+    {
+      "runId": "1x1-150ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 150,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:03.068Z",
+      "totalDurationMs": 166,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:03.068Z",
+          "completedAt": "2026-07-28T13:36:03.070Z",
+          "startGapMs": null,
+          "durationMs": 2,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    },
+    {
+      "runId": "1x1-100ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 100,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:05.247Z",
+      "totalDurationMs": 104,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:05.247Z",
+          "completedAt": "2026-07-28T13:36:05.250Z",
+          "startGapMs": null,
+          "durationMs": 3,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    },
+    {
+      "runId": "1x1-50ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 50,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:07.351Z",
+      "totalDurationMs": 60,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:07.352Z",
+          "completedAt": "2026-07-28T13:36:07.354Z",
+          "startGapMs": null,
+          "durationMs": 2,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    },
+    {
+      "runId": "1x1-0ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 0,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:09.426Z",
+      "totalDurationMs": 2,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:09.426Z",
+          "completedAt": "2026-07-28T13:36:09.428Z",
+          "startGapMs": null,
+          "durationMs": 2,
+          "status": null,
+          "errorCode": null,
+          "errorSource": "client",
+          "classification": "network-error",
+          "totalTime": null,
+          "errorMessage": "fetch failed"
+        }
+      ]
+    }
+  ]
+}
