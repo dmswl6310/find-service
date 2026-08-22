@@ -47,14 +47,14 @@ export default function RouteMatrix({
 }: RouteMatrixProps) {
   if (starts.length === 0 || ends.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border bg-surface-raised p-5 text-sm text-text-muted">
+      <p className="rounded-lg border border-dashed border-border bg-surface-raised p-5 text-sm text-text-muted">
         출발지와 후보지를 추가하면 경로표가 나타납니다.
       </p>
     );
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
+    <div className="w-full overflow-x-auto rounded-lg border border-border bg-surface">
       <table className="w-full min-w-max border-collapse text-left text-sm">
         <caption className="sr-only">출발지별 후보지 경로 비교</caption>
         <thead>

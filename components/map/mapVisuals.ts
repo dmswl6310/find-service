@@ -53,7 +53,7 @@ function buildOriginMarker(order: number, width: number, height: number, opacity
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
       <g opacity="${opacity}">
         <circle cx="${center}" cy="${height / 2}" r="${Math.min(width, height) / 2 - 2}" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="2"/>
-        <text x="${center}" y="${height / 2 + 4}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="white">${Math.max(1, Math.trunc(order))}</text>
+        <text x="${center}" y="${height / 2 + 4}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="white">${Math.max(1, Math.trunc(order))}</text>
       </g>
     </svg>
   `.trim();
@@ -69,7 +69,7 @@ function buildCandidateMarker(order: number, width: number, height: number, opac
       <g opacity="${opacity}">
         <path d="M${center - 5} ${bodyHeight - 1} L${center} ${height - 2} L${center + 5} ${bodyHeight - 1} Z" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="2" stroke-linejoin="round"/>
         <rect x="2" y="2" width="${width - 4}" height="${bodyHeight - 2}" rx="9" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="2"/>
-        <text x="${center}" y="${bodyHeight / 2 + 5}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="white">${toCandidateLabel(order)}</text>
+        <text x="${center}" y="${bodyHeight / 2 + 5}" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="white">${toCandidateLabel(order)}</text>
       </g>
     </svg>
   `.trim();

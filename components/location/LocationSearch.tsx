@@ -109,7 +109,7 @@ export default function LocationSearch({
           aria-expanded={shouldShowDropdown}
           aria-controls={shouldShowDropdown ? listboxId : undefined}
           aria-activedescendant={activeIndex >= 0 && results[activeIndex] ? `${listboxId}-${results[activeIndex].id}` : undefined}
-          className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text shadow-sm transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
+          className="w-full rounded-lg border border-border bg-surface px-4 py-3 text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
         />
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2" role="status" aria-label="장소 검색 중">

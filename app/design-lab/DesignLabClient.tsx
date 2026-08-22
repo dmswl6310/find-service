@@ -79,7 +79,7 @@ function FixedLocationSearch({ label, placeholder = "장소 검색", helperText 
         readOnly
         placeholder={placeholder}
         aria-label={label}
-        className="w-full rounded-xl border border-border bg-surface-raised px-4 py-3 text-text"
+        className="w-full rounded-lg border border-border bg-surface-raised px-4 py-3 text-text"
       />
       {helperText && <p className="mt-2 text-xs text-text-muted">{helperText}</p>}
       <p className="mt-2 text-xs text-text-muted">고정 fixture 입력으로, 장소 검색을 실행하지 않습니다.</p>

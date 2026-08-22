@@ -46,13 +46,13 @@ export function TimeFilterView({
   };
 
   return (
-    <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+    <div className="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="whitespace-nowrap text-sm font-semibold text-text">출발 시간 반영</span>
         <button
           type="button"
           onClick={() => onUseDepartureTimeChange(!useDepartureTime)}
-          className={`inline-flex min-h-11 w-full items-center justify-between rounded-xl border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 sm:w-[220px] ${
+          className={`inline-flex min-h-11 w-full items-center justify-between rounded-lg border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 sm:w-[220px] ${
             useDepartureTime
               ? "border-action bg-canvas text-action"
               : "border-border bg-surface-raised text-text-muted"
@@ -81,19 +81,19 @@ export function TimeFilterView({
             aria-label="출발 날짜"
             value={dateInputValue}
             onChange={handleDateChange}
-            className="min-h-11 min-w-0 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
+            className="min-h-11 min-w-0 w-full rounded-lg border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
           />
           <input
             type="time"
             aria-label="출발 시간"
             value={timeInputValue}
             onChange={handleTimeChange}
-            className="min-h-11 min-w-0 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
+            className="min-h-11 min-w-0 w-full rounded-lg border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
           />
           <button
             type="button"
             onClick={onResetToNow}
-            className="min-h-11 whitespace-nowrap rounded-xl border border-border-strong bg-surface px-4 text-sm text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 min-[360px]:col-span-2"
+            className="min-h-11 whitespace-nowrap rounded-lg border border-border-strong bg-surface px-4 text-sm text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 min-[360px]:col-span-2"
           >
             현재 시간
           </button>

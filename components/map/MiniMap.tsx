@@ -122,7 +122,7 @@ export default function MiniMap({
     return (
       <>
         <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
-        <div className="w-full h-full flex items-center justify-center bg-surface border border-border rounded-xl aspect-square md:aspect-auto" role="status" aria-live="polite" aria-busy="true">
+        <div className="w-full h-full flex items-center justify-center bg-surface border border-border rounded-lg aspect-square md:aspect-auto" role="status" aria-live="polite" aria-busy="true">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-action border-t-transparent"></div>
           <span className="sr-only">지도를 불러오는 중입니다.</span>
         </div>
@@ -133,7 +133,7 @@ export default function MiniMap({
   const defaultCenter = { lat: 37.5665, lng: 126.9780 }; // 서울시청 기본값
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden border border-border shadow-sm min-h-[400px]">
+    <div className="w-full h-full rounded-lg overflow-hidden border border-border min-h-[400px]">
       <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
       <Map
         center={defaultCenter}

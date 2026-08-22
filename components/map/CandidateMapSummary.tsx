@@ -1,4 +1,5 @@
 import type { CandidateSummary } from "@/components/result/resultModel";
+import { formatMinutesValue } from "@/components/result/formatMinutes";
 
 export interface CandidateMapSummaryProps {
   candidate: CandidateSummary;
@@ -22,7 +23,7 @@ export default function CandidateMapSummary({
         </div>
         {candidate.isComplete ? (
           <p className="text-sm font-medium text-text">
-            평균 {candidate.averageMinutes}분 · 최장 {candidate.maxMinutes}분
+            평균 {formatMinutesValue(candidate.averageMinutes!)}분 · 최장 {candidate.maxMinutes}분
           </p>
         ) : (
           <p className="text-sm font-medium text-warning">

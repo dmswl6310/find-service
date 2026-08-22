@@ -34,6 +34,8 @@ describe("Design Lab 입력 시나리오", () => {
     const searchInputs = screen.getAllByRole("textbox");
     searchInputs.forEach((input) => {
       expect(input).toBeDisabled();
+      expect(input).toHaveClass("rounded-lg");
+      expect(input).not.toHaveClass("rounded-xl");
       fireEvent.change(input, { target: { value: "강남역" } });
       expect(input).toHaveValue("");
     });

@@ -67,6 +67,24 @@ describe("결과 요약 컴포넌트", () => {
     expect(screen.queryByText(/👑/)).not.toBeInTheDocument();
   });
 
+  it("세 출발지의 소수 평균을 모든 요약 표면에서 한 자리 소수로 표시한다", () => {
+    const fractionalCandidate = {
+      ...completeCandidate,
+      averageMinutes: 101 / 3,
+      maxMinutes: 36,
+      score: 36 + 101 / 3,
+    };
+    const balance = render(
+      <BalanceSummary name="을지로3가" averageMinutes={fractionalCandidate.averageMinutes} maxMinutes={36} />,
+    );
+    expect(screen.getByText("33.7분")).toBeVisible();
+    balance.unmount();
+
+    const rank = render(<CandidateRankList summaries={[fractionalCandidate]} onSelectCandidate={() => undefined} />);
+    expect(screen.getByText("평균 33.7분 · 최장 36분")).toBeVisible();
+    rank.unmount();
+  });
+
   it("완료 수와 부분 실패의 유지 결과를 알린다", () => {
     render(
       <>

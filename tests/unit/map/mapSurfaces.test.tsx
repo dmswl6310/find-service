@@ -25,6 +25,10 @@ describe("지도 표면", () => {
     expect(screen.getByLabelText("출발지 1")).toHaveTextContent("1");
     expect(screen.getByLabelText("후보지 A")).toHaveTextContent("A");
     expect(screen.getByLabelText("선택 경로")).toBeVisible();
+    expect(screen.getByLabelText("출발지 1")).toHaveClass("font-semibold");
+    expect(screen.getByLabelText("출발지 1")).not.toHaveClass("font-bold");
+    expect(screen.getByLabelText("후보지 A")).toHaveClass("font-semibold");
+    expect(screen.getByLabelText("후보지 A")).not.toHaveClass("font-bold");
   });
 
   it("정적 표면은 상태별 장소 수와 경로 표시를 자체 props로 제어한다", () => {
@@ -104,5 +108,20 @@ describe("지도 표면", () => {
     expect(staticSummary).toHaveTextContent("강남역에서 을지로입구역까지");
     expect(staticSummary.className).toBe(liveClassName);
     expect(staticSummary.className).toContain("md:bottom-3");
+  });
+
+  it("지도 요약도 세 출발지의 소수 평균을 한 자리 소수로 표시한다", () => {
+    render(
+      <StaticMapSurface
+        selectedCandidate={{
+          ...selectedCandidate,
+          averageMinutes: 101 / 3,
+          maxMinutes: 36,
+          score: 36 + 101 / 3,
+        }}
+      />,
+    );
+
+    expect(screen.getByLabelText("선택 후보 요약")).toHaveTextContent("평균 33.7분 · 최장 36분");
   });
 });

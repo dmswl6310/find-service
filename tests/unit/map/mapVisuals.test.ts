@@ -28,11 +28,15 @@ describe("지도 시맨틱 시각 요소", () => {
     expect(originSvg).not.toContain('fill="#B9604B"');
     expect(originSvg).toContain("<circle");
     expect(originSvg).toContain(">1</text>");
+    expect(originSvg).toContain('font-weight="600"');
+    expect(originSvg).not.toContain('font-weight="700"');
     expect(candidateSvg).toContain('fill="#B9604B"');
     expect(candidateSvg).toContain('stroke="#843E30"');
     expect(candidateSvg).not.toContain('fill="#397C8A"');
     expect(candidateSvg).toContain("<rect");
     expect(candidateSvg).toContain(">AA</text>");
+    expect(candidateSvg).toContain('font-weight="600"');
+    expect(candidateSvg).not.toContain('font-weight="700"');
     expect(originSvg).not.toEqual(candidateSvg);
   });
 

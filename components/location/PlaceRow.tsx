@@ -31,8 +31,8 @@ export default function PlaceRow({ location, kind, index, selected = false, onSe
   const markerClass = kind === "origin" ? "rounded-full bg-origin text-action-foreground" : "rounded bg-candidate text-action-foreground";
 
   return (
-    <li className={`flex items-center gap-2 rounded-xl border p-2 ${selected ? "border-border-strong bg-canvas" : "border-border bg-surface"}`}>
-      <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold ${markerClass}`} aria-hidden="true">
+    <li className={`flex items-center gap-2 rounded-lg border p-2 ${selected ? "border-border-strong bg-canvas" : "border-border bg-surface"}`}>
+      <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center text-xs font-semibold ${markerClass}`} aria-hidden="true">
         {placeMarker(kind, index)}
       </span>
       <button

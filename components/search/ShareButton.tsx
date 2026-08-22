@@ -48,7 +48,7 @@ export function ShareButtonView({
       onClick={onShare}
       disabled={!canShare}
       title={canShare ? "현재 입력한 출발지와 목적지 후보를 공유합니다." : "출발지와 목적지 후보를 모두 추가하면 공유할 수 있습니다."}
-      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface px-4 text-sm font-medium text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-strong bg-surface px-4 text-sm font-medium text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55"
       aria-live="polite"
     >
       <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,3 +1,5 @@
+import { formatMinutesValue } from "@/components/result/formatMinutes";
+
 type BalanceSummaryProps = {
   name: string;
   averageMinutes: number;
@@ -13,7 +15,7 @@ export default function BalanceSummary({ name, averageMinutes, maxMinutes }: Bal
       <dl className="mt-4 grid grid-cols-2 divide-x divide-border">
         <div className="pr-4">
           <dt className="text-sm text-text-muted">평균 이동시간</dt>
-          <dd className="mt-1 text-lg font-semibold text-text">{averageMinutes}분</dd>
+          <dd className="mt-1 text-lg font-semibold text-text">{formatMinutesValue(averageMinutes)}분</dd>
         </div>
         <div className="pl-4">
           <dt className="text-sm text-text-muted">최장 이동시간</dt>

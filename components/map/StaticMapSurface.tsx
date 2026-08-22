@@ -34,7 +34,7 @@ export default function StaticMapSurface({
   const visibleCandidates = CANDIDATE_MARKERS.slice(0, Math.max(0, Math.min(candidateCount, CANDIDATE_MARKERS.length)));
 
   return (
-    <div className="relative h-full min-h-80 w-full overflow-hidden rounded-xl border border-border bg-surface-raised">
+    <div className="relative h-full min-h-80 w-full overflow-hidden rounded-lg border border-border bg-surface-raised">
       <div role="img" aria-label={accessibleLabel} className="absolute inset-0">
         <div className="absolute inset-x-[-8%] top-[24%] h-5 rotate-[-8deg] border-y border-border bg-surface" />
         <div className="absolute inset-x-[-8%] top-[62%] h-4 rotate-[7deg] border-y border-border bg-surface" />
@@ -55,7 +55,7 @@ export default function StaticMapSurface({
           <span
             key={marker.label}
             aria-label={`출발지 ${marker.label}`}
-            className={`absolute ${marker.position} flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-origin text-xs font-bold text-action-foreground shadow-sm`}
+            className={`absolute ${marker.position} flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-origin text-xs font-semibold text-action-foreground shadow-sm`}
           >
             {marker.label}
           </span>
@@ -64,7 +64,7 @@ export default function StaticMapSurface({
           <span
             key={marker.label}
             aria-label={`후보지 ${marker.label}`}
-            className={`absolute ${marker.position} flex h-9 w-9 items-center justify-center rounded-lg border-2 border-surface bg-candidate text-xs font-bold text-action-foreground shadow-sm after:absolute after:-bottom-1 after:h-2 after:w-2 after:rotate-45 after:bg-candidate`}
+            className={`absolute ${marker.position} flex h-9 w-9 items-center justify-center rounded-lg border-2 border-surface bg-candidate text-xs font-semibold text-action-foreground shadow-sm after:absolute after:-bottom-1 after:h-2 after:w-2 after:rotate-45 after:bg-candidate`}
           >
             <span className="relative z-10">{marker.label}</span>
           </span>

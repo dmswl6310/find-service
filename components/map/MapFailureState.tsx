@@ -1,7 +1,7 @@
 export default function MapFailureState() {
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl border border-border bg-surface px-6 text-center aspect-square md:aspect-auto"
+      className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-lg border border-border bg-surface px-6 text-center aspect-square md:aspect-auto"
       role="status"
       aria-live="polite"
     >

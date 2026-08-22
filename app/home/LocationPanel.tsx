@@ -50,7 +50,7 @@ export default function LocationPanel({
   return (
     <section aria-label="장소 입력" className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-text">장소와 시간을 입력하세요</h1>
+        <h1 className="text-2xl font-semibold text-text">장소와 시간을 입력하세요</h1>
         {controls?.shareButton ?? <ShareButton />}
       </div>
       {controls?.timeFilter ?? <TimeFilter />}

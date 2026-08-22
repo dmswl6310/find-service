@@ -12,7 +12,7 @@ const MAP_CHUNK_LOAD_TIMEOUT_MS = 8000;
 function MapLoadingState() {
   return (
     <div
-      className="flex h-full min-h-80 w-full items-center justify-center rounded-xl border border-border bg-surface"
+      className="flex h-full min-h-80 w-full items-center justify-center rounded-lg border border-border bg-surface"
       role="status"
       aria-live="polite"
       aria-busy="true"
@@ -89,13 +89,13 @@ export default function MapWorkspace({ selectedCandidate, selectedRouteName, fil
 
   return (
     <section className={fill ? "flex h-full min-h-0 flex-col gap-3" : "space-y-3"} aria-label="지도 작업공간">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-text-muted">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text-muted">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-origin-soft px-2.5 py-1 text-origin">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-origin text-[10px] font-bold text-action-foreground">1</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-origin text-[10px] font-semibold text-action-foreground">1</span>
           숫자 원형 · 출발지
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-candidate-soft px-2.5 py-1 text-candidate">
-          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-candidate text-[10px] font-bold text-action-foreground">A</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-candidate text-[10px] font-semibold text-action-foreground">A</span>
           문자 사각 핀 · 후보지
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-origin-soft px-2.5 py-1 text-origin">
@@ -104,7 +104,7 @@ export default function MapWorkspace({ selectedCandidate, selectedRouteName, fil
         </span>
       </div>
 
-      <div className={fill ? "relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border shadow-sm" : "relative h-[400px] overflow-hidden rounded-xl border border-border shadow-sm lg:h-[calc(100vh-4rem)]"}>
+      <div className={fill ? "relative min-h-0 flex-1 overflow-hidden rounded-lg border border-border" : "relative h-[400px] overflow-hidden rounded-lg border border-border lg:h-[calc(100vh-4rem)]"}>
         {loadFailed ? (
           <MapFailureState />
         ) : (

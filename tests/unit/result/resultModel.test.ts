@@ -26,4 +26,19 @@ describe("buildCandidateSummaries 후보 요약", () => {
     expect(summaries[1]).toMatchObject({ id: "e2", isComplete: false, validRoutes: 1, totalRoutes: 2 });
     expect(findRouteResult(matrix, "s1", "e2")?.timeMn).toBe(20);
   });
+
+  it("세 출발지의 소수 평균과 공정성 점수는 원본 정밀도를 유지한다", () => {
+    const threeStarts = [...starts, makeLocation("s3", "강남")];
+    const summaries = buildCandidateSummaries(
+      threeStarts,
+      [ends[0]],
+      [makeRoute("s1", "e1", 30), makeRoute("s2", "e1", 35), makeRoute("s3", "e1", 36)],
+    );
+
+    expect(summaries[0]).toMatchObject({
+      averageMinutes: 101 / 3,
+      maxMinutes: 36,
+      score: 36 + 101 / 3,
+    });
+  });
 });

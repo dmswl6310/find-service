@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
+import { TimeFilterView } from "@/components/search/TimeFilter";
+import { ShareButtonView } from "@/components/search/ShareButton";
 
 describe("UI 컨트롤", () => {
   it("로딩 중인 주요 버튼의 상태를 알리고 기존 접근 가능한 이름을 유지한다", () => {
@@ -55,5 +57,36 @@ describe("UI 컨트롤", () => {
     expect(button).not.toHaveClass("text-white");
     button.click();
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("시간·공유 컨트롤은 8px 반경의 평면 입력 표면을 사용한다", () => {
+    const { container } = render(
+      <>
+        <TimeFilterView
+          useDepartureTime
+          targetDate="20260823"
+          targetTime="1230"
+          onUseDepartureTimeChange={() => undefined}
+          onTargetDateChange={() => undefined}
+          onTargetTimeChange={() => undefined}
+          onResetToNow={() => undefined}
+        />
+        <ShareButtonView canShare onShare={() => undefined} />
+      </>,
+    );
+
+    const timeSurface = container.querySelector(".mb-4");
+    expect(timeSurface).toHaveClass("rounded-lg");
+    expect(timeSurface).not.toHaveClass("rounded-2xl", "shadow-sm");
+    for (const control of [
+      screen.getByRole("button", { name: /켜짐/ }),
+      screen.getByLabelText("출발 날짜"),
+      screen.getByLabelText("출발 시간"),
+      screen.getByRole("button", { name: "현재 시간" }),
+      screen.getByRole("button", { name: "결과 공유 링크 복사" }),
+    ]) {
+      expect(control).toHaveClass("rounded-lg");
+      expect(control).not.toHaveClass("rounded-xl", "shadow-sm");
+    }
   });
 });

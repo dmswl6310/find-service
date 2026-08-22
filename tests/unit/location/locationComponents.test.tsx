@@ -49,6 +49,36 @@ describe("장소 입력 컴포넌트", () => {
     expect(screen.getByText("A")).toHaveClass("rounded", "bg-candidate");
   });
 
+  it("입력 그룹·검색 필드·장소 행은 8px 반경과 평면 표면을 사용한다", () => {
+    render(
+      <LocationGroup
+        kind="origin"
+        title="출발지"
+        locations={[makeLocation("s1", "홍대")]}
+        onSelectLocation={() => undefined}
+        onRemove={() => undefined}
+        onAdd={() => undefined}
+      />,
+    );
+
+    const group = screen.getByRole("region", { name: "출발지" });
+    const input = screen.getByRole("combobox", { name: "출발지 검색" });
+    const row = screen.getByRole("button", { name: "홍대 선택" }).closest("li");
+    const marker = screen.getByText("1");
+    const list = row?.parentElement;
+
+    expect(group).toHaveClass("rounded-lg");
+    expect(group).not.toHaveClass("rounded-3xl", "shadow-sm");
+    expect(input).toHaveClass("rounded-lg");
+    expect(input).not.toHaveClass("rounded-xl", "shadow-sm");
+    expect(list).toHaveClass("rounded-lg");
+    expect(list).not.toHaveClass("rounded-2xl", "shadow-sm");
+    expect(row).toHaveClass("rounded-lg");
+    expect(row).not.toHaveClass("rounded-xl", "shadow-sm");
+    expect(marker).toHaveClass("font-semibold");
+    expect(marker).not.toHaveClass("font-bold");
+  });
+
   it("후보지 27번째 표식은 AA로 이어진다", () => {
     render(<PlaceRow location={makeLocation("e27", "스물일곱") } kind="candidate" index={26} onSelect={() => undefined} onRemove={() => undefined} />);
 

@@ -121,7 +121,7 @@ export default function RouteDetailSheet({
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
         tabIndex={-1}
-        className="relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl border border-border bg-surface shadow-xl sm:max-w-xl sm:rounded-2xl"
+        className="relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-xl border border-border bg-surface shadow-xl sm:max-w-xl sm:rounded-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <header className="flex items-start justify-between gap-4 border-b border-border bg-surface p-5">
@@ -146,7 +146,7 @@ export default function RouteDetailSheet({
 
         <div className="flex-1 overflow-y-auto">
           {isFailure ? (
-            <section role="alert" className="m-5 rounded-xl border border-danger bg-surface-raised p-4">
+            <section role="alert" className="m-5 rounded-lg border border-danger bg-surface-raised p-4">
               <h3 className="font-semibold text-danger">{result.errorMessage || "경로 조회 실패"}</h3>
               <dl className="mt-3 grid gap-2 text-sm text-text-muted">
                 {result.errorCode ? <div><dt className="inline font-medium text-text">오류 코드: </dt><dd className="inline">{result.errorCode}</dd></div> : null}
@@ -174,7 +174,7 @@ export default function RouteDetailSheet({
 
               <div className="p-5">
                 {!result.subPath || result.subPath.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border bg-surface-raised p-4 text-center text-sm text-text-muted">
+                  <p className="rounded-lg border border-dashed border-border bg-surface-raised p-4 text-center text-sm text-text-muted">
                     상세 경로 정보가 없습니다.
                   </p>
                 ) : (
@@ -182,7 +182,7 @@ export default function RouteDetailSheet({
                     {result.subPath.map((path, index) => {
                       const presentation = getSegmentPresentation(path.trafficType);
                       return (
-                        <li key={`${path.trafficType}-${index}`} className="rounded-xl border border-border bg-surface p-4">
+                        <li key={`${path.trafficType}-${index}`} className="rounded-lg border border-border bg-surface p-4">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${presentation.classes}`}>
                               {presentation.label}

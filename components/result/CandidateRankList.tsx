@@ -1,4 +1,5 @@
 import type { CandidateSummary } from "@/components/result/resultModel";
+import { formatMinutesValue } from "@/components/result/formatMinutes";
 
 type CandidateRankListProps = {
   summaries: CandidateSummary[];
@@ -21,7 +22,7 @@ export default function CandidateRankList({ summaries, onSelectCandidate }: Cand
       <h2 id="candidate-rank-heading" className="text-lg font-semibold text-text">후보 비교</h2>
       <ul className="mt-3 space-y-2">
         {orderedSummaries.map((summary, index) => (
-          <li key={summary.id} className="border border-border bg-surface p-4">
+          <li key={summary.id} className="rounded-lg border border-border bg-surface p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="font-semibold text-text">
@@ -29,7 +30,7 @@ export default function CandidateRankList({ summaries, onSelectCandidate }: Cand
                 </p>
                 {summary.isComplete ? (
                   <p className="mt-1 text-sm text-text-muted">
-                    평균 {summary.averageMinutes}분 · 최장 {summary.maxMinutes}분
+                    평균 {formatMinutesValue(summary.averageMinutes!)}분 · 최장 {summary.maxMinutes}분
                   </p>
                 ) : (
                   <p className="mt-1 text-sm text-warning">
@@ -40,7 +41,7 @@ export default function CandidateRankList({ summaries, onSelectCandidate }: Cand
               <button
                 type="button"
                 onClick={() => onSelectCandidate(summary.id)}
-                className="shrink-0 border border-border-strong bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
+                className="shrink-0 rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
               >
                 {summary.name} 선택
               </button>
