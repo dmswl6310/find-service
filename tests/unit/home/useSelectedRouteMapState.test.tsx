@@ -57,11 +57,29 @@ const routeToE2: TransitFetchResult = {
   subPath: [{ trafficType: 3, distance: 150, sectionTime: 5, startX: "127.0", startY: "37.0", endX: "127.2", endY: "37.2" }],
 };
 
+const updatedRouteToE1: TransitFetchResult = {
+  ...routeToE1,
+  timeMn: 18,
+  mapObj: "route-e1-updated",
+  subPath: [
+    {
+      trafficType: 3,
+      distance: 180,
+      sectionTime: 6,
+      startX: "128.0",
+      startY: "38.0",
+      endX: "128.4",
+      endY: "38.4",
+    },
+  ],
+};
+
 const matrixData = [routeToE1, routeToE2];
 
 describe("useSelectedRouteMapState", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("syncs selected route to active map route id", async () => {
@@ -190,6 +208,62 @@ describe("useSelectedRouteMapState", () => {
     });
   });
 
+  it("distinguishes a new route object from old geometry when both routes have the same ids", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: "fallback" }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const commits: Array<{
+      selectedRoute: TransitFetchResult | null;
+      geometryRoute: TransitFetchResult | null;
+      lastPoint: { lat: number; lng: number } | null;
+    }> = [];
+
+    function Harness({ route }: { route: TransitFetchResult }) {
+      const state = useSelectedRouteMapState({
+        starts,
+        ends,
+        matrixData: [route],
+        isCalculating: false,
+      });
+
+      useLayoutEffect(() => {
+        commits.push({
+          selectedRoute: state.selectedRoute,
+          geometryRoute: state.geometryRoute,
+          lastPoint: state.routeSegments.at(-1)?.path.at(-1) ?? null,
+        });
+      });
+
+      return null;
+    }
+
+    const view = render(<Harness route={routeToE1} />);
+    await waitFor(() => {
+      expect(commits.at(-1)?.selectedRoute).toBe(routeToE1);
+      expect(commits.at(-1)?.geometryRoute).toBe(routeToE1);
+      expect(commits.at(-1)?.lastPoint).toEqual({ lat: 37.1, lng: 127.1 });
+    });
+    commits.length = 0;
+
+    view.rerender(<Harness route={updatedRouteToE1} />);
+    await waitFor(() => {
+      expect(commits.at(-1)?.selectedRoute).toBe(updatedRouteToE1);
+      expect(commits.at(-1)?.geometryRoute).toBe(updatedRouteToE1);
+      expect(commits.at(-1)?.lastPoint).toEqual({ lat: 38.4, lng: 128.4 });
+    });
+
+    const firstUpdatedSelection = commits.find(
+      (commit) => commit.selectedRoute === updatedRouteToE1,
+    );
+    expect(firstUpdatedSelection?.geometryRoute).toBe(routeToE1);
+    expect(firstUpdatedSelection?.lastPoint).toEqual({ lat: 37.1, lng: 127.1 });
+    expect(commits.at(-1)?.geometryRoute).not.toBe(routeToE1);
+    expect(commits.at(-1)?.lastPoint).not.toEqual({ lat: 37.1, lng: 127.1 });
+  });
+
   it("aborts an old graphic request and never assigns its coordinates to the new geometry owner", async () => {
     type PendingGraphic = {
       signal: AbortSignal;
@@ -264,6 +338,83 @@ describe("useSelectedRouteMapState", () => {
     expect(result.current.detailedPath).not.toContainEqual({ lat: 39.1, lng: 129.1 });
   });
 
+  it("rejects a late same-id graphic response by exact route owner even if abort cannot cancel it", async () => {
+    const NativeAbortController = globalThis.AbortController;
+    class NonAbortingController {
+      readonly signal = new NativeAbortController().signal;
+      abort() {}
+    }
+    vi.stubGlobal("AbortController", NonAbortingController);
+
+    const pending = new Map<string, (response: Response) => void>();
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) =>
+      new Promise<Response>((resolve) => {
+        pending.set(String(input), resolve);
+      }),
+    );
+    const { result, rerender } = renderHook(
+      ({ route }: { route: TransitFetchResult }) =>
+        useSelectedRouteMapState({ starts, ends, matrixData: [route], isCalculating: false }),
+      { initialProps: { route: routeToE1 } },
+    );
+    await waitFor(() => {
+      expect(result.current.geometryRoute).toBe(routeToE1);
+      expect(pending.has("/api/transit/graphic?mapObj=route-e1")).toBe(true);
+    });
+
+    rerender({ route: updatedRouteToE1 });
+    await waitFor(() => {
+      expect(result.current.geometryRoute).toBe(updatedRouteToE1);
+      expect(pending.has("/api/transit/graphic?mapObj=route-e1-updated")).toBe(true);
+    });
+
+    await act(async () => {
+      pending.get("/api/transit/graphic?mapObj=route-e1-updated")?.(
+        new Response(
+          JSON.stringify({
+            result: {
+              lane: [
+                {
+                  section: [
+                    { graphPos: [{ x: "128.0", y: "38.0" }, { x: "128.8", y: "38.8" }] },
+                  ],
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    });
+    await waitFor(() => {
+      expect(result.current.detailedPath.at(-1)).toEqual({ lat: 38.8, lng: 128.8 });
+    });
+
+    await act(async () => {
+      pending.get("/api/transit/graphic?mapObj=route-e1")?.(
+        new Response(
+          JSON.stringify({
+            result: {
+              lane: [
+                {
+                  section: [
+                    { graphPos: [{ x: "129.0", y: "39.0" }, { x: "129.9", y: "39.9" }] },
+                  ],
+                },
+              ],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    });
+
+    expect(result.current.geometryRoute).toBe(updatedRouteToE1);
+    expect(result.current.geometryRouteId).toBe("s1-e1");
+    expect(result.current.detailedPath.at(-1)).toEqual({ lat: 38.8, lng: 128.8 });
+    expect(result.current.detailedPath).not.toContainEqual({ lat: 39.9, lng: 129.9 });
+  });
+
   it("clears geometry ownership with route state while calculating or empty", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ error: "fallback" }), { status: 502 }),
@@ -278,12 +429,16 @@ describe("useSelectedRouteMapState", () => {
     rerender({ nextMatrix: matrixData, isCalculating: true });
     await waitFor(() => {
       expect(result.current.selectedRoute).toBeNull();
+      expect(result.current.geometryRoute).toBeNull();
       expect(result.current.geometryRouteId).toBeNull();
       expect(result.current.routeSegments).toEqual([]);
       expect(result.current.detailedPath).toEqual([]);
     });
 
     rerender({ nextMatrix: [], isCalculating: false });
-    await waitFor(() => expect(result.current.geometryRouteId).toBeNull());
+    await waitFor(() => {
+      expect(result.current.geometryRoute).toBeNull();
+      expect(result.current.geometryRouteId).toBeNull();
+    });
   });
 });

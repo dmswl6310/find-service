@@ -12,12 +12,14 @@ type Params = {
 };
 
 type RouteGeometryState = {
+  geometryRoute: TransitFetchResult | null;
   geometryRouteId: string | null;
   routeSegments: MapRouteSegment[];
   detailedPath: MapPathPoint[];
 };
 
 const emptyRouteGeometry: RouteGeometryState = {
+  geometryRoute: null,
   geometryRouteId: null,
   routeSegments: [],
   detailedPath: [],
@@ -69,6 +71,7 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
     const geometryRouteId = `${selectedRoute.fromId}-${selectedRoute.toId}`;
     const fallbackSegments = buildRouteSegments(selectedRoute, starts, ends);
     setRouteGeometry({
+      geometryRoute: selectedRoute,
       geometryRouteId,
       routeSegments: fallbackSegments,
       detailedPath: [],
@@ -97,7 +100,7 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
 
         if (!controller.signal.aborted && nextDetailedPath.length >= 2) {
           setRouteGeometry((current) =>
-            current.geometryRouteId === geometryRouteId
+            current.geometryRoute === selectedRoute
               ? { ...current, detailedPath: nextDetailedPath }
               : current,
           );
@@ -126,6 +129,7 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
   return {
     activeMapRouteId,
     selectedRoute,
+    geometryRoute: routeGeometry.geometryRoute,
     geometryRouteId: routeGeometry.geometryRouteId,
     routeSegments: routeGeometry.routeSegments,
     detailedPath: routeGeometry.detailedPath,

@@ -12,6 +12,7 @@ import type { TransitFetchResult } from "@/types/odsay";
 const mapState = vi.hoisted(() => ({
   activeMapRouteId: null as string | null,
   selectedRoute: null as TransitFetchResult | null,
+  geometryRoute: null as TransitFetchResult | null,
   geometryRouteId: null as string | null,
   routeSegments: [] as MapRouteSegment[],
   detailedPath: [] as MapPathPoint[],
@@ -115,9 +116,17 @@ const firstEnd = makeLocation("e1", "성공 후보");
 const secondEnd = makeLocation("e2", "두 번째 후보");
 const successfulRoute = makeRoute(start.id, firstEnd.id, 20);
 const secondSuccessfulRoute = makeRoute(start.id, secondEnd.id, 25);
+const updatedSuccessfulRoute: TransitFetchResult = {
+  ...successfulRoute,
+  timeMn: 18,
+};
 const oldSegment: MapRouteSegment = {
   kind: "bus",
   path: [{ lat: 37.5, lng: 127 }, { lat: 37.6, lng: 127.1 }],
+};
+const updatedSegment: MapRouteSegment = {
+  kind: "subway",
+  path: [{ lat: 38, lng: 128 }, { lat: 38.4, lng: 128.4 }],
 };
 
 const baseProps: ComparisonWorkspaceProps = {
@@ -143,6 +152,7 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
     Object.assign(mapState, {
       activeMapRouteId: `${start.id}-${firstEnd.id}`,
       selectedRoute: successfulRoute,
+      geometryRoute: successfulRoute,
       geometryRouteId: `${start.id}-${firstEnd.id}`,
       routeSegments: [oldSegment],
       detailedPath: [{ lat: 37.5, lng: 127 }, { lat: 37.6, lng: 127.1 }],
@@ -151,6 +161,7 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
     mapState.handleSelectRoute.mockImplementation((route: TransitFetchResult) => {
       mapState.activeMapRouteId = `${route.fromId}-${route.toId}`;
       mapState.selectedRoute = route;
+      mapState.geometryRoute = route;
       mapState.geometryRouteId = `${route.fromId}-${route.toId}`;
     });
   });
@@ -204,6 +215,7 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
     Object.assign(mapState, {
       activeMapRouteId: `${start.id}-${secondEnd.id}`,
       selectedRoute: secondSuccessfulRoute,
+      geometryRoute: successfulRoute,
       geometryRouteId: `${start.id}-${firstEnd.id}`,
       routeSegments: [oldSegment],
       detailedPath: [{ lat: 37.5, lng: 127 }, { lat: 37.6, lng: 127.1 }],
@@ -216,6 +228,50 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
     );
     expect(screen.getByLabelText("지도 경로선 좌표")).toHaveTextContent("없음");
     expect(screen.getByLabelText("지도 상세 좌표")).toHaveTextContent("없음");
+    expect(screen.getByLabelText("지도 경로선 좌표")).not.toHaveTextContent("37.5,127");
+  });
+
+  it("같은 ids의 새 route 객체가 선택되기 전후 이전 owner 좌표를 지도에 전달하지 않는다", () => {
+    const view = renderWorkspace();
+    expect(screen.getByLabelText("지도 경로선 좌표")).toHaveTextContent(
+      "37.5,127|37.6,127.1",
+    );
+
+    view.rerender(
+      <ComparisonWorkspace {...baseProps} matrixData={[updatedSuccessfulRoute]} />,
+    );
+    expect(screen.getByLabelText("지도 경로선 좌표")).toHaveTextContent("없음");
+
+    Object.assign(mapState, {
+      selectedRoute: updatedSuccessfulRoute,
+      geometryRoute: successfulRoute,
+      geometryRouteId: `${start.id}-${firstEnd.id}`,
+      routeSegments: [oldSegment],
+      detailedPath: [{ lat: 37.5, lng: 127 }, { lat: 37.6, lng: 127.1 }],
+    });
+    view.rerender(
+      <ComparisonWorkspace {...baseProps} matrixData={[updatedSuccessfulRoute]} />,
+    );
+    expect(screen.getByLabelText("지도 선택 경로명")).toHaveTextContent(
+      "출발지에서 성공 후보까지",
+    );
+    expect(screen.getByLabelText("지도 경로선 좌표")).toHaveTextContent("없음");
+    expect(screen.getByLabelText("지도 상세 좌표")).toHaveTextContent("없음");
+
+    Object.assign(mapState, {
+      geometryRoute: updatedSuccessfulRoute,
+      routeSegments: [updatedSegment],
+      detailedPath: [{ lat: 38, lng: 128 }, { lat: 38.4, lng: 128.4 }],
+    });
+    view.rerender(
+      <ComparisonWorkspace {...baseProps} matrixData={[updatedSuccessfulRoute]} />,
+    );
+    expect(screen.getByLabelText("지도 경로선 좌표")).toHaveTextContent(
+      "38,128|38.4,128.4",
+    );
+    expect(screen.getByLabelText("지도 상세 좌표")).toHaveTextContent(
+      "38,128|38.4,128.4",
+    );
     expect(screen.getByLabelText("지도 경로선 좌표")).not.toHaveTextContent("37.5,127");
   });
 

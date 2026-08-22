@@ -65,7 +65,7 @@ export default function ComparisonWorkspace({
   const {
     activeMapRouteId,
     selectedRoute,
-    geometryRouteId,
+    geometryRoute,
     routeSegments,
     detailedPath,
     handleSelectRoute,
@@ -108,10 +108,8 @@ export default function ComparisonWorkspace({
     (!selectedCandidateId || currentSelectedRoute.toId === selectedCandidateId)
       ? currentSelectedRoute
       : undefined;
-  const visibleRouteId = visibleSelectedRoute
-    ? `${visibleSelectedRoute.fromId}-${visibleSelectedRoute.toId}`
-    : null;
-  const ownsVisibleRouteGeometry = visibleRouteId !== null && geometryRouteId === visibleRouteId;
+  const ownsVisibleRouteGeometry =
+    visibleSelectedRoute !== undefined && geometryRoute === visibleSelectedRoute;
   const selectedCandidate = hasResults
     ? summaries.find((summary) => summary.id === selectedCandidateId) ??
       summaries.find((summary) => summary.id === visibleSelectedRoute?.toId) ??
