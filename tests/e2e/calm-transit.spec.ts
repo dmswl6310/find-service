@@ -56,3 +56,10 @@ test("Calm Transit tokens and Pretendard are exposed at runtime", async ({ page 
     "600"
   );
 });
+
+test("개발 환경 Design Lab이 고정 기반 컨트롤을 렌더링한다", async ({ page }) => {
+  await page.goto("/design-lab?scenario=foundation");
+
+  await expect(page.getByRole("heading", { name: "Design Lab" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "주요 동작" })).toBeVisible();
+});
