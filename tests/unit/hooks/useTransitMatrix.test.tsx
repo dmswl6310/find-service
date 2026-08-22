@@ -233,6 +233,110 @@ describe("useTransitMatrix", () => {
     expect(result.current.error).toBeNull();
   });
 
+  it("publishes settled cells during calculation and preserves matrix order", async () => {
+    const pending = [deferred<Response>(), deferred<Response>()];
+    let responseIndex = 0;
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      () => pending[responseIndex++].promise,
+    );
+    const successResponse = (totalTime: number) =>
+      jsonResponse({
+        totalTime,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [],
+        mapObj: "m1",
+      });
+
+    const { result } = renderHook(() => useTransitMatrix());
+    let calculatePromise!: Promise<void>;
+
+    act(() => {
+      calculatePromise = result.current.calculateMatrix(starts, ends);
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+      pending[1].resolve(successResponse(22));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(result.current.isCalculating).toBe(true);
+    expect(result.current.matrixData).toEqual([
+      expect.objectContaining({ fromId: "s1", toId: "e2", timeMn: 22 }),
+    ]);
+    expect(result.current.calculationProgress).toEqual({
+      completed: 1,
+      total: 2,
+      currentCandidate: "도착지2",
+    });
+
+    await act(async () => {
+      pending[0].resolve(successResponse(18));
+      await calculatePromise;
+    });
+
+    expect(result.current.matrixData.map((cell) => cell.toId)).toEqual(["e1", "e2"]);
+    expect(result.current.calculationProgress).toEqual({
+      completed: 2,
+      total: 2,
+      currentCandidate: "도착지1",
+    });
+  });
+
+  it("does not publish stale cells from an overlapping calculation", async () => {
+    const firstPending = deferred<Response>();
+    const secondPending = deferred<Response>();
+    vi.spyOn(globalThis, "fetch")
+      .mockReturnValueOnce(firstPending.promise)
+      .mockReturnValueOnce(secondPending.promise);
+    const successResponse = (totalTime: number) =>
+      jsonResponse({
+        totalTime,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [],
+        mapObj: "m1",
+      });
+
+    const { result } = renderHook(() => useTransitMatrix());
+    let firstCalculation!: Promise<void>;
+    let secondCalculation!: Promise<void>;
+
+    act(() => {
+      firstCalculation = result.current.calculateMatrix([starts[0]], [ends[0]]);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    act(() => {
+      secondCalculation = result.current.calculateMatrix([starts[0]], [ends[1]]);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+      secondPending.resolve(successResponse(22));
+      await secondCalculation;
+    });
+
+    expect(result.current.matrixData).toEqual([
+      expect.objectContaining({ toId: "e2", timeMn: 22 }),
+    ]);
+    expect(result.current.calculationProgress.currentCandidate).toBe("도착지2");
+
+    await act(async () => {
+      firstPending.resolve(successResponse(99));
+      await firstCalculation;
+    });
+
+    expect(result.current.matrixData).toEqual([
+      expect.objectContaining({ toId: "e2", timeMn: 22 }),
+    ]);
+    expect(result.current.calculationProgress.currentCandidate).toBe("도착지2");
+  });
+
   it("stops queued cells after a rate-limit response", async () => {
     const thirdEnd: KakaoLocation = {
       id: "e3",
@@ -325,6 +429,7 @@ describe("useTransitMatrix", () => {
     expect(result.current.matrixData).toEqual([]);
     expect(result.current.error).toBeNull();
     expect(result.current.isCalculating).toBe(false);
+    expect(result.current.calculationProgress).toEqual({ completed: 0, total: 0 });
   });
 
   it("ignores stale calculation results after reset", async () => {

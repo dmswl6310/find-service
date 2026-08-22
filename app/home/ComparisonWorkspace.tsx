@@ -86,6 +86,9 @@ export default function ComparisonWorkspace({
   );
   const hasLocations = starts.length > 0 || ends.length > 0;
   const hasResults = matrixData.length > 0 && !isCalculating;
+  const hasValidRoute = matrixData.some(
+    (result) => !result.error && result.timeMn >= 0,
+  );
   const panelMode = isCalculating
     ? "loading"
     : isEditing
@@ -110,7 +113,7 @@ export default function ComparisonWorkspace({
       : undefined;
   const ownsVisibleRouteGeometry =
     visibleSelectedRoute !== undefined && geometryRoute === visibleSelectedRoute;
-  const selectedCandidate = hasResults
+  const selectedCandidate = hasResults && hasValidRoute
     ? summaries.find((summary) => summary.id === selectedCandidateId) ??
       summaries.find((summary) => summary.id === visibleSelectedRoute?.toId) ??
       summaries.find((summary) => summary.isFairest) ??
@@ -223,6 +226,7 @@ export default function ComparisonWorkspace({
     <CalculationProgress
       completed={calculationProgress.completed}
       total={calculationProgress.total}
+      currentCandidate={calculationProgress.currentCandidate}
     />
   ) : isMatrixOpen ? (
     <section aria-label="경로표" className="min-w-0 space-y-4">

@@ -177,9 +177,17 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
   });
 
   it("계산 중에는 edit 상태보다 loading을 우선하고 후보 요약과 경로를 숨긴다", () => {
-    renderWorkspace({ isCalculating: true });
+    renderWorkspace({
+      isCalculating: true,
+      calculationProgress: {
+        completed: 1,
+        total: 2,
+        currentCandidate: "두 번째 후보",
+      },
+    });
 
     expect(screen.getByRole("region", { name: "경로 계산 상태" })).toBeVisible();
+    expect(screen.getByText("현재 후보: 두 번째 후보")).toBeVisible();
     expect(screen.queryByLabelText("선택 후보 요약")).not.toBeInTheDocument();
     expect(screen.getByLabelText("지도 경로선 개수")).toHaveTextContent("0");
   });
@@ -275,10 +283,10 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
     expect(screen.getByLabelText("지도 경로선 좌표")).not.toHaveTextContent("37.5,127");
   });
 
-  it("새 matrix가 같은 쌍의 전면 실패여도 이전 성공 route 객체를 지도에 재사용하지 않는다", () => {
+  it("새 matrix가 전면 실패면 후보 요약과 이전 성공 route 객체를 지도에 재사용하지 않는다", () => {
     renderWorkspace({ matrixData: [makeFailedRoute(start.id, firstEnd.id)] });
 
-    expect(screen.getByLabelText("선택 후보 요약")).toHaveTextContent("성공 후보 비교 불가 0/1");
+    expect(screen.queryByLabelText("선택 후보 요약")).not.toBeInTheDocument();
     expect(screen.getByLabelText("지도 선택 경로명")).toHaveTextContent("없음");
     expect(screen.getByLabelText("지도 경로선 개수")).toHaveTextContent("0");
     expect(screen.getByLabelText("지도 상세 좌표 개수")).toHaveTextContent("0");

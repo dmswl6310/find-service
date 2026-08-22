@@ -12,6 +12,7 @@ const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘
 export type CalculationProgress = {
   completed: number;
   total: number;
+  currentCandidate?: string;
 };
 
 async function fetchTransitCell(params: {
@@ -315,15 +316,28 @@ export function useTransitMatrix() {
       signal: abortController.signal,
       cancelers: cancelersRef.current,
     });
+    const settledResults: Array<TransitFetchResult | undefined> = new Array(
+      fetchPromises.length,
+    );
 
     try {
       const results = await Promise.all(
-        fetchPromises.map((promise) =>
+        fetchPromises.map((promise, cellIndex) =>
           promise.then((result) => {
             if (calculationSeq === calculationSeqRef.current) {
+              settledResults[cellIndex] = result;
+              setMatrixData(
+                settledResults.filter(
+                  (settledResult): settledResult is TransitFetchResult =>
+                    settledResult !== undefined,
+                ),
+              );
               setCalculationProgress((current) => ({
                 completed: Math.min(current.completed + 1, current.total),
                 total: current.total,
+                currentCandidate:
+                  ends.find((end) => end.id === result.toId)?.place_name ??
+                  current.currentCandidate,
               }));
             }
 
@@ -337,8 +351,6 @@ export function useTransitMatrix() {
 
       abortControllerRef.current = null;
       cancelersRef.current = [];
-
-      setMatrixData(results);
 
       if (results.some((result) => result.error)) {
         setError(PARTIAL_FAILURE_MESSAGE);
