@@ -1,39 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
+  --canvas: #f3f6f5;
   --surface: #ffffff;
-  --border: #e2e8f0;
+  --surface-raised: #fbfdfc;
+  --text: #172625;
+  --text-muted: #647774;
+  --border: #d7e1df;
+  --border-strong: #b9c9c6;
+  --action: #173f42;
+  --action-hover: #0f3335;
+  --action-foreground: #ffffff;
+  --origin: #397c8a;
+  --origin-soft: #e6f0f2;
+  --candidate: #b9604b;
+  --candidate-soft: #f7ebe7;
+  --balance: #95651d;
+  --balance-soft: #f8f1e4;
+  --success: #2f6b56;
+  --warning: #8a651e;
+  --danger: #a44f48;
+  --info: #397c8a;
+
+  /* Temporary aliases for existing consumers; remove after their migration. */
+  --background: var(--canvas);
+  --foreground: var(--text);
+  --primary: var(--action);
+  --primary-hover: var(--action-hover);
 }
 
 @theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-foreground: var(--action-foreground);
+  --color-origin: var(--origin);
+  --color-origin-soft: var(--origin-soft);
+  --color-candidate: var(--candidate);
+  --color-candidate-soft: var(--candidate-soft);
+  --color-balance: var(--balance);
+  --color-balance-soft: var(--balance-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+
+  /* Temporary aliases for existing Tailwind consumers. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-pretendard), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --primary: #60a5fa;
-    --primary-hover: #3b82f6;
-    --surface: #1e293b;
-    --border: #334155;
-  }
-}
-
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--canvas);
+  color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
