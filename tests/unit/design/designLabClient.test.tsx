@@ -11,9 +11,6 @@ vi.mock("@/hooks/useLocationSearch", () => ({
   useLocationSearch,
 }));
 
-vi.mock("@/components/search/TimeFilter", () => ({ default: () => <div>시간 필터</div> }));
-vi.mock("@/components/search/ShareButton", () => ({ default: () => <div>공유 버튼</div> }));
-
 import DesignLabClient from "@/app/design-lab/DesignLabClient";
 
 describe("Design Lab 입력 시나리오", () => {

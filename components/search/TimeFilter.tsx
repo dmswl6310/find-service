@@ -9,37 +9,40 @@ import {
   toTimeInputValue,
 } from "@/utils/dateTime";
 
-export default function TimeFilter() {
-  const {
-    useDepartureTime,
-    targetDate,
-    targetTime,
-    setUseDepartureTime,
-    setTargetDate,
-    setTargetTime,
-  } = useAppStore();
+export interface TimeFilterViewProps {
+  useDepartureTime: boolean;
+  targetDate: string;
+  targetTime: string;
+  onUseDepartureTimeChange: (enabled: boolean) => void;
+  onTargetDateChange: (date: string) => void;
+  onTargetTimeChange: (time: string) => void;
+  onResetToNow: () => void;
+}
 
+export function TimeFilterView({
+  useDepartureTime,
+  targetDate,
+  targetTime,
+  onUseDepartureTimeChange,
+  onTargetDateChange,
+  onTargetTimeChange,
+  onResetToNow,
+}: TimeFilterViewProps) {
   const dateInputValue = toDateInputValue(targetDate);
   const timeInputValue = toTimeInputValue(targetTime);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value; // YYYY-MM-DD
     if (val) {
-      setTargetDate(fromDateInputValue(val));
+      onTargetDateChange(fromDateInputValue(val));
     }
   };
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value; // HH:mm
     if (val) {
-      setTargetTime(fromTimeInputValue(val));
+      onTargetTimeChange(fromTimeInputValue(val));
     }
-  };
-
-  const resetToNow = () => {
-    const now = getCurrentDateTime();
-    setTargetDate(now.date);
-    setTargetTime(now.time);
   };
 
   return (
@@ -48,7 +51,7 @@ export default function TimeFilter() {
         <span className="whitespace-nowrap text-sm font-semibold text-text">출발 시간 반영</span>
         <button
           type="button"
-          onClick={() => setUseDepartureTime(!useDepartureTime)}
+          onClick={() => onUseDepartureTimeChange(!useDepartureTime)}
           className={`inline-flex min-h-11 w-full items-center justify-between rounded-xl border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 sm:w-[220px] ${
             useDepartureTime
               ? "border-action bg-canvas text-action"
@@ -72,28 +75,59 @@ export default function TimeFilter() {
       </div>
 
       {useDepartureTime && (
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+        <div className="grid gap-3 min-[360px]:grid-cols-2 min-[360px]:items-center">
           <input
             type="date"
+            aria-label="출발 날짜"
             value={dateInputValue}
             onChange={handleDateChange}
-            className="min-h-11 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
+            className="min-h-11 min-w-0 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
           />
           <input
             type="time"
+            aria-label="출발 시간"
             value={timeInputValue}
             onChange={handleTimeChange}
-            className="min-h-11 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
+            className="min-h-11 min-w-0 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
           />
           <button
             type="button"
-            onClick={resetToNow}
-            className="min-h-11 whitespace-nowrap rounded-xl border border-border-strong bg-surface px-4 text-sm text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2"
+            onClick={onResetToNow}
+            className="min-h-11 whitespace-nowrap rounded-xl border border-border-strong bg-surface px-4 text-sm text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 min-[360px]:col-span-2"
           >
             현재 시간
           </button>
         </div>
       )}
     </div>
+  );
+}
+
+export default function TimeFilter() {
+  const {
+    useDepartureTime,
+    targetDate,
+    targetTime,
+    setUseDepartureTime,
+    setTargetDate,
+    setTargetTime,
+  } = useAppStore();
+
+  const resetToNow = () => {
+    const now = getCurrentDateTime();
+    setTargetDate(now.date);
+    setTargetTime(now.time);
+  };
+
+  return (
+    <TimeFilterView
+      useDepartureTime={useDepartureTime}
+      targetDate={targetDate}
+      targetTime={targetTime}
+      onUseDepartureTimeChange={setUseDepartureTime}
+      onTargetDateChange={setTargetDate}
+      onTargetTimeChange={setTargetTime}
+      onResetToNow={resetToNow}
+    />
   );
 }

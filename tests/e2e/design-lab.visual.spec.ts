@@ -37,6 +37,9 @@ async function prepareScenario(
 test("알 수 없는 시나리오는 기반 카탈로그로 돌아가고 선택으로 URL을 이동한다", async ({
   page,
 }) => {
+  await page.goto("/design-lab");
+  await expect(page.getByLabel("시각 시나리오", { exact: true })).toHaveValue("foundation");
+
   await page.goto("/design-lab?scenario=unknown");
 
   const scenarioSelect = page.getByLabel("시각 시나리오", { exact: true });
@@ -46,20 +49,85 @@ test("알 수 없는 시나리오는 기반 카탈로그로 돌아가고 선택�
   await expect(scenarioSelect).toHaveValue("result");
 });
 
+test("모바일 시나리오는 뷰포트에 고정된 독립 스크롤 시트를 사용한다", async ({ page }) => {
+  await prepareScenario(page, "result", { width: 390, height: 844 });
+
+  const metrics = await page.evaluate(() => {
+    const panel = document.querySelector<HTMLElement>("[data-testid='design-lab-panel']");
+    const map = document.querySelector<HTMLElement>("[data-testid='design-lab-map']");
+    const workspace = panel?.parentElement;
+    const sheet = panel?.firstElementChild as HTMLElement | null;
+    if (!panel || !map || !workspace || !sheet) throw new Error("시각 작업공간을 찾지 못했습니다.");
+
+    const panelBox = panel.getBoundingClientRect();
+    const mapBox = map.getBoundingClientRect();
+    const workspaceBox = workspace.getBoundingClientRect();
+
+    return {
+      panelPosition: getComputedStyle(panel).position,
+      panelBottom: panelBox.bottom,
+      workspaceBottom: workspaceBox.bottom,
+      workspaceHeight: workspaceBox.height,
+      mapHeight: mapBox.height,
+      sheetClientHeight: sheet.clientHeight,
+      sheetScrollHeight: sheet.scrollHeight,
+    };
+  });
+
+  expect(metrics.panelPosition).toBe("absolute");
+  expect(Math.abs(metrics.panelBottom - metrics.workspaceBottom)).toBeLessThanOrEqual(1);
+  expect(metrics.workspaceHeight).toBeLessThanOrEqual(780);
+  expect(metrics.mapHeight).toBe(metrics.workspaceHeight);
+  expect(metrics.sheetClientHeight).toBeLessThan(metrics.sheetScrollHeight);
+  expect(metrics.sheetClientHeight).toBeLessThanOrEqual(Math.round(844 * 0.6));
+});
+
+test("좁은 데스크톱 패널에서도 시간 입력 동작이 잘리지 않는다", async ({ page }) => {
+  await prepareScenario(page, "input", { width: 1440, height: 1000 });
+
+  const panel = await page.getByTestId("design-lab-panel").boundingBox();
+  const resetButton = await page.getByRole("button", { name: "현재 시간" }).boundingBox();
+  expect(panel).not.toBeNull();
+  expect(resetButton).not.toBeNull();
+  expect(resetButton!.x).toBeGreaterThanOrEqual(panel!.x);
+  expect(resetButton!.x + resetButton!.width).toBeLessThanOrEqual(panel!.x + panel!.width);
+});
+
 test("지도 표시는 시나리오의 입력과 결과 상태를 따른다", async ({ page }) => {
   await page.goto("/design-lab?scenario=empty");
-  await expect(page.getByLabel("출발지 1", { exact: true })).toBeHidden();
-  await expect(page.getByLabel("선택 경로", { exact: true })).toBeHidden();
+  let map = page.getByTestId("design-lab-map");
+  await expect(page.getByRole("img", { name: "빈 상태 지도: 장소와 선택 경로 없음" })).toBeVisible();
+  await expect(map.locator("[aria-label^='출발지 ']")).toHaveCount(0);
+  await expect(map.locator("[aria-label^='후보지 ']")).toHaveCount(0);
+  await expect(page.getByLabel("선택 경로", { exact: true })).toHaveCount(0);
 
   await page.goto("/design-lab?scenario=input");
-  await expect(page.getByLabel("출발지 1", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("선택 경로", { exact: true })).toBeHidden();
+  map = page.getByTestId("design-lab-map");
+  await expect(page.getByRole("img", { name: "장소 입력 지도: 출발지 3곳과 후보지 3곳, 선택 경로 없음" })).toBeVisible();
+  await expect(map.locator("[aria-label^='출발지 ']")).toHaveCount(3);
+  await expect(map.locator("[aria-label^='후보지 ']")).toHaveCount(3);
+  await expect(page.getByLabel("선택 경로", { exact: true })).toHaveCount(0);
+
+  await page.goto("/design-lab?scenario=loading");
+  map = page.getByTestId("design-lab-map");
+  await expect(page.getByRole("img", { name: "계산 중 지도: 출발지 3곳과 후보지 3곳, 선택 경로 없음" })).toBeVisible();
+  await expect(map.locator("[aria-label^='출발지 ']")).toHaveCount(3);
+  await expect(page.getByLabel("선택 경로", { exact: true })).toHaveCount(0);
 
   await page.goto("/design-lab?scenario=result");
   await expect(page.getByLabel("선택 경로", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("선택 후보 요약", { exact: true })).toContainText("평균 34분 · 최장 36분");
+
+  await page.goto("/design-lab?scenario=partial-failure");
+  await expect(page.getByLabel("선택 경로", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("선택 후보 요약", { exact: true })).toContainText("평균 34분 · 최장 36분");
 
   await page.goto("/design-lab?scenario=total-failure");
-  await expect(page.getByLabel("선택 경로", { exact: true })).toBeHidden();
+  map = page.getByTestId("design-lab-map");
+  await expect(page.getByRole("img", { name: "전체 실패 지도: 출발지 3곳과 후보지 3곳, 선택 경로 없음" })).toBeVisible();
+  await expect(map.locator("[aria-label^='출발지 ']")).toHaveCount(3);
+  await expect(page.getByLabel("선택 경로", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("선택 후보 요약", { exact: true })).toHaveCount(0);
 });
 
 for (const scenario of scenarios) {

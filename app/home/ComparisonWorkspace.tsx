@@ -6,10 +6,10 @@ import ResultPanel from "@/app/home/ResultPanel";
 import { useSelectedRouteMapState } from "@/app/home/useSelectedRouteMapState";
 import MapWorkspace from "@/components/map/MapWorkspace";
 import CalculationProgress from "@/components/result/CalculationProgress";
+import ComparisonWorkspaceShell from "@/components/layout/ComparisonWorkspaceShell";
 import RouteDetailSheet from "@/components/result/RouteDetailSheet";
 import RouteMatrix from "@/components/result/RouteMatrix";
 import { buildCandidateSummaries } from "@/components/result/resultModel";
-import BottomSheet from "@/components/ui/BottomSheet";
 import Button from "@/components/ui/Button";
 import type { CalculationProgress as CalculationProgressState } from "@/hooks/useTransitMatrix";
 import { useAppStore } from "@/store/useAppStore";
@@ -274,34 +274,10 @@ export default function ComparisonWorkspace({
   );
 
   return (
-    <section
-      aria-label="장소 비교 작업공간"
-      className="relative grid h-[calc(100svh-4rem)] min-h-[640px] min-w-0 overflow-hidden bg-canvas md:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]"
-    >
-      <aside className="absolute inset-x-0 bottom-0 z-20 min-w-0 md:static md:col-start-1 md:row-start-1 md:h-full">
-        <BottomSheet
-          title="비교 패널"
-          className="max-h-[72svh] overflow-y-auto md:h-full md:max-h-none md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
-        >
-          <div className="min-w-0 p-4 sm:p-5">
-            <header className="mb-5 border-b border-border pb-5">
-              <p className="text-xs font-semibold text-action">대중교통 약속 장소 비교</p>
-              <h1 className="mt-2 text-2xl font-semibold leading-tight text-text">
-                어디서 만나는 게 가장 균형 잡힐까요?
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-text-muted">
-                출발지와 후보지를 추가하면 이동시간의 균형을 비교합니다.
-              </p>
-            </header>
-            {activePanel}
-          </div>
-        </BottomSheet>
-      </aside>
-
-      <section
-        aria-label="출발지와 후보지 지도"
-        className="col-start-1 row-start-1 h-full min-h-0 min-w-0 p-3 pb-0 md:col-start-2 md:p-4"
-      >
+    <ComparisonWorkspaceShell
+      accessibleLabel="장소 비교 작업공간"
+      panel={activePanel}
+      map={(
         <MapWorkspace
           fill
           starts={starts}
@@ -313,8 +289,8 @@ export default function ComparisonWorkspace({
           selectedCandidate={selectedCandidate}
           selectedRouteName={selectedRouteName}
         />
-      </section>
-
+      )}
+    >
       <RouteDetailSheet
         isOpen={!isCalculating && routeDetail !== null}
         onClose={() => setRouteDetail(null)}
@@ -322,6 +298,6 @@ export default function ComparisonWorkspace({
         startName={routeDetail?.startName ?? ""}
         endName={routeDetail?.endName ?? ""}
       />
-    </section>
+    </ComparisonWorkspaceShell>
   );
 }

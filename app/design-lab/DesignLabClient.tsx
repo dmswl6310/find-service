@@ -6,10 +6,13 @@ import LocationPanel from "@/app/home/LocationPanel";
 import ResultPanel from "@/app/home/ResultPanel";
 import { designLabFixtures } from "@/components/design-lab/fixtures";
 import PlaceRow from "@/components/location/PlaceRow";
+import ComparisonWorkspaceShell from "@/components/layout/ComparisonWorkspaceShell";
 import StaticMapSurface from "@/components/map/StaticMapSurface";
 import CalculationProgress from "@/components/result/CalculationProgress";
 import RouteDetailSheet from "@/components/result/RouteDetailSheet";
 import RouteMatrix from "@/components/result/RouteMatrix";
+import { ShareButtonView } from "@/components/search/ShareButton";
+import { TimeFilterView } from "@/components/search/TimeFilter";
 import { buildCandidateSummaries } from "@/components/result/resultModel";
 import Button from "@/components/ui/Button";
 import BottomSheet from "@/components/ui/BottomSheet";
@@ -86,22 +89,34 @@ function FixedLocationSearch({ label, placeholder = "장소 검색", helperText 
 
 type VisualScenario = Exclude<DesignLabScenario, "foundation">;
 
+const matrixByScenario: Record<VisualScenario, TransitFetchResult[]> = {
+  empty: [],
+  input: [],
+  loading: [],
+  result: [...designLabFixtures.successfulRoutes],
+  "partial-failure": [...designLabFixtures.partialFailureMatrix],
+  "total-failure": [...designLabFixtures.totalFailureMatrix],
+};
+
+const mapLabelByScenario: Record<VisualScenario, string> = {
+  empty: "빈 상태 지도: 장소와 선택 경로 없음",
+  input: "장소 입력 지도: 출발지 3곳과 후보지 3곳, 선택 경로 없음",
+  loading: "계산 중 지도: 출발지 3곳과 후보지 3곳, 선택 경로 없음",
+  result: "비교 결과 지도: 출발지 3곳과 후보지 3곳, 선택 경로 표시",
+  "partial-failure": "부분 실패 지도: 출발지 3곳과 후보지 3곳, 선택 경로 표시",
+  "total-failure": "전체 실패 지도: 출발지 3곳과 후보지 3곳, 선택 경로 없음",
+};
+
 function ScenarioPanel({ scenario }: { scenario: VisualScenario }) {
   const starts = scenario === "empty" ? [] : [...designLabFixtures.starts];
   const candidates = scenario === "empty" ? [] : [...designLabFixtures.candidates];
-  const matrixByScenario: Record<VisualScenario, TransitFetchResult[]> = {
-    empty: [],
-    input: [],
-    loading: [],
-    result: [...designLabFixtures.successfulRoutes],
-    "partial-failure": [...designLabFixtures.partialFailureMatrix],
-    "total-failure": [...designLabFixtures.totalFailureMatrix],
-  };
   const matrixData = matrixByScenario[scenario];
   const summaries = buildCandidateSummaries(starts, candidates, matrixData);
   const total = designLabFixtures.starts.length * designLabFixtures.candidates.length;
 
   if (scenario === "empty" || scenario === "input") {
+    const hasLocations = starts.length > 0 && candidates.length > 0;
+
     return (
       <LocationPanel
         starts={starts}
@@ -116,6 +131,25 @@ function ScenarioPanel({ scenario }: { scenario: VisualScenario }) {
         onSelectEnd={() => undefined}
         onCalculate={() => undefined}
         SearchComponent={FixedLocationSearch}
+        controls={{
+          shareButton: (
+            <ShareButtonView
+              canShare={hasLocations}
+              onShare={() => undefined}
+            />
+          ),
+          timeFilter: (
+            <TimeFilterView
+              useDepartureTime
+              targetDate="20260822"
+              targetTime="0930"
+              onUseDepartureTimeChange={() => undefined}
+              onTargetDateChange={() => undefined}
+              onTargetTimeChange={() => undefined}
+              onResetToNow={() => undefined}
+            />
+          ),
+        }}
       />
     );
   }
@@ -145,104 +179,37 @@ function ScenarioPanel({ scenario }: { scenario: VisualScenario }) {
   );
 }
 
-function MapStatus({ scenario }: { scenario: VisualScenario }) {
-  const statusByScenario: Record<VisualScenario, { eyebrow: string; title: string; description: string }> = {
-    empty: {
-      eyebrow: "입력 대기",
-      title: "서울 전역을 한눈에 비교하세요",
-      description: "출발지와 후보지를 추가하면 번호와 문자 마커로 구분해 표시합니다.",
-    },
-    input: {
-      eyebrow: "6개 장소",
-      title: "출발지 3곳 · 후보지 3곳",
-      description: "서로 다른 형태와 레이블로 두 장소 그룹을 구분합니다.",
-    },
-    loading: {
-      eyebrow: "6 / 9 경로 완료",
-      title: "광화문역 경로를 계산 중입니다",
-      description: "입력한 장소는 그대로 두고 완료된 경로 수를 알려드립니다.",
-    },
-    result: {
-      eyebrow: "황금 밸런스",
-      title: "을지로입구역",
-      description: "강남역에서 을지로입구역까지 30분 경로를 선택했습니다.",
-    },
-    "partial-failure": {
-      eyebrow: "8 / 9 경로 완료",
-      title: "성공한 결과를 유지합니다",
-      description: "실패한 1개 경로는 안내하고 계산된 후보는 계속 비교합니다.",
-    },
-    "total-failure": {
-      eyebrow: "경로 계산 실패",
-      title: "입력한 장소는 유지됩니다",
-      description: "잠시 후 다시 계산하거나 장소를 수정할 수 있습니다.",
-    },
-  };
-  const status = statusByScenario[scenario];
-
-  return (
-    <div className="absolute inset-x-6 top-6 z-10 max-w-sm rounded-xl border border-border bg-surface/95 p-4 shadow-sm md:hidden lg:block">
-      <p className="text-xs font-semibold text-action">{status.eyebrow}</p>
-      <p className="mt-1 font-semibold text-text">{status.title}</p>
-      <p className="mt-1 text-sm leading-5 text-text-muted">{status.description}</p>
-    </div>
-  );
-}
-
 function ScenarioWorkspace({ scenario }: { scenario: VisualScenario }) {
-  return (
-    <section
-      aria-label={`${scenarioLabels[scenario]} 시각 시나리오`}
-      className="relative isolate grid min-h-[720px] min-w-0 overflow-hidden bg-canvas md:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]"
-    >
-      <aside
-        data-testid="design-lab-panel"
-        className="relative z-20 col-start-1 row-start-1 mt-60 min-w-0 self-end md:mt-0 md:self-stretch"
-      >
-        <BottomSheet
-          title="비교 패널"
-          className="md:h-full md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
-        >
-          <div className="min-w-0 p-4 sm:p-5">
-            <header className="mb-5 border-b border-border pb-5">
-              <p className="text-xs font-semibold text-action">대중교통 약속 장소 비교</p>
-              <h2 className="mt-2 text-2xl font-semibold leading-tight text-text">
-                어디서 만나는 게 가장 균형 잡힐까요?
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-text-muted">
-                출발지와 후보지를 추가하면 이동시간의 균형을 비교합니다.
-              </p>
-            </header>
-            <ScenarioPanel scenario={scenario} />
-          </div>
-        </BottomSheet>
-      </aside>
+  const hasLocations = scenario !== "empty";
+  const showRoute = scenario === "result" || scenario === "partial-failure";
+  const selectedCandidate = showRoute
+    ? buildCandidateSummaries(
+        [...designLabFixtures.starts],
+        [...designLabFixtures.candidates],
+        matrixByScenario[scenario],
+      )[0]
+    : undefined;
 
-      <section
-        data-testid="design-lab-map"
-        data-static-map-state={scenario}
-        aria-label="출발지와 후보지 지도"
-        className="absolute inset-0 z-0 min-h-0 min-w-0 p-3 pb-0 [&>[role=img]]:h-full [&>[role=img]]:min-h-full md:relative md:col-start-2 md:row-start-1 md:p-4"
-      >
-        <style>{`
-          [data-static-map-state="empty"] > [role="img"] > span {
-            display: none;
-          }
-          [data-static-map-state="empty"] > [role="img"] > div:nth-of-type(5),
-          [data-static-map-state="empty"] > [role="img"] > div:nth-of-type(6),
-          [data-static-map-state="input"] > [role="img"] > div:nth-of-type(5),
-          [data-static-map-state="input"] > [role="img"] > div:nth-of-type(6),
-          [data-static-map-state="loading"] > [role="img"] > div:nth-of-type(5),
-          [data-static-map-state="loading"] > [role="img"] > div:nth-of-type(6),
-          [data-static-map-state="total-failure"] > [role="img"] > div:nth-of-type(5),
-          [data-static-map-state="total-failure"] > [role="img"] > div:nth-of-type(6) {
-            display: none;
-          }
-        `}</style>
-        <StaticMapSurface />
-        <MapStatus scenario={scenario} />
-      </section>
-    </section>
+  return (
+    <ComparisonWorkspaceShell
+      accessibleLabel={`${scenarioLabels[scenario]} 시각 시나리오`}
+      headingLevel="h2"
+      panelTestId="design-lab-panel"
+      mapTestId="design-lab-map"
+      panel={<ScenarioPanel scenario={scenario} />}
+      map={(
+        <div className="h-full min-h-0">
+          <StaticMapSurface
+            originCount={hasLocations ? designLabFixtures.starts.length : 0}
+            candidateCount={hasLocations ? designLabFixtures.candidates.length : 0}
+            showRoute={showRoute}
+            accessibleLabel={mapLabelByScenario[scenario]}
+            selectedCandidate={selectedCandidate}
+            selectedRouteName={showRoute ? "강남역에서 을지로입구역까지" : undefined}
+          />
+        </div>
+      )}
+    />
   );
 }
 
