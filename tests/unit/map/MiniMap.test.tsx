@@ -61,6 +61,14 @@ describe("MiniMap", () => {
     document.documentElement.style.removeProperty("--success");
   });
 
+  it("컴포넌트가 mount되면 작업공간 timeout handoff callback을 호출한다", () => {
+    const onMount = vi.fn();
+
+    render(<MiniMap starts={starts} ends={ends} onMount={onMount} />);
+
+    expect(onMount).toHaveBeenCalledTimes(1);
+  });
+
   it("선택된 출발지·후보지를 활성 크기로 표시하고 나머지 마커를 약화한다", async () => {
     render(<MiniMap starts={starts} ends={ends} selectedStartId="s1" selectedEndId="e2" />);
     fireEvent.click(screen.getByRole("button", { name: "script-ready" }));

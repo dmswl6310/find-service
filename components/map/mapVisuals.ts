@@ -14,6 +14,9 @@ export type MapMarkerState = "default" | "active" | "dimmed";
 export type MapMarkerImage = {
   src: string;
   size: { width: number; height: number };
+  options?: {
+    offset: { x: number; y: number };
+  };
 };
 
 const MARKER_SIZES = {
@@ -86,5 +89,8 @@ export function createMapMarkerImage(
   return {
     src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
     size: { ...size },
+    options: kind === "origin"
+      ? { offset: { x: size.width / 2, y: size.height / 2 } }
+      : undefined,
   };
 }

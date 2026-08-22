@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Script from "next/script";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
+import MapFailureState from "@/components/map/MapFailureState";
 import { createMapMarkerImage, ROUTE_VISUALS } from "@/components/map/mapVisuals";
 import { KakaoLocation } from "@/types/kakao";
 import { buildKakaoSdkScriptUrl, getKakaoJsApiKey } from "@/lib/external-config";
@@ -22,6 +23,7 @@ export interface MiniMapProps {
   detailedPath?: MapPathPoint[];
   selectedStartId?: string;
   selectedEndId?: string;
+  onMount?: () => void;
 }
 
 function resolveCssColor(token: string) {
@@ -35,6 +37,7 @@ export default function MiniMap({
   detailedPath = [],
   selectedStartId,
   selectedEndId,
+  onMount,
 }: MiniMapProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -43,6 +46,10 @@ export default function MiniMap({
   const kakaoScriptUrl = buildKakaoSdkScriptUrl(getKakaoJsApiKey());
   const hasSelectedRoute = Boolean(selectedStartId && selectedEndId);
   const segmentPoints = routeSegments.flatMap((segment) => segment.path);
+
+  useEffect(() => {
+    onMount?.();
+  }, [onMount]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -106,10 +113,7 @@ export default function MiniMap({
     return (
       <>
         <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
-        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-surface border border-border rounded-xl aspect-square md:aspect-auto px-6 text-center" role="status" aria-live="polite">
-          <p className="text-sm font-semibold text-foreground">지도를 불러오지 못했습니다.</p>
-          <p className="text-xs leading-5 text-foreground/60">네트워크 상태를 확인하거나 잠시 후 다시 시도해 주세요.</p>
-        </div>
+        <MapFailureState />
       </>
     );
   }

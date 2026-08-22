@@ -43,6 +43,16 @@ describe("지도 시맨틱 시각 요소", () => {
     expect(decodeMarker("candidate", 1, "dimmed")).toContain('opacity="0.48"');
   });
 
+  it("원형 출발지는 크기별 중심 offset을 사용하고 후보 핀은 center-bottom 기본값을 유지한다", () => {
+    expect(createMapMarkerImage("origin", 1, "default").options).toEqual({
+      offset: { x: 17, y: 17 },
+    });
+    expect(createMapMarkerImage("origin", 1, "active").options).toEqual({
+      offset: { x: 20, y: 20 },
+    });
+    expect(createMapMarkerImage("candidate", 1, "default").options).toBeUndefined();
+  });
+
   it("후보 문자 표기는 Z 다음에 AA로 이어진다", () => {
     expect(decodeMarker("candidate", 1, "default")).toContain(">A</text>");
     expect(decodeMarker("candidate", 26, "default")).toContain(">Z</text>");
