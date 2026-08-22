@@ -58,6 +58,7 @@ export default function ComparisonWorkspace({
   const [selectedStartId, setSelectedStartId] = useState<string>();
   const [selectedEndId, setSelectedEndId] = useState<string>();
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>();
+  const [isEditing, setIsEditing] = useState(false);
   const [isMatrixOpen, setIsMatrixOpen] = useState(false);
   const [routeDetail, setRouteDetail] = useState<RouteDetailState | null>(null);
   const { activeMapRouteId, selectedRoute, routeSegments, detailedPath, handleSelectRoute } =
@@ -71,18 +72,38 @@ export default function ComparisonWorkspace({
   const hasResults = matrixData.length > 0 && !isCalculating;
   const panelMode = isCalculating
     ? "loading"
-    : hasResults
-      ? "result"
-      : hasLocations
-        ? "input"
-        : "empty";
-  const selectedCandidate =
-    summaries.find((summary) => summary.id === selectedCandidateId) ??
-    summaries.find((summary) => summary.id === selectedRoute?.toId) ??
-    summaries.find((summary) => summary.isFairest) ??
-    summaries[0];
-  const selectedStartName = starts.find((start) => start.id === selectedRoute?.fromId)?.place_name;
-  const selectedEndName = ends.find((end) => end.id === selectedRoute?.toId)?.place_name;
+    : isEditing
+      ? "input"
+      : hasResults
+        ? "result"
+        : hasLocations
+          ? "input"
+          : "empty";
+  const currentSelectedRoute =
+    hasResults &&
+    selectedRoute &&
+    matrixData.includes(selectedRoute) &&
+    !selectedRoute.error &&
+    selectedRoute.timeMn >= 0
+      ? selectedRoute
+      : undefined;
+  const visibleSelectedRoute =
+    currentSelectedRoute &&
+    (!selectedCandidateId || currentSelectedRoute.toId === selectedCandidateId)
+      ? currentSelectedRoute
+      : undefined;
+  const selectedCandidate = hasResults
+    ? summaries.find((summary) => summary.id === selectedCandidateId) ??
+      summaries.find((summary) => summary.id === visibleSelectedRoute?.toId) ??
+      summaries.find((summary) => summary.isFairest) ??
+      summaries[0]
+    : undefined;
+  const selectedStartName = starts.find(
+    (start) => start.id === visibleSelectedRoute?.fromId,
+  )?.place_name;
+  const selectedEndName = ends.find(
+    (end) => end.id === visibleSelectedRoute?.toId,
+  )?.place_name;
   const selectedRouteName =
     selectedStartName && selectedEndName
       ? `${selectedStartName}에서 ${selectedEndName}까지`
@@ -91,11 +112,14 @@ export default function ComparisonWorkspace({
   const closeSecondaryViews = () => {
     setIsMatrixOpen(false);
     setRouteDetail(null);
-    setSelectedCandidateId(undefined);
   };
 
   const handleCalculate = () => {
     closeSecondaryViews();
+    setIsEditing(false);
+    setSelectedStartId(undefined);
+    setSelectedEndId(undefined);
+    setSelectedCandidateId(undefined);
     void calculateMatrix(
       starts,
       ends,
@@ -107,12 +131,14 @@ export default function ComparisonWorkspace({
   const handleAddStart = (location: KakaoLocation) => {
     resetMatrix();
     closeSecondaryViews();
+    setSelectedCandidateId(undefined);
     addStart(location);
   };
 
   const handleRemoveStart = (id: string) => {
     resetMatrix();
     closeSecondaryViews();
+    setSelectedCandidateId(undefined);
     setSelectedStartId((current) => (current === id ? undefined : current));
     removeStart(id);
   };
@@ -120,12 +146,14 @@ export default function ComparisonWorkspace({
   const handleAddEnd = (location: KakaoLocation) => {
     resetMatrix();
     closeSecondaryViews();
+    setSelectedCandidateId(undefined);
     addEnd(location);
   };
 
   const handleRemoveEnd = (id: string) => {
     resetMatrix();
     closeSecondaryViews();
+    setSelectedCandidateId(undefined);
     setSelectedEndId((current) => (current === id ? undefined : current));
     removeEnd(id);
   };
@@ -148,6 +176,8 @@ export default function ComparisonWorkspace({
     if (preferredRoute) {
       setSelectedStartId(preferredRoute.fromId);
       handleSelectRoute(preferredRoute);
+    } else {
+      setSelectedStartId(undefined);
     }
   };
 
@@ -167,8 +197,8 @@ export default function ComparisonWorkspace({
   };
 
   const handleEditInputs = () => {
-    resetMatrix();
     closeSecondaryViews();
+    setIsEditing(true);
   };
 
   const activePanel = isMatrixOpen ? (
@@ -186,7 +216,7 @@ export default function ComparisonWorkspace({
         starts={starts}
         ends={ends}
         matrixData={matrixData}
-        activeMapRouteId={activeMapRouteId ?? undefined}
+        activeMapRouteId={visibleSelectedRoute ? activeMapRouteId ?? undefined : undefined}
         onSelectRoute={handleSelectMatrixRoute}
         onOpenRoute={handleOpenRoute}
       />
@@ -258,10 +288,10 @@ export default function ComparisonWorkspace({
           fill
           starts={starts}
           ends={ends}
-          routeSegments={routeSegments}
-          detailedPath={detailedPath}
-          selectedStartId={selectedRoute?.fromId ?? selectedStartId}
-          selectedEndId={selectedRoute?.toId ?? selectedEndId}
+          routeSegments={visibleSelectedRoute ? routeSegments : []}
+          detailedPath={visibleSelectedRoute ? detailedPath : []}
+          selectedStartId={visibleSelectedRoute?.fromId ?? selectedStartId}
+          selectedEndId={visibleSelectedRoute?.toId ?? selectedEndId}
           selectedCandidate={selectedCandidate}
           selectedRouteName={selectedRouteName}
         />

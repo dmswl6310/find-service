@@ -323,9 +323,16 @@ test("result cell selection updates active map-synced route", async ({ page }: {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await page.getByRole("button", { name: "비교 결과로 돌아가기" }).click();
+  const selectedCandidateSummary = page.getByLabel("선택 후보 요약");
+  await expect(selectedCandidateSummary).toContainText("홍대-result");
+  await expect(selectedCandidateSummary).toContainText("평균 22분 · 최장 33분");
   await page.getByRole("button", { name: "장소 수정하기" }).click();
+  await expect(page.getByRole("region", { name: "장소 입력" })).toBeVisible();
+  await expect(selectedCandidateSummary).toContainText("홍대-result");
+  await expect(selectedCandidateSummary).toContainText("평균 22분 · 최장 33분");
   await page.getByRole("button", { name: "강남-result 제거" }).click();
   await expect(page.locator("li", { hasText: "강남-result" })).toHaveCount(0);
+  await expect(selectedCandidateSummary).toHaveCount(0);
   await expect(page.getByRole("button", { name: /44분/ })).toHaveCount(0);
 
   await page.getByPlaceholder("목적지 후보 추가").fill("건대");
