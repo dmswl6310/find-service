@@ -144,70 +144,72 @@ export default function RouteDetailSheet({
           </button>
         </header>
 
-        {isFailure ? (
-          <section role="alert" className="m-5 rounded-xl border border-danger bg-surface-raised p-4">
-            <h3 className="font-semibold text-danger">{result.errorMessage || "경로 조회 실패"}</h3>
-            <dl className="mt-3 grid gap-2 text-sm text-text-muted">
-              {result.errorCode ? <div><dt className="inline font-medium text-text">오류 코드: </dt><dd className="inline">{result.errorCode}</dd></div> : null}
-              {result.errorStatus ? <div><dt className="inline font-medium text-text">응답 상태: </dt><dd className="inline">{result.errorStatus}</dd></div> : null}
-              {result.errorDetails ? <div><dt className="inline font-medium text-text">상세 사유: </dt><dd className="inline">{result.errorDetails}</dd></div> : null}
-            </dl>
-          </section>
-        ) : (
-          <>
-            <section aria-label="경로 요약" className="grid grid-cols-2 gap-4 border-b border-border bg-surface-raised p-5">
-              <div>
-                <p className="text-xs text-text-muted">소요 시간 · 환승</p>
-                <p className="mt-1 text-xl font-semibold text-action">
-                  {formatTime(result.timeMn)}
-                  <span className="ml-2 text-sm font-medium text-text-muted">환승 {result.transitCount ?? 0}회</span>
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-text-muted">총 요금</p>
-                <p className="mt-1 text-lg font-semibold text-text">
-                  {result.payment > 0 ? `${result.payment.toLocaleString()}원` : "무료"}
-                </p>
-              </div>
+        <div className="flex-1 overflow-y-auto">
+          {isFailure ? (
+            <section role="alert" className="m-5 rounded-xl border border-danger bg-surface-raised p-4">
+              <h3 className="font-semibold text-danger">{result.errorMessage || "경로 조회 실패"}</h3>
+              <dl className="mt-3 grid gap-2 text-sm text-text-muted">
+                {result.errorCode ? <div><dt className="inline font-medium text-text">오류 코드: </dt><dd className="inline">{result.errorCode}</dd></div> : null}
+                {result.errorStatus ? <div><dt className="inline font-medium text-text">응답 상태: </dt><dd className="inline">{result.errorStatus}</dd></div> : null}
+                {result.errorDetails ? <div><dt className="inline font-medium text-text">상세 사유: </dt><dd className="inline">{result.errorDetails}</dd></div> : null}
+              </dl>
             </section>
+          ) : (
+            <>
+              <section aria-label="경로 요약" className="grid grid-cols-2 gap-4 border-b border-border bg-surface-raised p-5">
+                <div>
+                  <p className="text-xs text-text-muted">소요 시간 · 환승</p>
+                  <p className="mt-1 text-xl font-semibold text-action">
+                    {formatTime(result.timeMn)}
+                    <span className="ml-2 text-sm font-medium text-text-muted">환승 {result.transitCount ?? 0}회</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-text-muted">총 요금</p>
+                  <p className="mt-1 text-lg font-semibold text-text">
+                    {result.payment > 0 ? `${result.payment.toLocaleString()}원` : "무료"}
+                  </p>
+                </div>
+              </section>
 
-            <div className="flex-1 overflow-y-auto p-5">
-              {!result.subPath || result.subPath.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border bg-surface-raised p-4 text-center text-sm text-text-muted">
-                  상세 경로 정보가 없습니다.
-                </p>
-              ) : (
-                <ol className="space-y-3" aria-label="이동 구간">
-                  {result.subPath.map((path, index) => {
-                    const presentation = getSegmentPresentation(path.trafficType);
-                    return (
-                      <li key={`${path.trafficType}-${index}`} className="rounded-xl border border-border bg-surface p-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${presentation.classes}`}>
-                            {presentation.label}
-                          </span>
-                          <span className="text-sm font-semibold text-text">{getLineName(path)}</span>
-                          <span className="text-sm text-text-muted">{path.sectionTime}분</span>
-                        </div>
-                        {path.trafficType === 3 ? (
-                          <p className="mt-2 text-sm text-text-muted">
-                            {path.distance > 0 ? `${path.distance.toLocaleString()}m 이동` : "도보 이동"}
-                          </p>
-                        ) : (
-                          <div className="mt-3 text-sm text-text-muted">
-                            <p><span className="font-medium text-text">{path.startName || "승차 지점"}</span> 승차</p>
-                            <p className="my-1">{path.stationCount ?? 0}개 정류장 이동</p>
-                            <p><span className="font-medium text-text">{path.endName || "하차 지점"}</span> 하차</p>
+              <div className="p-5">
+                {!result.subPath || result.subPath.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border bg-surface-raised p-4 text-center text-sm text-text-muted">
+                    상세 경로 정보가 없습니다.
+                  </p>
+                ) : (
+                  <ol className="space-y-3" aria-label="이동 구간">
+                    {result.subPath.map((path, index) => {
+                      const presentation = getSegmentPresentation(path.trafficType);
+                      return (
+                        <li key={`${path.trafficType}-${index}`} className="rounded-xl border border-border bg-surface p-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${presentation.classes}`}>
+                              {presentation.label}
+                            </span>
+                            <span className="text-sm font-semibold text-text">{getLineName(path)}</span>
+                            <span className="text-sm text-text-muted">{path.sectionTime}분</span>
                           </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </div>
-          </>
-        )}
+                          {path.trafficType === 3 ? (
+                            <p className="mt-2 text-sm text-text-muted">
+                              {path.distance > 0 ? `${path.distance.toLocaleString()}m 이동` : "도보 이동"}
+                            </p>
+                          ) : (
+                            <div className="mt-3 text-sm text-text-muted">
+                              <p><span className="font-medium text-text">{path.startName || "승차 지점"}</span> 승차</p>
+                              <p className="my-1">{path.stationCount ?? 0}개 정류장 이동</p>
+                              <p><span className="font-medium text-text">{path.endName || "하차 지점"}</span> 하차</p>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

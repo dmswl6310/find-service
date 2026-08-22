@@ -266,6 +266,29 @@ describe("RouteDetailSheet 접근성", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("ODsay에서 대중교통 경로를 찾지 못했습니다.");
     expect(screen.getByRole("dialog")).not.toHaveTextContent("-1분");
   });
+
+  it("긴 실패 상세를 스크롤 가능한 flex 본문 안에 렌더링한다", () => {
+    const longErrorDetails = "작은 화면에서도 확인해야 하는 상세 실패 사유입니다. ".repeat(40);
+    const failedRoute = {
+      ...makeFailedRoute("s1", "e1"),
+      errorDetails: longErrorDetails,
+    };
+
+    render(
+      <RouteDetailSheet
+        isOpen
+        onClose={() => undefined}
+        result={failedRoute}
+        startName="홍대"
+        endName="성수"
+      />,
+    );
+
+    const alert = screen.getByRole("alert");
+    const contentRegion = alert.parentElement;
+    expect(contentRegion).toHaveClass("flex-1", "overflow-y-auto");
+    expect(contentRegion?.textContent).toContain(longErrorDetails.trim());
+  });
 });
 
 describe("Design Lab 고정 경로 예시", () => {
