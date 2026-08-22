@@ -50,6 +50,7 @@ export default function ResultPanel({
         <div className="flex flex-wrap gap-3">
           <Button type="button" onClick={onRetry}>다시 계산하기</Button>
           <Button type="button" variant="secondary" onClick={onEditInputs}>장소 수정하기</Button>
+          <Button type="button" variant="secondary" onClick={onOpenMatrix}>실패 상세 보기</Button>
         </div>
       </section>
     );
@@ -80,7 +81,10 @@ export default function ResultPanel({
         />
       ) : null}
       <CandidateRankList summaries={summaries} onSelectCandidate={onSelectCandidate} />
-      <Button type="button" variant="secondary" onClick={onOpenMatrix}>경로표 열기</Button>
+      <div className="flex flex-wrap gap-3">
+        <Button type="button" variant="secondary" onClick={onOpenMatrix}>경로표 열기</Button>
+        <Button type="button" variant="ghost" onClick={onEditInputs}>장소 수정하기</Button>
+      </div>
     </section>
   );
 }

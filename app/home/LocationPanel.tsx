@@ -49,7 +49,7 @@ export default function LocationPanel({
         <ShareButton />
       </div>
       <TimeFilter />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-5">
         <LocationGroup kind="origin" title="출발지" locations={starts} selectedId={selectedStartId} onSelectLocation={onSelectStart} onRemove={onRemoveStart} onAdd={onAddStart} SearchComponent={SearchComponent} />
         <LocationGroup kind="candidate" title="목적지 후보" locations={ends} selectedId={selectedEndId} onSelectLocation={onSelectEnd} onRemove={onRemoveEnd} onAdd={onAddEnd} SearchComponent={SearchComponent} />
       </div>

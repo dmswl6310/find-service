@@ -43,27 +43,27 @@ export default function TimeFilter() {
   };
 
   return (
-    <div className="flex flex-col gap-3 bg-surface border border-border p-4 rounded-2xl shadow-sm mb-4">
+    <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-sm font-semibold whitespace-nowrap">⏳ 출발 시간 반영</span>
+        <span className="whitespace-nowrap text-sm font-semibold text-text">출발 시간 반영</span>
         <button
           type="button"
           onClick={() => setUseDepartureTime(!useDepartureTime)}
-          className={`inline-flex h-10 w-full items-center justify-between rounded-xl border px-4 text-sm font-medium transition-colors sm:w-[220px] ${
+          className={`inline-flex min-h-11 w-full items-center justify-between rounded-xl border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2 sm:w-[220px] ${
             useDepartureTime
-              ? "border-primary/30 bg-primary/10 text-primary"
-              : "border-border bg-background text-foreground/70"
+              ? "border-action bg-canvas text-action"
+              : "border-border bg-surface-raised text-text-muted"
           }`}
           aria-pressed={useDepartureTime}
         >
           <span>{useDepartureTime ? "켜짐" : "꺼짐"}</span>
           <span
             className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              useDepartureTime ? "bg-primary" : "bg-foreground/20"
+              useDepartureTime ? "bg-action" : "bg-border-strong"
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+              className={`inline-block h-4 w-4 rounded-full bg-action-foreground transition-transform ${
                 useDepartureTime ? "translate-x-4" : "translate-x-1"
               }`}
             />
@@ -77,18 +77,18 @@ export default function TimeFilter() {
             type="date"
             value={dateInputValue}
             onChange={handleDateChange}
-            className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm focus-ring"
+            className="min-h-11 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
           />
           <input
             type="time"
             value={timeInputValue}
             onChange={handleTimeChange}
-            className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm focus-ring"
+            className="min-h-11 w-full rounded-xl border border-border bg-surface-raised px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action"
           />
           <button
             type="button"
             onClick={resetToNow}
-            className="px-4 py-2.5 bg-secondary text-secondary-foreground rounded-xl text-sm hover:bg-secondary/80 whitespace-nowrap transition-colors"
+            className="min-h-11 whitespace-nowrap rounded-xl border border-border-strong bg-surface px-4 text-sm text-text transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2"
           >
             현재 시간
           </button>

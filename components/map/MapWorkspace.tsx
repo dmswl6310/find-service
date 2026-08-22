@@ -51,9 +51,10 @@ class MapLoadErrorBoundary extends Component<MapLoadErrorBoundaryProps, { failed
 export type MapWorkspaceProps = Omit<MiniMapProps, "onMount"> & {
   selectedCandidate?: CandidateSummary;
   selectedRouteName?: string;
+  fill?: boolean;
 };
 
-export default function MapWorkspace({ selectedCandidate, selectedRouteName, ...mapProps }: MapWorkspaceProps) {
+export default function MapWorkspace({ selectedCandidate, selectedRouteName, fill = false, ...mapProps }: MapWorkspaceProps) {
   const [loadFailed, setLoadFailed] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const miniMapMountedRef = useRef(false);
@@ -86,7 +87,7 @@ export default function MapWorkspace({ selectedCandidate, selectedRouteName, ...
   }, [clearLoadTimeout, handleLoadFailure]);
 
   return (
-    <section className="space-y-3" aria-label="지도 작업공간">
+    <section className={fill ? "flex h-full min-h-0 flex-col gap-3" : "space-y-3"} aria-label="지도 작업공간">
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-text-muted">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-origin-soft px-2.5 py-1 text-origin">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-origin text-[10px] font-bold text-action-foreground">1</span>
@@ -102,7 +103,7 @@ export default function MapWorkspace({ selectedCandidate, selectedRouteName, ...
         </span>
       </div>
 
-      <div className="relative h-[400px] overflow-hidden rounded-xl border border-border shadow-sm lg:h-[calc(100vh-4rem)]">
+      <div className={fill ? "relative min-h-0 flex-1 overflow-hidden rounded-xl border border-border shadow-sm" : "relative h-[400px] overflow-hidden rounded-xl border border-border shadow-sm lg:h-[calc(100vh-4rem)]"}>
         {loadFailed ? (
           <MapFailureState />
         ) : (

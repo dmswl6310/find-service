@@ -94,7 +94,6 @@ export default function RouteMatrix({
                       <p className="font-semibold text-danger">{result.errorMessage || "경로 조회 실패"}</p>
                       <Button
                         type="button"
-                        size="sm"
                         variant="secondary"
                         className="mt-3 w-full"
                         aria-label={`${start.place_name}에서 ${end.place_name}까지 실패 상세 보기`}
@@ -136,7 +135,6 @@ export default function RouteMatrix({
                     </button>
                     <Button
                       type="button"
-                      size="sm"
                       variant="secondary"
                       className="mt-2 w-full"
                       aria-label={`${start.place_name}에서 ${end.place_name}까지 상세 경로 보기`}

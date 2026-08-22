@@ -45,7 +45,7 @@ export default function PlaceRow({ location, kind, index, selected = false, onSe
         <p className="truncate text-sm font-semibold text-text">{location.place_name}</p>
         <p className="truncate text-xs text-text-muted">{location.road_address_name || location.address_name}</p>
       </button>
-      <IconButton aria-label={`${location.place_name} 제거`} type="button" variant="ghost" size="sm" onClick={onRemove}>
+      <IconButton aria-label={`${location.place_name} 제거`} type="button" variant="ghost" onClick={onRemove}>
         <span aria-hidden="true">×</span>
       </IconButton>
     </li>

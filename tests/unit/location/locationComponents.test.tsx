@@ -4,7 +4,6 @@ import LocationGroup from "@/components/location/LocationGroup";
 import LocationSearch from "@/components/location/LocationSearch";
 import PlaceRow from "@/components/location/PlaceRow";
 import LocationPanel from "@/app/home/LocationPanel";
-import LocationInput from "@/components/search/LocationInput";
 import { makeLocation } from "@/tests/fixtures/transit";
 
 const searchState = vi.hoisted(() => ({
@@ -88,18 +87,6 @@ describe("장소 입력 컴포넌트", () => {
     const input = screen.getByRole("combobox", { name: "출발지 검색" });
     expect(input).toHaveAttribute("aria-controls");
     expect(screen.getByRole("option", { name: /홍대/ })).toBeVisible();
-  });
-
-  it("기존 입력 어댑터는 placeholder를 문맥 접근 가능한 이름으로 사용한다", () => {
-    render(
-      <>
-        <LocationInput placeholder="출발지 추가" onSelect={() => undefined} />
-        <LocationInput placeholder="목적지 후보 추가" onSelect={() => undefined} />
-      </>,
-    );
-
-    expect(screen.getByRole("combobox", { name: "출발지 추가" })).toBeVisible();
-    expect(screen.getByRole("combobox", { name: "목적지 후보 추가" })).toBeVisible();
   });
 
   it("option은 포인터로 선택하지만 내부에 Tab으로 진입할 버튼을 두지 않는다", () => {

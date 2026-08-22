@@ -1,5 +1,35 @@
 import { expect, test } from "@playwright/test";
 
+test("Calm Transit 데스크톱 작업공간에서 비교 동작과 지도를 함께 유지한다", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+
+  await expect(page.getByRole("region", { name: "장소 비교 작업공간" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "어디서 만나는 게 가장 균형 잡힐까요?" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "출발지와 후보지 지도" })).toBeVisible();
+});
+
+test("모바일은 한 줄 앱 바와 지도 바텀시트를 사용한다", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  await expect(page.getByRole("region", { name: "장소 입력" })).toBeVisible();
+  const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
+  expect(bodyWidth).toBeLessThanOrEqual(390);
+});
+
+test("비교 작업공간은 320px에서 가로로 넘치지 않는다", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto("/");
+
+  await expect(page.getByRole("region", { name: "장소 비교 작업공간" })).toBeVisible();
+  const widths = await page.evaluate(() => ({
+    body: document.body.scrollWidth,
+    viewport: document.documentElement.clientWidth,
+  }));
+  expect(widths.body).toBeLessThanOrEqual(widths.viewport);
+});
+
 const requiredTokens = {
   "--canvas": "#f3f6f5",
   "--surface": "#ffffff",

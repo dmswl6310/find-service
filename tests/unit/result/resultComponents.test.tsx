@@ -95,6 +95,7 @@ describe("결과 요약 컴포넌트", () => {
   it("완전한 성공 결과를 황금 밸런스와 순위로 표시하고 CTA를 연결한다", () => {
     const onSelectCandidate = vi.fn();
     const onOpenMatrix = vi.fn();
+    const onEditInputs = vi.fn();
     render(
       <ResultPanel
         {...baseProps}
@@ -103,14 +104,17 @@ describe("결과 요약 컴포넌트", () => {
         calculationProgress={{ completed: 2, total: 2 }}
         onSelectCandidate={onSelectCandidate}
         onOpenMatrix={onOpenMatrix}
+        onEditInputs={onEditInputs}
       />,
     );
 
     expect(screen.getByText("황금 밸런스")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "을지로3가 선택" }));
     fireEvent.click(screen.getByRole("button", { name: "경로표 열기" }));
+    fireEvent.click(screen.getByRole("button", { name: "장소 수정하기" }));
     expect(onSelectCandidate).toHaveBeenCalledWith("e1");
     expect(onOpenMatrix).toHaveBeenCalledTimes(1);
+    expect(onEditInputs).toHaveBeenCalledTimes(1);
   });
 
   it("부분 실패에서는 완전 후보를 우선하고 불완전 후보와 성공 결과를 유지한다", () => {
@@ -168,9 +172,10 @@ describe("결과 요약 컴포넌트", () => {
     expect(screen.queryByText("모든 경로 계산에 실패했습니다.")).not.toBeInTheDocument();
   });
 
-  it("모든 매트릭스 경로가 실패한 경우에만 재시도와 장소 수정 CTA를 표시한다", () => {
+  it("모든 매트릭스 경로가 실패한 경우에도 실패 상세 경로표를 열 수 있다", () => {
     const onRetry = vi.fn();
     const onEditInputs = vi.fn();
+    const onOpenMatrix = vi.fn();
     render(
       <ResultPanel
         {...baseProps}
@@ -179,13 +184,16 @@ describe("결과 요약 컴포넌트", () => {
         error="다른 오류 문구"
         onRetry={onRetry}
         onEditInputs={onEditInputs}
+        onOpenMatrix={onOpenMatrix}
       />,
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent("모든 경로 계산에 실패했습니다");
     fireEvent.click(screen.getByRole("button", { name: "다시 계산하기" }));
     fireEvent.click(screen.getByRole("button", { name: "장소 수정하기" }));
+    fireEvent.click(screen.getByRole("button", { name: "실패 상세 보기" }));
     expect(onRetry).toHaveBeenCalledTimes(1);
     expect(onEditInputs).toHaveBeenCalledTimes(1);
+    expect(onOpenMatrix).toHaveBeenCalledTimes(1);
   });
 });
