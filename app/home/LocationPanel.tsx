@@ -1,6 +1,8 @@
 "use client";
 
+import type { ComponentType } from "react";
 import LocationGroup from "@/components/location/LocationGroup";
+import type { LocationSearchProps } from "@/components/location/LocationSearch";
 import ShareButton from "@/components/search/ShareButton";
 import TimeFilter from "@/components/search/TimeFilter";
 import Button from "@/components/ui/Button";
@@ -19,6 +21,7 @@ export interface LocationPanelProps {
   onSelectStart: (id: string) => void;
   onSelectEnd: (id: string) => void;
   onCalculate: () => void;
+  SearchComponent?: ComponentType<LocationSearchProps>;
 }
 
 export default function LocationPanel({
@@ -34,6 +37,7 @@ export default function LocationPanel({
   onSelectStart,
   onSelectEnd,
   onCalculate,
+  SearchComponent,
 }: LocationPanelProps) {
   const routeCount = starts.length * ends.length;
   const canCalculate = routeCount > 0;
@@ -46,8 +50,8 @@ export default function LocationPanel({
       </div>
       <TimeFilter />
       <div className="grid gap-6 md:grid-cols-2">
-        <LocationGroup kind="origin" title="출발지" locations={starts} selectedId={selectedStartId} onSelectLocation={onSelectStart} onRemove={onRemoveStart} onAdd={onAddStart} />
-        <LocationGroup kind="candidate" title="목적지 후보" locations={ends} selectedId={selectedEndId} onSelectLocation={onSelectEnd} onRemove={onRemoveEnd} onAdd={onAddEnd} />
+        <LocationGroup kind="origin" title="출발지" locations={starts} selectedId={selectedStartId} onSelectLocation={onSelectStart} onRemove={onRemoveStart} onAdd={onAddStart} SearchComponent={SearchComponent} />
+        <LocationGroup kind="candidate" title="목적지 후보" locations={ends} selectedId={selectedEndId} onSelectLocation={onSelectEnd} onRemove={onRemoveEnd} onAdd={onAddEnd} SearchComponent={SearchComponent} />
       </div>
       <Button type="button" onClick={onCalculate} disabled={!canCalculate} isLoading={isCalculating} className="w-full">
         {isCalculating ? "경로 계산 중..." : canCalculate ? `${routeCount}개 경로 비교하기` : "장소를 추가해 주세요"}

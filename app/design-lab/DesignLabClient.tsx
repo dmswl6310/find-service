@@ -11,6 +11,7 @@ import BottomSheet from "@/components/ui/BottomSheet";
 import IconButton from "@/components/ui/IconButton";
 import InlineNotice from "@/components/ui/InlineNotice";
 import Progress from "@/components/ui/Progress";
+import type { LocationSearchProps } from "@/components/location/LocationSearch";
 import type { TransitFetchResult } from "@/types/odsay";
 
 export const designLabScenarios = [
@@ -46,6 +47,25 @@ function PlaceStateExample({ title, locations, selectedId }: PlaceStateExamplePr
         {locations.length === 0 && <li className="py-2 text-sm text-text-muted">친구들이 출발하는 역이나 장소를 추가해 주세요.</li>}
       </ul>
     </section>
+  );
+}
+
+function FixedLocationSearch({ label, placeholder = "장소 검색", helperText }: LocationSearchProps) {
+  return (
+    <div className="w-full">
+      <label className="sr-only">{label}</label>
+      <input
+        type="text"
+        value=""
+        disabled
+        readOnly
+        placeholder={placeholder}
+        aria-label={label}
+        className="w-full rounded-xl border border-border bg-surface-raised px-4 py-3 text-text"
+      />
+      {helperText && <p className="mt-2 text-xs text-text-muted">{helperText}</p>}
+      <p className="mt-2 text-xs text-text-muted">고정 fixture 입력으로, 장소 검색을 실행하지 않습니다.</p>
+    </div>
   );
 }
 
@@ -192,6 +212,7 @@ export default function DesignLabClient() {
             onSelectStart={() => undefined}
             onSelectEnd={() => undefined}
             onCalculate={() => undefined}
+            SearchComponent={FixedLocationSearch}
           />
         </section>
       ) : null}

@@ -69,3 +69,19 @@ test("개발 환경 Design Lab이 고정 기반 컨트롤을 렌더링한다", a
   await expect(page.getByText("검색 결과가 없습니다. 다른 키워드로 시도해 보세요.")).toBeVisible();
   await expect(page.getByText("장소 검색 중 오류가 발생했습니다.")).toHaveAttribute("role", "alert");
 });
+
+test("Design Lab 입력 시나리오는 장소 검색 API를 호출하지 않는 고정 입력만 제공한다", async ({ page }) => {
+  const searchRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/search") {
+      searchRequests.push(request.url());
+    }
+  });
+
+  await page.goto("/design-lab?scenario=input");
+
+  await expect(page.getByText("고정 fixture 입력으로, 장소 검색을 실행하지 않습니다.")).toHaveCount(2);
+  await expect(page.getByRole("textbox", { name: "출발지 검색" })).toBeDisabled();
+  await expect(page.getByRole("textbox", { name: "목적지 후보 검색" })).toBeDisabled();
+  expect(searchRequests).toEqual([]);
+});
