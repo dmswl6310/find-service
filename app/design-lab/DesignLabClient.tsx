@@ -1,13 +1,33 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import Button from "@/components/ui/Button";
-import IconButton from "@/components/ui/IconButton";
-import Progress from "@/components/ui/Progress";
-import InlineNotice from "@/components/ui/InlineNotice";
-import BottomSheet from "@/components/ui/BottomSheet";
-import PlaceRow from "@/components/location/PlaceRow";
+import LocationPanel from "@/app/home/LocationPanel";
+import ResultPanel from "@/app/home/ResultPanel";
 import { designLabFixtures } from "@/components/design-lab/fixtures";
+import PlaceRow from "@/components/location/PlaceRow";
+import { buildCandidateSummaries } from "@/components/result/resultModel";
+import Button from "@/components/ui/Button";
+import BottomSheet from "@/components/ui/BottomSheet";
+import IconButton from "@/components/ui/IconButton";
+import InlineNotice from "@/components/ui/InlineNotice";
+import Progress from "@/components/ui/Progress";
+import type { TransitFetchResult } from "@/types/odsay";
+
+export const designLabScenarios = [
+  "foundation",
+  "empty",
+  "input",
+  "loading",
+  "result",
+  "partial-failure",
+  "total-failure",
+] as const;
+
+type DesignLabScenario = (typeof designLabScenarios)[number];
+
+export function isDesignLabScenario(value: string | null): value is DesignLabScenario {
+  return designLabScenarios.some((scenario) => scenario === value);
+}
 
 type PlaceStateExampleProps = {
   title: string;
@@ -21,15 +41,7 @@ function PlaceStateExample({ title, locations, selectedId }: PlaceStateExamplePr
       <h3 id={`${title}-heading`} className="text-base font-semibold text-text">장소 상태: {title}</h3>
       <ul className="mt-3 flex min-h-16 flex-col gap-2 rounded-lg border border-dashed border-border bg-surface-raised p-3">
         {locations.map((location, index) => (
-          <PlaceRow
-            key={location.id}
-            location={location}
-            kind="origin"
-            index={index}
-            selected={selectedId === location.id}
-            onSelect={() => undefined}
-            onRemove={() => undefined}
-          />
+          <PlaceRow key={location.id} location={location} kind="origin" index={index} selected={selectedId === location.id} onSelect={() => undefined} onRemove={() => undefined} />
         ))}
         {locations.length === 0 && <li className="py-2 text-sm text-text-muted">친구들이 출발하는 역이나 장소를 추가해 주세요.</li>}
       </ul>
@@ -37,32 +49,50 @@ function PlaceStateExample({ title, locations, selectedId }: PlaceStateExamplePr
   );
 }
 
-export default function DesignLabClient() {
-  const scenario = useSearchParams().get("scenario");
+function ResultState({ scenario }: { scenario: Exclude<DesignLabScenario, "foundation" | "input"> }) {
+  const matrixByScenario: Record<Exclude<DesignLabScenario, "foundation" | "input">, TransitFetchResult[]> = {
+    empty: [],
+    loading: [],
+    result: [...designLabFixtures.successfulRoutes],
+    "partial-failure": [...designLabFixtures.partialFailureMatrix],
+    "total-failure": [...designLabFixtures.totalFailureMatrix],
+  };
+  const matrixData = matrixByScenario[scenario];
+  const summaries = buildCandidateSummaries([...designLabFixtures.starts], [...designLabFixtures.candidates], matrixData);
+  const total = designLabFixtures.starts.length * designLabFixtures.candidates.length;
+  const titles: Record<Exclude<DesignLabScenario, "foundation" | "input">, string> = {
+    empty: "빈 결과",
+    loading: "계산 중",
+    result: "완료 결과",
+    "partial-failure": "부분 실패 결과",
+    "total-failure": "전체 실패 결과",
+  };
 
-  if (scenario !== "foundation") {
-    return (
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 md:px-8">
-        <h1 className="text-3xl font-bold text-text">Design Lab</h1>
-        <p className="mt-3 text-text-muted">foundation 시나리오만 사용할 수 있습니다.</p>
-      </main>
-    );
-  }
+  return (
+    <section className="space-y-4" aria-labelledby="result-state-heading">
+      <h2 id="result-state-heading" className="text-lg font-semibold text-text">{titles[scenario]}</h2>
+      <ResultPanel
+        summaries={summaries}
+        matrixData={matrixData}
+        calculationProgress={{ completed: scenario === "loading" ? 6 : total, total }}
+        isCalculating={scenario === "loading"}
+        error={null}
+        onEditInputs={() => undefined}
+        onRetry={() => undefined}
+        onSelectCandidate={() => undefined}
+        onOpenMatrix={() => undefined}
+      />
+    </section>
+  );
+}
 
+function FoundationState() {
   const partialFailureCount = designLabFixtures.partialFailureMatrix.filter((route) => route.error).length;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-10 sm:px-6 md:px-8">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold text-info">foundation</p>
-        <h1 className="text-3xl font-bold tracking-tight text-text">Design Lab</h1>
-        <p className="max-w-2xl text-text-muted">
-          외부 API 없이 고정 데이터와 승인된 시맨틱 토큰으로 구성 요소를 점검하는 개발 전용 화면입니다.
-        </p>
-      </header>
-
+    <div className="space-y-8">
       <section aria-labelledby="tokens-heading" className="rounded-xl border border-border bg-surface p-5">
-        <h2 id="tokens-heading" className="text-lg font-semibold text-text">Task 2 토큰</h2>
+        <h2 id="tokens-heading" className="text-lg font-semibold text-text">시맨틱 토큰</h2>
         <p className="mt-2 text-sm text-text-muted">canvas, surface, action, origin, candidate, balance, success, warning, danger, info</p>
         <div className="mt-4 flex flex-wrap gap-2" aria-label="시맨틱 색상 토큰 견본">
           <span className="rounded-full bg-origin-soft px-3 py-1 text-sm text-origin">출발지</span>
@@ -72,28 +102,30 @@ export default function DesignLabClient() {
       </section>
 
       <section aria-labelledby="controls-heading" className="rounded-xl border border-border bg-surface p-5">
-        <h2 id="controls-heading" className="text-lg font-semibold text-text">Task 3 Button / IconButton</h2>
+        <h2 id="controls-heading" className="text-lg font-semibold text-text">버튼과 아이콘 버튼</h2>
         <div className="mt-4 flex items-center gap-3">
           <Button type="button">주요 동작</Button>
-          <IconButton aria-label="설정 열기" type="button" variant="secondary">⚙</IconButton>
+          <IconButton aria-label="설정 열기" type="button" variant="secondary">
+            <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Zm0 10a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5ZM4.75 12a2.25 2.25 0 1 0 4.5 0 2.25 2.25 0 0 0-4.5 0Zm10 0a2.25 2.25 0 1 0 4.5 2.25 2.25 0 0 0-4.5 0Z" />
+            </svg>
+          </IconButton>
         </div>
       </section>
 
       <section aria-labelledby="feedback-heading" className="space-y-4 rounded-xl border border-border bg-surface p-5">
-        <h2 id="feedback-heading" className="text-lg font-semibold text-text">Task 4 Progress / InlineNotice / BottomSheet</h2>
+        <h2 id="feedback-heading" className="text-lg font-semibold text-text">진행률과 안내</h2>
         <Progress value={6} max={9} label="경로 계산 진행률" />
         <p className="text-sm text-text-muted">출발지 3개, 후보지 3개, 성공 경로 9개를 고정으로 제공합니다.</p>
-        <InlineNotice tone="warning" title="부분 실패 매트릭스">
-          {partialFailureCount}개 경로가 실패해도 나머지 성공 결과는 유지합니다.
-        </InlineNotice>
+        <InlineNotice tone="warning" title="부분 실패 매트릭스">{partialFailureCount}개 경로가 실패해도 나머지 성공 결과는 유지합니다.</InlineNotice>
         <BottomSheet title="고정 결과 미리보기" className="p-5">
-          <p className="font-medium text-text">foundation 고정 문구</p>
+          <p className="font-medium text-text">고정 결과 미리보기</p>
           <p className="mt-1 text-sm text-text-muted">네트워크 요청 없이 결정적인 fixture만 사용합니다.</p>
         </BottomSheet>
       </section>
 
       <section aria-labelledby="locations-heading" className="space-y-4 rounded-xl border border-border bg-surface p-5">
-        <h2 id="locations-heading" className="text-lg font-semibold text-text">Task 6 장소 입력 상태</h2>
+        <h2 id="locations-heading" className="text-lg font-semibold text-text">장소 입력 상태</h2>
         <p className="text-sm text-text-muted">모든 사례는 네트워크 요청 없이 고정 fixture와 정적 표현만 사용합니다.</p>
         <div className="grid gap-4 md:grid-cols-2">
           <PlaceStateExample title="비어 있음" locations={[]} />
@@ -101,7 +133,11 @@ export default function DesignLabClient() {
           <PlaceStateExample title="3개" locations={designLabFixtures.starts} />
           <PlaceStateExample title="선택됨" locations={designLabFixtures.starts} selectedId={designLabFixtures.starts[1].id} />
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+      </section>
+
+      <section aria-labelledby="search-state-heading" className="rounded-xl border border-border bg-surface p-5">
+        <h2 id="search-state-heading" className="text-lg font-semibold text-text">장소 검색 상태</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
           <section className="rounded-xl border border-border bg-surface-raised p-4" aria-labelledby="loading-search-heading">
             <h3 id="loading-search-heading" className="text-base font-semibold text-text">검색 중</h3>
             <div className="mt-3 flex items-center gap-2 text-sm text-text-muted" role="status" aria-label="장소 검색 중">
@@ -119,6 +155,47 @@ export default function DesignLabClient() {
           </section>
         </div>
       </section>
+    </div>
+  );
+}
+
+export default function DesignLabClient() {
+  const scenarioValue = useSearchParams().get("scenario");
+
+  if (!isDesignLabScenario(scenarioValue)) {
+    return (
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 md:px-8">
+        <h1 className="text-3xl font-bold text-text">Design Lab</h1>
+        <p className="mt-3 text-text-muted">허용된 고정 시나리오를 선택해 주세요.</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-10 sm:px-6 md:px-8">
+      <header className="space-y-2">
+        <p className="text-sm font-semibold text-info">{scenarioValue}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-text">Design Lab</h1>
+        <p className="max-w-2xl text-text-muted">외부 API 없이 고정 데이터와 승인된 시맨틱 토큰으로 구성 요소를 점검하는 개발 전용 화면입니다.</p>
+      </header>
+      {scenarioValue === "foundation" ? <FoundationState /> : null}
+      {scenarioValue === "input" ? (
+        <section aria-labelledby="input-state-heading">
+          <h2 id="input-state-heading" className="mb-4 text-lg font-semibold text-text">장소 입력</h2>
+          <LocationPanel
+            starts={[...designLabFixtures.starts]}
+            ends={[...designLabFixtures.candidates]}
+            onAddStart={() => undefined}
+            onAddEnd={() => undefined}
+            onRemoveStart={() => undefined}
+            onRemoveEnd={() => undefined}
+            onSelectStart={() => undefined}
+            onSelectEnd={() => undefined}
+            onCalculate={() => undefined}
+          />
+        </section>
+      ) : null}
+      {scenarioValue !== "foundation" && scenarioValue !== "input" ? <ResultState scenario={scenarioValue} /> : null}
     </main>
   );
 }

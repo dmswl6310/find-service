@@ -37,4 +37,7 @@ export const designLabFixtures = {
     makeRoute(starts[1].id, candidates[2].id, 41),
     makeRoute(starts[2].id, candidates[2].id, 32),
   ],
+  totalFailureMatrix: starts.flatMap((start) =>
+    candidates.map((candidate) => makeFailedRoute(start.id, candidate.id)),
+  ),
 } as const;
