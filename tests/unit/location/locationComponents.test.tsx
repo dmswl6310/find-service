@@ -4,6 +4,7 @@ import LocationGroup from "@/components/location/LocationGroup";
 import LocationSearch from "@/components/location/LocationSearch";
 import PlaceRow from "@/components/location/PlaceRow";
 import LocationPanel from "@/app/home/LocationPanel";
+import LocationInput from "@/components/search/LocationInput";
 import { makeLocation } from "@/tests/fixtures/transit";
 
 const searchState = vi.hoisted(() => ({
@@ -49,6 +50,12 @@ describe("장소 입력 컴포넌트", () => {
     expect(screen.getByText("A")).toHaveClass("rounded", "bg-candidate");
   });
 
+  it("후보지 27번째 표식은 AA로 이어진다", () => {
+    render(<PlaceRow location={makeLocation("e27", "스물일곱") } kind="candidate" index={26} onSelect={() => undefined} onRemove={() => undefined} />);
+
+    expect(screen.getByText("AA")).toBeVisible();
+  });
+
   it("장소 선택 행과 제거 버튼을 구분하고 선택 상태를 알린다", () => {
     const onSelect = vi.fn();
     const onRemove = vi.fn();
@@ -83,6 +90,39 @@ describe("장소 입력 컴포넌트", () => {
     expect(screen.getByRole("option", { name: /홍대/ })).toBeVisible();
   });
 
+  it("기존 입력 어댑터는 placeholder를 문맥 접근 가능한 이름으로 사용한다", () => {
+    render(
+      <>
+        <LocationInput placeholder="출발지 추가" onSelect={() => undefined} />
+        <LocationInput placeholder="목적지 후보 추가" onSelect={() => undefined} />
+      </>,
+    );
+
+    expect(screen.getByRole("combobox", { name: "출발지 추가" })).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "목적지 후보 추가" })).toBeVisible();
+  });
+
+  it("option은 포인터로 선택하지만 내부에 Tab으로 진입할 버튼을 두지 않는다", () => {
+    const onSelect = vi.fn();
+    Object.assign(searchState, {
+      query: "홍",
+      results: [makeLocation("s1", "홍대")],
+      isOpen: true,
+      hasSearched: true,
+    });
+    render(<LocationSearch label="장소 검색" onSelect={onSelect} />);
+
+    const input = screen.getByRole("combobox", { name: "장소 검색" });
+    const option = screen.getByRole("option", { name: /홍대/ });
+    input.focus();
+    fireEvent.mouseDown(option);
+    fireEvent.click(option);
+
+    expect(option.querySelector("button")).toBeNull();
+    expect(document.activeElement).toBe(input);
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "s1" }));
+  });
+
   it("ArrowDown·ArrowUp·Enter·Escape로 콤보박스를 제어한다", () => {
     const onSelect = vi.fn();
     Object.assign(searchState, {
@@ -102,6 +142,41 @@ describe("장소 입력 컴포넌트", () => {
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "s2" }));
     fireEvent.keyDown(input, { key: "Escape" });
     expect(searchState.setIsOpen).toHaveBeenLastCalledWith(false);
+  });
+
+  it("검색어 또는 결과가 바뀌면 이전 활성 항목을 선택하지 않는다", () => {
+    const onSelect = vi.fn();
+    Object.assign(searchState, {
+      query: "강",
+      results: [makeLocation("old", "강남역")],
+      isOpen: true,
+      hasSearched: true,
+    });
+    const { rerender } = render(<LocationSearch label="장소 검색" onSelect={onSelect} />);
+    const input = screen.getByRole("combobox", { name: "장소 검색" });
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(input).toHaveAttribute("aria-activedescendant", expect.stringContaining("old"));
+
+    Object.assign(searchState, { query: "홍", results: [makeLocation("new", "홍대") ] });
+    rerender(<LocationSearch label="장소 검색" onSelect={onSelect} />);
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("같은 종류의 그룹도 고유한 제목 id로 연결한다", () => {
+    render(
+      <>
+        <LocationGroup kind="origin" title="출발지 하나" locations={[]} onSelectLocation={() => undefined} onRemove={() => undefined} onAdd={() => undefined} />
+        <LocationGroup kind="origin" title="출발지 둘" locations={[]} onSelectLocation={() => undefined} onRemove={() => undefined} onAdd={() => undefined} />
+      </>,
+    );
+
+    const groups = screen.getAllByRole("region");
+    const labelledBy = groups.map((group) => group.getAttribute("aria-labelledby"));
+    expect(new Set(labelledBy).size).toBe(2);
+    labelledBy.forEach((id) => expect(document.getElementById(id ?? "")).toBeTruthy());
   });
 
   it("결과 없음과 인라인 오류를 각각 안내한다", () => {

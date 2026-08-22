@@ -13,7 +13,18 @@ export interface PlaceRowProps {
 }
 
 function placeMarker(kind: PlaceRowProps["kind"], index: number) {
-  return kind === "origin" ? String(index + 1) : String.fromCharCode(65 + index);
+  if (kind === "origin") {
+    return String(index + 1);
+  }
+
+  let value = index + 1;
+  let marker = "";
+  while (value > 0) {
+    value -= 1;
+    marker = String.fromCharCode(65 + (value % 26)) + marker;
+    value = Math.floor(value / 26);
+  }
+  return marker;
 }
 
 export default function PlaceRow({ location, kind, index, selected = false, onSelect, onRemove }: PlaceRowProps) {

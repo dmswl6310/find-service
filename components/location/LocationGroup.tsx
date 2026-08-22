@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import LocationSearch from "@/components/location/LocationSearch";
 import PlaceRow from "@/components/location/PlaceRow";
 import type { KakaoLocation } from "@/types/kakao";
@@ -16,12 +17,13 @@ export interface LocationGroupProps {
 
 export default function LocationGroup({ kind, title, locations, selectedId, onSelectLocation, onRemove, onAdd }: LocationGroupProps) {
   const isOrigin = kind === "origin";
+  const headingId = useId();
   const emptyMessage = isOrigin ? "친구들이 출발하는 역이나 장소를 추가해 주세요." : "비교하고 싶은 약속 장소 후보를 추가해 주세요.";
 
   return (
-    <section aria-labelledby={`${kind}-locations-heading`} className={`flex flex-col gap-4 rounded-3xl border p-5 ${isOrigin ? "border-origin bg-origin-soft" : "border-candidate bg-candidate-soft"}`}>
+    <section aria-labelledby={headingId} className={`flex flex-col gap-4 rounded-3xl border p-5 ${isOrigin ? "border-origin bg-origin-soft" : "border-candidate bg-candidate-soft"}`}>
       <div className="flex items-center justify-between gap-3">
-        <h2 id={`${kind}-locations-heading`} className="text-xl font-bold text-text">{title}</h2>
+        <h2 id={headingId} className="text-xl font-bold text-text">{title}</h2>
         <span className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-text-muted">{locations.length}개</span>
       </div>
       <LocationSearch

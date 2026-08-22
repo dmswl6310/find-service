@@ -5,7 +5,7 @@ import { useLocationSearch } from "@/hooks/useLocationSearch";
 import type { KakaoLocation } from "@/types/kakao";
 
 export interface LocationSearchProps {
-  label?: string;
+  label: string;
   placeholder?: string;
   helperText?: string;
   selectedName?: string;
@@ -13,7 +13,7 @@ export interface LocationSearchProps {
 }
 
 export default function LocationSearch({
-  label = "장소 검색",
+  label,
   placeholder = "장소 검색",
   helperText,
   selectedName,
@@ -21,9 +21,12 @@ export default function LocationSearch({
 }: LocationSearchProps) {
   const { query, setQuery, results, isLoading, isOpen, setIsOpen, error, hasSearched } = useLocationSearch();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeOption, setActiveOption] = useState<{ id: string; query: string; results: KakaoLocation[] } | null>(null);
   const listboxId = useId();
   const inputId = useId();
+  const activeIndex = activeOption?.query === query && activeOption.results === results
+    ? results.findIndex((location) => location.id === activeOption.id)
+    : -1;
   const shouldShowNoResults = isOpen && hasSearched && !isLoading && query.trim().length > 0 && results.length === 0 && !error;
   const shouldShowDropdown = isOpen && (results.length > 0 || shouldShowNoResults);
 
@@ -31,7 +34,7 @@ export default function LocationSearch({
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        setActiveIndex(-1);
+        setActiveOption(null);
       }
     };
 
@@ -48,7 +51,7 @@ export default function LocationSearch({
   const handleSelect = (location: KakaoLocation) => {
     setQuery("");
     setIsOpen(false);
-    setActiveIndex(-1);
+    setActiveOption(null);
     onSelect(location);
   };
 
@@ -61,7 +64,7 @@ export default function LocationSearch({
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Escape") {
       setIsOpen(false);
-      setActiveIndex(-1);
+      setActiveOption(null);
       return;
     }
 
@@ -71,13 +74,15 @@ export default function LocationSearch({
 
     if (event.key === "ArrowDown" && results.length > 0) {
       event.preventDefault();
-      setActiveIndex((current) => (current + 1) % results.length);
+      const nextIndex = (activeIndex + 1) % results.length;
+      setActiveOption({ id: results[nextIndex].id, query, results });
       return;
     }
 
     if (event.key === "ArrowUp" && results.length > 0) {
       event.preventDefault();
-      setActiveIndex((current) => (current <= 0 ? results.length - 1 : current - 1));
+      const previousIndex = activeIndex <= 0 ? results.length - 1 : activeIndex - 1;
+      setActiveOption({ id: results[previousIndex].id, query, results });
       return;
     }
 
@@ -122,15 +127,17 @@ export default function LocationSearch({
             {results.map((location) => {
               const isActive = results[activeIndex]?.id === location.id;
               return (
-                <li key={location.id} id={`${listboxId}-${location.id}`} role="option" aria-selected={isActive}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(location)}
-                    className={`w-full border-b border-border px-4 py-3 text-left transition-colors last:border-0 hover:bg-canvas ${isActive ? "bg-origin-soft" : ""}`}
-                  >
-                    <p className="font-medium text-text">{location.place_name}</p>
-                    <p className="mt-0.5 text-xs text-text-muted">{location.road_address_name || location.address_name}</p>
-                  </button>
+                <li
+                  key={location.id}
+                  id={`${listboxId}-${location.id}`}
+                  role="option"
+                  aria-selected={isActive}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => handleSelect(location)}
+                  className={`w-full cursor-pointer border-b border-border px-4 py-3 text-left transition-colors last:border-0 hover:bg-canvas ${isActive ? "bg-origin-soft" : ""}`}
+                >
+                  <p className="font-medium text-text">{location.place_name}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">{location.road_address_name || location.address_name}</p>
                 </li>
               );
             })}
