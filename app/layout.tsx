@@ -69,7 +69,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <header className="border-b border-border bg-surface/80 backdrop-blur">
           <nav className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8">
-            <Link href="/" className="text-xl font-black tracking-tight text-foreground">
+            <Link href="/" className="text-xl font-semibold tracking-tight text-foreground">
               모두스팟
             </Link>
             <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-foreground/70">

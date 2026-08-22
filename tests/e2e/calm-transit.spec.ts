@@ -51,4 +51,8 @@ test("Calm Transit tokens and Pretendard are exposed at runtime", async ({ page 
   expect(styles.bodyFontFamily).toContain(
     styles.fontVariable.split(",")[0].replaceAll('"', "")
   );
+  await expect(page.getByRole("link", { name: "모두스팟", exact: true })).toHaveCSS(
+    "font-weight",
+    "600"
+  );
 });
