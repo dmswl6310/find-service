@@ -61,8 +61,24 @@ export default function ComparisonWorkspace({
   const [isEditing, setIsEditing] = useState(false);
   const [isMatrixOpen, setIsMatrixOpen] = useState(false);
   const [routeDetail, setRouteDetail] = useState<RouteDetailState | null>(null);
-  const { activeMapRouteId, selectedRoute, routeSegments, detailedPath, handleSelectRoute } =
-    useSelectedRouteMapState({ starts, ends, matrixData, isCalculating });
+  const [previousIsCalculating, setPreviousIsCalculating] = useState(isCalculating);
+  const {
+    activeMapRouteId,
+    selectedRoute,
+    geometryRouteId,
+    routeSegments,
+    detailedPath,
+    handleSelectRoute,
+  } = useSelectedRouteMapState({ starts, ends, matrixData, isCalculating });
+
+  if (isCalculating !== previousIsCalculating) {
+    setPreviousIsCalculating(isCalculating);
+    if (isCalculating) {
+      setIsMatrixOpen(false);
+      setRouteDetail(null);
+      setIsEditing(false);
+    }
+  }
 
   const summaries = useMemo(
     () => buildCandidateSummaries(starts, ends, matrixData),
@@ -92,6 +108,10 @@ export default function ComparisonWorkspace({
     (!selectedCandidateId || currentSelectedRoute.toId === selectedCandidateId)
       ? currentSelectedRoute
       : undefined;
+  const visibleRouteId = visibleSelectedRoute
+    ? `${visibleSelectedRoute.fromId}-${visibleSelectedRoute.toId}`
+    : null;
+  const ownsVisibleRouteGeometry = visibleRouteId !== null && geometryRouteId === visibleRouteId;
   const selectedCandidate = hasResults
     ? summaries.find((summary) => summary.id === selectedCandidateId) ??
       summaries.find((summary) => summary.id === visibleSelectedRoute?.toId) ??
@@ -201,7 +221,12 @@ export default function ComparisonWorkspace({
     setIsEditing(true);
   };
 
-  const activePanel = isMatrixOpen ? (
+  const activePanel = panelMode === "loading" ? (
+    <CalculationProgress
+      completed={calculationProgress.completed}
+      total={calculationProgress.total}
+    />
+  ) : isMatrixOpen ? (
     <section aria-label="경로표" className="min-w-0 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
@@ -221,11 +246,6 @@ export default function ComparisonWorkspace({
         onOpenRoute={handleOpenRoute}
       />
     </section>
-  ) : panelMode === "loading" ? (
-    <CalculationProgress
-      completed={calculationProgress.completed}
-      total={calculationProgress.total}
-    />
   ) : panelMode === "result" ? (
     <ResultPanel
       summaries={summaries}
@@ -288,8 +308,8 @@ export default function ComparisonWorkspace({
           fill
           starts={starts}
           ends={ends}
-          routeSegments={visibleSelectedRoute ? routeSegments : []}
-          detailedPath={visibleSelectedRoute ? detailedPath : []}
+          routeSegments={ownsVisibleRouteGeometry ? routeSegments : []}
+          detailedPath={ownsVisibleRouteGeometry ? detailedPath : []}
           selectedStartId={visibleSelectedRoute?.fromId ?? selectedStartId}
           selectedEndId={visibleSelectedRoute?.toId ?? selectedEndId}
           selectedCandidate={selectedCandidate}
@@ -298,7 +318,7 @@ export default function ComparisonWorkspace({
       </section>
 
       <RouteDetailSheet
-        isOpen={routeDetail !== null}
+        isOpen={!isCalculating && routeDetail !== null}
         onClose={() => setRouteDetail(null)}
         result={routeDetail?.result ?? null}
         startName={routeDetail?.startName ?? ""}
