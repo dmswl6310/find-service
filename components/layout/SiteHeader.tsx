@@ -20,25 +20,28 @@ const desktopLinks = mobileLinks.filter((link) =>
 
 export default function SiteHeader() {
   const pathname = usePathname();
-  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const [menuState, setMenuState] = useState({ isOpen: false, pathname });
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const isMenuOpen = menuPath === pathname;
+  if (menuState.pathname !== pathname) {
+    setMenuState({ isOpen: false, pathname });
+  }
+  const isMenuOpen = menuState.isOpen;
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || !isMenuOpen) return;
-      setMenuPath(null);
+      setMenuState({ isOpen: false, pathname });
       menuButtonRef.current?.focus();
     };
 
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [isMenuOpen]);
+  }, [isMenuOpen, pathname]);
 
   return (
     <header className="relative z-20 h-16 border-b border-border bg-surface">
       <div className="mx-auto flex h-full w-full max-w-[1400px] items-center gap-3 px-4 sm:px-6 md:px-8">
-        <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight text-text">
+        <Link href="/" className="inline-flex min-h-11 shrink-0 items-center text-lg font-semibold tracking-tight text-text">
           모두스팟
         </Link>
         <nav aria-label="주요 내비게이션" className="ml-auto hidden items-center gap-6 text-sm font-medium text-text-muted md:flex">
@@ -48,7 +51,7 @@ export default function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link href="/" className="ml-auto text-sm font-medium text-action md:hidden">
+        <Link href="/" className="ml-auto inline-flex min-h-11 items-center text-sm font-medium text-action md:hidden">
           장소 비교
         </Link>
         <button
@@ -58,7 +61,7 @@ export default function SiteHeader() {
           aria-expanded={isMenuOpen}
           aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border text-sm font-medium text-text transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action md:hidden"
-          onClick={() => setMenuPath(isMenuOpen ? null : pathname)}
+          onClick={() => setMenuState({ isOpen: !isMenuOpen, pathname })}
         >
           <span aria-hidden="true" className="grid gap-1">
             <span className="block h-px w-4 bg-current" />
@@ -79,7 +82,7 @@ export default function SiteHeader() {
                 <Link
                   href={link.href}
                   className="block rounded-lg px-3 py-3 text-sm font-medium text-text transition-colors hover:bg-surface-raised hover:text-action focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
-                  onClick={() => setMenuPath(null)}
+                  onClick={() => setMenuState({ isOpen: false, pathname })}
                 >
                   {link.label}
                 </Link>

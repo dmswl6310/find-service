@@ -24,6 +24,8 @@ test("모바일 헤더는 한 줄을 유지하고 보조 내비게이션을 제�
 
   const header = page.getByRole("banner");
   expect((await header.boundingBox())?.height).toBeLessThanOrEqual(64);
+  expect((await page.getByRole("link", { name: "모두스팟", exact: true }).boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  expect((await page.getByRole("link", { name: "장소 비교", exact: true }).boundingBox())?.height).toBeGreaterThanOrEqual(44);
   await page.getByRole("button", { name: "메뉴 열기" }).click();
   await expect(page.getByRole("navigation", { name: "모바일 메뉴" }).getByRole("link", { name: "서비스 소개" })).toBeVisible();
 });
@@ -45,6 +47,22 @@ test("모바일 메뉴는 상태를 알리고 Escape와 링크 선택 시 닫힌
   await page.getByRole("navigation", { name: "모바일 메뉴" }).getByRole("link", { name: "이용 방법" }).click();
   await expect(page).toHaveURL(/\/tips$/);
   await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
+});
+
+test("모바일 메뉴는 메뉴 밖 라우트 이동과 뒤로가기 뒤에도 닫힌 상태를 유지한다", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tips");
+
+  await page.getByRole("button", { name: "메뉴 열기" }).click();
+  await page.getByRole("banner").getByRole("link", { name: "모두스팟", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("navigation", { name: "모바일 메뉴" })).toHaveCount(0);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/tips$/);
+  await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("navigation", { name: "모바일 메뉴" })).toHaveCount(0);
 });
 
 test("데스크톱 내비게이션과 푸터는 핵심 및 보조 경로를 제공한다", async ({ page }) => {
