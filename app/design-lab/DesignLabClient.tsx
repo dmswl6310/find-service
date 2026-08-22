@@ -5,6 +5,7 @@ import LocationPanel from "@/app/home/LocationPanel";
 import ResultPanel from "@/app/home/ResultPanel";
 import { designLabFixtures } from "@/components/design-lab/fixtures";
 import PlaceRow from "@/components/location/PlaceRow";
+import StaticMapSurface from "@/components/map/StaticMapSurface";
 import RouteDetailSheet from "@/components/result/RouteDetailSheet";
 import RouteMatrix from "@/components/result/RouteMatrix";
 import { buildCandidateSummaries } from "@/components/result/resultModel";
@@ -233,6 +234,15 @@ function FoundationState() {
           endName={selectedRoute?.endName ?? ""}
         />
       </section>
+
+      <section aria-labelledby="map-surface-heading" className="space-y-4 rounded-xl border border-border bg-surface p-5">
+        <div>
+          <h2 id="map-surface-heading" className="text-lg font-semibold text-text">고정 지도 표면</h2>
+          <p className="mt-2 text-sm text-text-muted">외부 API 없이 도로, 출발지, 후보지와 선택 경로를 재현합니다.</p>
+        </div>
+        <StaticMapSurface />
+      </section>
+
     </div>
   );
 }

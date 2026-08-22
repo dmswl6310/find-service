@@ -3,18 +3,19 @@
 import { useEffect, useState } from "react";
 import Script from "next/script";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
+import { createMapMarkerImage, ROUTE_VISUALS } from "@/components/map/mapVisuals";
 import { KakaoLocation } from "@/types/kakao";
 import { buildKakaoSdkScriptUrl, getKakaoJsApiKey } from "@/lib/external-config";
 
 const MAP_LOAD_TIMEOUT_MS = 8000;
 
-type MapPathPoint = { lat: number; lng: number };
-type MapRouteSegment = {
+export type MapPathPoint = { lat: number; lng: number };
+export type MapRouteSegment = {
   kind: "walk" | "bus" | "subway";
   path: MapPathPoint[];
 };
 
-interface MiniMapProps {
+export interface MiniMapProps {
   starts: KakaoLocation[];
   ends: KakaoLocation[];
   routeSegments?: MapRouteSegment[];
@@ -23,29 +24,8 @@ interface MiniMapProps {
   selectedEndId?: string;
 }
 
-function createMarkerImage(
-  kind: "start" | "end",
-  order: number,
-  state: "default" | "active" | "muted"
-) {
-  const palette = {
-    start: { fill: "#0EA5E9", stroke: "#0369A1" },
-    end: { fill: "#10B981", stroke: "#047857" },
-  }[kind];
-  const opacity = state === "muted" ? 0.55 : 1;
-
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46">
-      <path d="M18 2C9.716 2 3 8.716 3 17c0 11.25 15 27 15 27s15-15.75 15-27C33 8.716 26.284 2 18 2z" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="2" opacity="${opacity}"/>
-      <circle cx="18" cy="17" r="10" fill="white" fill-opacity="0.96"/>
-      <text x="18" y="21" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="${palette.stroke}">${order}</text>
-    </svg>
-  `.trim();
-
-  return {
-    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-    size: { width: 36, height: 46 },
-  };
+function resolveCssColor(token: string) {
+  return window.getComputedStyle(document.documentElement).getPropertyValue(token).trim();
 }
 
 export default function MiniMap({
@@ -122,12 +102,6 @@ export default function MiniMap({
     }
   }, [map, starts, ends, segmentPoints, detailedPath]);
 
-  const segmentStyles: Record<MapRouteSegment["kind"], { color: string; opacity: number; weight: number; style: kakao.maps.StrokeStyles }> = {
-    walk: { color: "#6B7280", opacity: 0.8, weight: 4, style: "shortdash" },
-    bus: { color: "#16A34A", opacity: 0.9, weight: 5, style: "solid" },
-    subway: { color: "#2563EB", opacity: 0.9, weight: 5, style: "solid" },
-  };
-
   if (loadFailed) {
     return (
       <>
@@ -165,17 +139,17 @@ export default function MiniMap({
       >
         {starts.map((loc, index) => {
           const isActive = loc.id === selectedStartId;
-          const markerState = hasSelectedRoute ? (isActive ? "active" : "muted") : "default";
+          const markerState = hasSelectedRoute ? (isActive ? "active" : "dimmed") : "default";
 
           return (
           <MapMarker
             key={`start-${loc.id}`}
             position={{ lat: Number(loc.y), lng: Number(loc.x) }}
             title={loc.place_name}
-            image={createMarkerImage("start", index + 1, markerState)}
+            image={createMapMarkerImage("origin", index + 1, markerState)}
           >
             {isActive && (
-              <div className="rounded-xl border border-sky-500 bg-white px-2 py-1 text-xs font-semibold whitespace-nowrap text-sky-950 shadow-md">
+              <div className="whitespace-nowrap rounded-xl border border-origin bg-surface px-2 py-1 text-xs font-semibold text-origin shadow-md">
                 {loc.place_name}
               </div>
             )}
@@ -184,17 +158,17 @@ export default function MiniMap({
         })}
         {ends.map((loc, index) => {
           const isActive = loc.id === selectedEndId;
-          const markerState = hasSelectedRoute ? (isActive ? "active" : "muted") : "default";
+          const markerState = hasSelectedRoute ? (isActive ? "active" : "dimmed") : "default";
 
           return (
           <MapMarker
             key={`end-${loc.id}`}
             position={{ lat: Number(loc.y), lng: Number(loc.x) }}
             title={loc.place_name}
-            image={createMarkerImage("end", index + 1, markerState)}
+            image={createMapMarkerImage("candidate", index + 1, markerState)}
           >
             {isActive && (
-              <div className="rounded-xl border border-emerald-500 bg-white px-2 py-1 text-xs font-semibold whitespace-nowrap text-emerald-950 shadow-md">
+              <div className="whitespace-nowrap rounded-xl border border-candidate bg-surface px-2 py-1 text-xs font-semibold text-candidate shadow-md">
                 {loc.place_name}
               </div>
             )}
@@ -206,23 +180,23 @@ export default function MiniMap({
           <Polyline
             path={detailedPath}
             strokeWeight={7}
-            strokeColor={"#111827"}
+            strokeColor={resolveCssColor("--text")}
             strokeOpacity={0.12}
             strokeStyle={"solid"}
           />
         )}
 
         {routeSegments.map((segment, index) => {
-          const style = segmentStyles[segment.kind];
+          const style = ROUTE_VISUALS[segment.kind];
 
           return (
             <Polyline
               key={`${segment.kind}-${index}`}
               path={segment.path}
               strokeWeight={style.weight}
-              strokeColor={style.color}
+              strokeColor={resolveCssColor(style.colorToken)}
               strokeOpacity={style.opacity}
-              strokeStyle={style.style}
+              strokeStyle={style.style as kakao.maps.StrokeStyles}
             />
           );
         })}

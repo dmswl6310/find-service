@@ -1,0 +1,73 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import type { MiniMapProps } from "@/components/map/MiniMap";
+import type { CandidateSummary } from "@/components/result/resultModel";
+
+const LiveMiniMap = dynamic(() => import("@/components/map/MiniMap"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="flex h-full min-h-80 w-full items-center justify-center rounded-xl border border-border bg-surface"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-action border-t-transparent" />
+      <span className="sr-only">지도를 준비하는 중입니다.</span>
+    </div>
+  ),
+});
+
+export type MapWorkspaceProps = MiniMapProps & {
+  selectedCandidate?: CandidateSummary;
+  selectedRouteName?: string;
+};
+
+export default function MapWorkspace({ selectedCandidate, selectedRouteName, ...mapProps }: MapWorkspaceProps) {
+  return (
+    <section className="space-y-3" aria-label="지도 작업공간">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-text-muted">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-origin-soft px-2.5 py-1 text-origin">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-origin text-[10px] font-bold text-action-foreground">1</span>
+          숫자 원형 · 출발지
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-candidate-soft px-2.5 py-1 text-candidate">
+          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-candidate text-[10px] font-bold text-action-foreground">A</span>
+          문자 사각 핀 · 후보지
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-origin-soft px-2.5 py-1 text-origin">
+          <span className="h-1 w-5 rounded-full bg-origin" />
+          선택 경로
+        </span>
+      </div>
+
+      <div className="relative h-[400px] overflow-hidden rounded-xl border border-border shadow-sm lg:h-[calc(100vh-4rem)]">
+        <LiveMiniMap {...mapProps} />
+        {selectedCandidate ? (
+          <aside
+            aria-label="선택 후보 요약"
+            className="absolute inset-x-3 bottom-3 rounded-xl border border-border-strong bg-surface/95 p-4 shadow-lg backdrop-blur-sm"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-candidate">선택 후보</p>
+                <p className="mt-1 font-semibold text-text">{selectedCandidate.name}</p>
+                {selectedRouteName ? <p className="mt-1 text-xs text-text-muted">{selectedRouteName}</p> : null}
+              </div>
+              {selectedCandidate.isComplete ? (
+                <p className="text-sm font-medium text-text">
+                  평균 {selectedCandidate.averageMinutes}분 · 최장 {selectedCandidate.maxMinutes}분
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-warning">
+                  비교 불가 · {selectedCandidate.validRoutes}/{selectedCandidate.totalRoutes} 경로 완료
+                </p>
+              )}
+            </div>
+          </aside>
+        ) : null}
+      </div>
+    </section>
+  );
+}

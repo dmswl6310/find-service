@@ -70,6 +70,23 @@ test("개발 환경 Design Lab이 고정 기반 컨트롤을 렌더링한다", a
   await expect(page.getByText("장소 검색 중 오류가 발생했습니다.")).toHaveAttribute("role", "alert");
 });
 
+test("Design Lab 지도는 외부 API 없이 고정 표면만 렌더링한다", async ({ page }) => {
+  const liveMapRequests: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/") || url.hostname === "dapi.kakao.com") {
+      liveMapRequests.push(request.url());
+    }
+  });
+
+  await page.goto("/design-lab?scenario=foundation");
+
+  await expect(
+    page.getByRole("img", { name: "출발지 3곳과 후보지 3곳, 선택 경로가 표시된 고정 지도 미리보기" }),
+  ).toBeVisible();
+  expect(liveMapRequests).toEqual([]);
+});
+
 test("Design Lab 입력 시나리오는 장소 검색 API를 호출하지 않는 고정 입력만 제공한다", async ({ page }) => {
   const searchRequests: string[] = [];
   page.on("request", (request) => {
