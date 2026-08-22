@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
+    "test:visual": "playwright test tests/e2e/design-lab.visual.spec.ts",
     "experiment:transit": "node scripts/transit-interval-experiment.mjs",
     "experiment:transit-scheduler": "node scripts/transit-scheduler-experiment.mjs"
   },

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import LocationPanel from "@/app/home/LocationPanel";
 import ResultPanel from "@/app/home/ResultPanel";
 import { designLabFixtures } from "@/components/design-lab/fixtures";
 import PlaceRow from "@/components/location/PlaceRow";
 import StaticMapSurface from "@/components/map/StaticMapSurface";
+import CalculationProgress from "@/components/result/CalculationProgress";
 import RouteDetailSheet from "@/components/result/RouteDetailSheet";
 import RouteMatrix from "@/components/result/RouteMatrix";
 import { buildCandidateSummaries } from "@/components/result/resultModel";
@@ -16,7 +18,6 @@ import InlineNotice from "@/components/ui/InlineNotice";
 import Progress from "@/components/ui/Progress";
 import type { LocationSearchProps } from "@/components/location/LocationSearch";
 import type { TransitFetchResult } from "@/types/odsay";
-import { useState } from "react";
 
 export const designLabScenarios = [
   "foundation",
@@ -29,6 +30,16 @@ export const designLabScenarios = [
 ] as const;
 
 type DesignLabScenario = (typeof designLabScenarios)[number];
+
+const scenarioLabels: Record<DesignLabScenario, string> = {
+  foundation: "기반 카탈로그",
+  empty: "빈 상태",
+  input: "장소 입력",
+  loading: "계산 중",
+  result: "비교 결과",
+  "partial-failure": "부분 실패",
+  "total-failure": "전체 실패",
+};
 
 export function isDesignLabScenario(value: string | null): value is DesignLabScenario {
   return designLabScenarios.some((scenario) => scenario === value);
@@ -73,39 +84,164 @@ function FixedLocationSearch({ label, placeholder = "장소 검색", helperText 
   );
 }
 
-function ResultState({ scenario }: { scenario: Exclude<DesignLabScenario, "foundation" | "input"> }) {
-  const matrixByScenario: Record<Exclude<DesignLabScenario, "foundation" | "input">, TransitFetchResult[]> = {
+type VisualScenario = Exclude<DesignLabScenario, "foundation">;
+
+function ScenarioPanel({ scenario }: { scenario: VisualScenario }) {
+  const starts = scenario === "empty" ? [] : [...designLabFixtures.starts];
+  const candidates = scenario === "empty" ? [] : [...designLabFixtures.candidates];
+  const matrixByScenario: Record<VisualScenario, TransitFetchResult[]> = {
     empty: [],
+    input: [],
     loading: [],
     result: [...designLabFixtures.successfulRoutes],
     "partial-failure": [...designLabFixtures.partialFailureMatrix],
     "total-failure": [...designLabFixtures.totalFailureMatrix],
   };
   const matrixData = matrixByScenario[scenario];
-  const summaries = buildCandidateSummaries([...designLabFixtures.starts], [...designLabFixtures.candidates], matrixData);
+  const summaries = buildCandidateSummaries(starts, candidates, matrixData);
   const total = designLabFixtures.starts.length * designLabFixtures.candidates.length;
-  const titles: Record<Exclude<DesignLabScenario, "foundation" | "input">, string> = {
-    empty: "빈 결과",
-    loading: "계산 중",
-    result: "완료 결과",
-    "partial-failure": "부분 실패 결과",
-    "total-failure": "전체 실패 결과",
-  };
+
+  if (scenario === "empty" || scenario === "input") {
+    return (
+      <LocationPanel
+        starts={starts}
+        ends={candidates}
+        selectedStartId={scenario === "input" ? starts[0]?.id : undefined}
+        selectedEndId={scenario === "input" ? candidates[0]?.id : undefined}
+        onAddStart={() => undefined}
+        onAddEnd={() => undefined}
+        onRemoveStart={() => undefined}
+        onRemoveEnd={() => undefined}
+        onSelectStart={() => undefined}
+        onSelectEnd={() => undefined}
+        onCalculate={() => undefined}
+        SearchComponent={FixedLocationSearch}
+      />
+    );
+  }
+
+  if (scenario === "loading") {
+    return (
+      <CalculationProgress
+        completed={6}
+        total={total}
+        currentCandidate={designLabFixtures.candidates[2].place_name}
+      />
+    );
+  }
 
   return (
-    <section className="space-y-4" aria-labelledby="result-state-heading">
-      <h2 id="result-state-heading" className="text-lg font-semibold text-text">{titles[scenario]}</h2>
-      <ResultPanel
-        summaries={summaries}
-        matrixData={matrixData}
-        calculationProgress={{ completed: scenario === "loading" ? 6 : total, total }}
-        isCalculating={scenario === "loading"}
-        error={null}
-        onEditInputs={() => undefined}
-        onRetry={() => undefined}
-        onSelectCandidate={() => undefined}
-        onOpenMatrix={() => undefined}
-      />
+    <ResultPanel
+      summaries={summaries}
+      matrixData={matrixData}
+      calculationProgress={{ completed: total, total }}
+      isCalculating={false}
+      error={scenario === "total-failure" ? "모든 경로 계산에 실패했습니다." : null}
+      onEditInputs={() => undefined}
+      onRetry={() => undefined}
+      onSelectCandidate={() => undefined}
+      onOpenMatrix={() => undefined}
+    />
+  );
+}
+
+function MapStatus({ scenario }: { scenario: VisualScenario }) {
+  const statusByScenario: Record<VisualScenario, { eyebrow: string; title: string; description: string }> = {
+    empty: {
+      eyebrow: "입력 대기",
+      title: "서울 전역을 한눈에 비교하세요",
+      description: "출발지와 후보지를 추가하면 번호와 문자 마커로 구분해 표시합니다.",
+    },
+    input: {
+      eyebrow: "6개 장소",
+      title: "출발지 3곳 · 후보지 3곳",
+      description: "서로 다른 형태와 레이블로 두 장소 그룹을 구분합니다.",
+    },
+    loading: {
+      eyebrow: "6 / 9 경로 완료",
+      title: "광화문역 경로를 계산 중입니다",
+      description: "입력한 장소는 그대로 두고 완료된 경로 수를 알려드립니다.",
+    },
+    result: {
+      eyebrow: "황금 밸런스",
+      title: "을지로입구역",
+      description: "강남역에서 을지로입구역까지 30분 경로를 선택했습니다.",
+    },
+    "partial-failure": {
+      eyebrow: "8 / 9 경로 완료",
+      title: "성공한 결과를 유지합니다",
+      description: "실패한 1개 경로는 안내하고 계산된 후보는 계속 비교합니다.",
+    },
+    "total-failure": {
+      eyebrow: "경로 계산 실패",
+      title: "입력한 장소는 유지됩니다",
+      description: "잠시 후 다시 계산하거나 장소를 수정할 수 있습니다.",
+    },
+  };
+  const status = statusByScenario[scenario];
+
+  return (
+    <div className="absolute inset-x-6 top-6 z-10 max-w-sm rounded-xl border border-border bg-surface/95 p-4 shadow-sm md:hidden lg:block">
+      <p className="text-xs font-semibold text-action">{status.eyebrow}</p>
+      <p className="mt-1 font-semibold text-text">{status.title}</p>
+      <p className="mt-1 text-sm leading-5 text-text-muted">{status.description}</p>
+    </div>
+  );
+}
+
+function ScenarioWorkspace({ scenario }: { scenario: VisualScenario }) {
+  return (
+    <section
+      aria-label={`${scenarioLabels[scenario]} 시각 시나리오`}
+      className="relative isolate grid min-h-[720px] min-w-0 overflow-hidden bg-canvas md:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]"
+    >
+      <aside
+        data-testid="design-lab-panel"
+        className="relative z-20 col-start-1 row-start-1 mt-60 min-w-0 self-end md:mt-0 md:self-stretch"
+      >
+        <BottomSheet
+          title="비교 패널"
+          className="md:h-full md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
+        >
+          <div className="min-w-0 p-4 sm:p-5">
+            <header className="mb-5 border-b border-border pb-5">
+              <p className="text-xs font-semibold text-action">대중교통 약속 장소 비교</p>
+              <h2 className="mt-2 text-2xl font-semibold leading-tight text-text">
+                어디서 만나는 게 가장 균형 잡힐까요?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-text-muted">
+                출발지와 후보지를 추가하면 이동시간의 균형을 비교합니다.
+              </p>
+            </header>
+            <ScenarioPanel scenario={scenario} />
+          </div>
+        </BottomSheet>
+      </aside>
+
+      <section
+        data-testid="design-lab-map"
+        data-static-map-state={scenario}
+        aria-label="출발지와 후보지 지도"
+        className="absolute inset-0 z-0 min-h-0 min-w-0 p-3 pb-0 [&>[role=img]]:h-full [&>[role=img]]:min-h-full md:relative md:col-start-2 md:row-start-1 md:p-4"
+      >
+        <style>{`
+          [data-static-map-state="empty"] > [role="img"] > span {
+            display: none;
+          }
+          [data-static-map-state="empty"] > [role="img"] > div:nth-of-type(5),
+          [data-static-map-state="empty"] > [role="img"] > div:nth-of-type(6),
+          [data-static-map-state="input"] > [role="img"] > div:nth-of-type(5),
+          [data-static-map-state="input"] > [role="img"] > div:nth-of-type(6),
+          [data-static-map-state="loading"] > [role="img"] > div:nth-of-type(5),
+          [data-static-map-state="loading"] > [role="img"] > div:nth-of-type(6),
+          [data-static-map-state="total-failure"] > [role="img"] > div:nth-of-type(5),
+          [data-static-map-state="total-failure"] > [role="img"] > div:nth-of-type(6) {
+            display: none;
+          }
+        `}</style>
+        <StaticMapSurface />
+        <MapStatus scenario={scenario} />
+      </section>
     </section>
   );
 }
@@ -249,42 +385,49 @@ function FoundationState() {
 
 export default function DesignLabClient() {
   const scenarioValue = useSearchParams().get("scenario");
+  const scenario: DesignLabScenario = isDesignLabScenario(scenarioValue)
+    ? scenarioValue
+    : "foundation";
 
-  if (!isDesignLabScenario(scenarioValue)) {
-    return (
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 md:px-8">
-        <h1 className="text-3xl font-bold text-text">Design Lab</h1>
-        <p className="mt-3 text-text-muted">허용된 고정 시나리오를 선택해 주세요.</p>
-      </main>
-    );
-  }
+  const handleScenarioChange = (nextScenario: string) => {
+    if (!isDesignLabScenario(nextScenario)) return;
+    window.location.assign(`/design-lab?scenario=${nextScenario}`);
+  };
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-10 sm:px-6 md:px-8">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold text-info">{scenarioValue}</p>
-        <h1 className="text-3xl font-bold tracking-tight text-text">Design Lab</h1>
-        <p className="max-w-2xl text-text-muted">외부 API 없이 고정 데이터와 승인된 시맨틱 토큰으로 구성 요소를 점검하는 개발 전용 화면입니다.</p>
+    <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
+      <header className="flex flex-col gap-4 border-b border-border bg-surface px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-text">Design Lab</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            고정 데이터와 승인된 시맨틱 토큰으로 화면 상태를 점검합니다.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <label htmlFor="design-lab-scenario" className="text-sm font-medium text-text">
+            시각 시나리오
+          </label>
+          <select
+            id="design-lab-scenario"
+            value={scenario}
+            onChange={(event) => handleScenarioChange(event.target.value)}
+            className="min-h-11 rounded-lg border border-border-strong bg-surface px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-action focus-visible:ring-offset-2"
+          >
+            {designLabScenarios.map((option) => (
+              <option key={option} value={option}>
+                {scenarioLabels[option]}
+              </option>
+            ))}
+          </select>
+        </div>
       </header>
-      {scenarioValue === "foundation" ? <FoundationState /> : null}
-      {scenarioValue === "input" ? (
-        <section aria-labelledby="input-state-heading">
-          <h2 id="input-state-heading" className="mb-4 text-lg font-semibold text-text">장소 입력</h2>
-          <LocationPanel
-            starts={[...designLabFixtures.starts]}
-            ends={[...designLabFixtures.candidates]}
-            onAddStart={() => undefined}
-            onAddEnd={() => undefined}
-            onRemoveStart={() => undefined}
-            onRemoveEnd={() => undefined}
-            onSelectStart={() => undefined}
-            onSelectEnd={() => undefined}
-            onCalculate={() => undefined}
-            SearchComponent={FixedLocationSearch}
-          />
-        </section>
-      ) : null}
-      {scenarioValue !== "foundation" && scenarioValue !== "input" ? <ResultState scenario={scenarioValue} /> : null}
+      {scenario === "foundation" ? (
+        <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-10 sm:px-6 md:px-8">
+          <FoundationState />
+        </div>
+      ) : (
+        <ScenarioWorkspace scenario={scenario} />
+      )}
     </main>
   );
 }
