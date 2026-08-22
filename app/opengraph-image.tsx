@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { semanticColors } from "@/lib/semanticColors";
 
 export const size = {
@@ -8,7 +10,9 @@ export const size = {
 
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
+  const pretendard = await readFile(join(process.cwd(), "app/fonts/Pretendard-Regular.otf"));
+
   return new ImageResponse(
     (
       <div
@@ -20,7 +24,7 @@ export default function Image() {
           overflow: "hidden",
           background: semanticColors.canvas,
           color: semanticColors.text,
-          fontFamily: "sans-serif",
+          fontFamily: "Pretendard",
         }}
       >
         <div
@@ -99,6 +103,16 @@ export default function Image() {
         </div>
       </div>
     ),
-    size
+    {
+      ...size,
+      fonts: [
+        {
+          name: "Pretendard",
+          data: Uint8Array.from(pretendard).buffer,
+          weight: 400,
+          style: "normal",
+        },
+      ],
+    }
   );
 }

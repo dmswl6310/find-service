@@ -61,7 +61,32 @@ const ARBITRARY_COLOR_UTILITY = new RegExp(
 );
 const RAW_HEX_COLOR = /(?<![\da-f])#(?:[\da-f]{8}|[\da-f]{6}|[\da-f]{4}|[\da-f]{3})(?![\da-f])/gi;
 const RAW_FUNCTION_COLOR = /\b(?:rgba?|hsla?)\(\s*(?=[+-]?(?:\d|\.\d)|none\b)[^)\r\n]+\)/gi;
-const ARBITRARY_COLOR_FUNCTION = /^(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark)\(/i;
+const ARBITRARY_COLOR_FUNCTION = /(?<![a-z0-9-])(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|light-dark)\s*\(/gi;
+const ARBITRARY_GRADIENT = /\b(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(/i;
+const TAILWIND_THEME_COLOR = new RegExp(
+  `\\btheme\\(\\s*(?:colors(?:\\.|\\[)|--color-(?:${NAMED_PALETTES.join("|")}|white|black)(?:-|\\b))`,
+  "i",
+);
+const CSS_NAMED_COLORS = new Set(`
+  aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue
+  blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk
+  crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki
+  darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen
+  darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue
+  dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite
+  gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki
+  lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan
+  lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen
+  lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen
+  magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen
+  mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream
+  mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid
+  palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum
+  powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown
+  seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen
+  steelblue tan teal thistle tomato transparent turquoise violet wheat white whitesmoke
+  yellow yellowgreen currentcolor
+`.trim().split(/\s+/));
 
 const APPROVED_MARKER_COLORS = {
   origin: { fill: "#397C8A", stroke: "#235965" },
@@ -115,12 +140,54 @@ function visit(node, visitor) {
   ts.forEachChild(node, (child) => visit(child, visitor));
 }
 
+function returnedSvgTemplate(functionNode) {
+  if (!functionNode?.body) return undefined;
+
+  const returnStatement = functionNode.body.statements.find(ts.isReturnStatement);
+  if (!returnStatement?.expression) return undefined;
+
+  let expression = unwrapExpression(returnStatement.expression);
+  if (
+    ts.isCallExpression(expression)
+    && expression.arguments.length === 0
+    && ts.isPropertyAccessExpression(expression.expression)
+    && expression.expression.name.text === "trim"
+  ) {
+    expression = unwrapExpression(expression.expression.expression);
+  }
+
+  return ts.isTemplateExpression(expression) && expression.head.text.includes("<svg")
+    ? expression
+    : undefined;
+}
+
+function templateUsesPaletteAttribute(template, role) {
+  for (let index = 0; index < template.templateSpans.length; index += 1) {
+    const span = template.templateSpans[index];
+    const expression = unwrapExpression(span.expression);
+    if (
+      !ts.isPropertyAccessExpression(expression)
+      || !ts.isIdentifier(expression.expression)
+      || expression.expression.text !== "palette"
+      || expression.name.text !== role
+    ) {
+      continue;
+    }
+
+    const before = index === 0
+      ? template.head.text
+      : template.templateSpans[index - 1].literal.text;
+    const attribute = before.match(new RegExp(`(?:^|\\s)${role}\\s*=\\s*(["'])$`));
+    if (attribute && span.literal.text.startsWith(attribute[1])) return true;
+  }
+
+  return false;
+}
+
 function returnedSvgUsesPalette(functionNode, sourceFile, kind) {
   if (!functionNode?.body) return false;
 
   let bindsApprovedPalette = false;
-  let returnedSvgUsesFill = false;
-  let returnedSvgUsesStroke = false;
 
   visit(functionNode.body, (node) => {
     if (
@@ -134,66 +201,84 @@ function returnedSvgUsesPalette(functionNode, sourceFile, kind) {
     ) {
       bindsApprovedPalette = true;
     }
-
-    if (!ts.isReturnStatement(node) || !node.expression) return;
-    const returnedSource = node.expression.getText(sourceFile);
-    if (!returnedSource.includes("<svg")) return;
-    visit(node.expression, (returnedNode) => {
-      if (
-        ts.isPropertyAccessExpression(returnedNode)
-        && returnedNode.expression.getText(sourceFile) === "palette"
-      ) {
-        if (returnedNode.name.text === "fill") returnedSvgUsesFill = true;
-        if (returnedNode.name.text === "stroke") returnedSvgUsesStroke = true;
-      }
-    });
   });
 
-  return bindsApprovedPalette && returnedSvgUsesFill && returnedSvgUsesStroke;
+  const template = returnedSvgTemplate(functionNode);
+  return Boolean(
+    bindsApprovedPalette
+    && template
+    && templateUsesPaletteAttribute(template, "fill")
+    && templateUsesPaletteAttribute(template, "stroke"),
+  );
 }
 
-function markerImageReturnsEncodedSvg(functionNode, sourceFile) {
+function isDirectBuilderCall(expression, name) {
+  const candidate = unwrapExpression(expression);
+  return ts.isCallExpression(candidate)
+    && ts.isIdentifier(candidate.expression)
+    && candidate.expression.text === name;
+}
+
+function isOriginKindCondition(expression) {
+  const condition = unwrapExpression(expression);
+  return ts.isBinaryExpression(condition)
+    && condition.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken
+    && ts.isIdentifier(unwrapExpression(condition.left))
+    && unwrapExpression(condition.left).text === "kind"
+    && ts.isStringLiteral(unwrapExpression(condition.right))
+    && unwrapExpression(condition.right).text === "origin";
+}
+
+function isExactEncodedSvgSource(expression) {
+  const source = unwrapExpression(expression);
+  if (
+    !ts.isTemplateExpression(source)
+    || source.head.text !== "data:image/svg+xml;charset=UTF-8,"
+    || source.templateSpans.length !== 1
+    || source.templateSpans[0].literal.text !== ""
+  ) {
+    return false;
+  }
+
+  const encoded = unwrapExpression(source.templateSpans[0].expression);
+  return ts.isCallExpression(encoded)
+    && ts.isIdentifier(encoded.expression)
+    && encoded.expression.text === "encodeURIComponent"
+    && encoded.arguments.length === 1
+    && ts.isIdentifier(unwrapExpression(encoded.arguments[0]))
+    && unwrapExpression(encoded.arguments[0]).text === "svg";
+}
+
+function markerImageReturnsEncodedSvg(functionNode) {
   if (!functionNode?.body) return false;
 
-  let svgUsesOriginBuilder = false;
-  let svgUsesCandidateBuilder = false;
-  let srcEncodesSvgDataUrl = false;
+  const svgDeclaration = functionNode.body.statements
+    .filter(ts.isVariableStatement)
+    .flatMap((statement) => [...statement.declarationList.declarations])
+    .find((declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "svg");
+  const svgInitializer = svgDeclaration?.initializer
+    ? unwrapExpression(svgDeclaration.initializer)
+    : undefined;
+  if (
+    !svgInitializer
+    || !ts.isConditionalExpression(svgInitializer)
+    || !isOriginKindCondition(svgInitializer.condition)
+    || !isDirectBuilderCall(svgInitializer.whenTrue, "buildOriginMarker")
+    || !isDirectBuilderCall(svgInitializer.whenFalse, "buildCandidateMarker")
+  ) {
+    return false;
+  }
 
-  visit(functionNode.body, (node) => {
-    if (
-      ts.isVariableDeclaration(node)
-      && ts.isIdentifier(node.name)
-      && node.name.text === "svg"
-      && node.initializer
-    ) {
-      visit(node.initializer, (initializerNode) => {
-        if (!ts.isCallExpression(initializerNode) || !ts.isIdentifier(initializerNode.expression)) return;
-        if (initializerNode.expression.text === "buildOriginMarker") svgUsesOriginBuilder = true;
-        if (initializerNode.expression.text === "buildCandidateMarker") svgUsesCandidateBuilder = true;
-      });
-    }
+  const returnStatement = functionNode.body.statements.find(ts.isReturnStatement);
+  const returned = returnStatement?.expression
+    ? unwrapExpression(returnStatement.expression)
+    : undefined;
+  if (!returned || !ts.isObjectLiteralExpression(returned)) return false;
 
-    if (!ts.isReturnStatement(node) || !node.expression) return;
-    visit(node.expression, (returnedNode) => {
-      if (!ts.isPropertyAssignment(returnedNode) || propertyName(returnedNode.name) !== "src") return;
-      const srcSource = returnedNode.initializer.getText(sourceFile);
-      let encodesSvg = false;
-      visit(returnedNode.initializer, (srcNode) => {
-        if (
-          ts.isCallExpression(srcNode)
-          && ts.isIdentifier(srcNode.expression)
-          && srcNode.expression.text === "encodeURIComponent"
-          && srcNode.arguments.length === 1
-          && srcNode.arguments[0].getText(sourceFile) === "svg"
-        ) {
-          encodesSvg = true;
-        }
-      });
-      if (srcSource.includes("data:image/svg+xml") && encodesSvg) srcEncodesSvgDataUrl = true;
-    });
-  });
-
-  return svgUsesOriginBuilder && svgUsesCandidateBuilder && srcEncodesSvgDataUrl;
+  const srcProperties = returned.properties.filter(
+    (property) => ts.isPropertyAssignment(property) && propertyName(property.name) === "src",
+  );
+  return srcProperties.length === 1 && isExactEncodedSvgSource(srcProperties[0].initializer);
 }
 
 function approvedMarkerColorPositions(path, source) {
@@ -231,12 +316,36 @@ function approvedMarkerColorPositions(path, source) {
   if (
     !returnedSvgUsesPalette(findFunction(sourceFile, "buildOriginMarker"), sourceFile, "origin")
     || !returnedSvgUsesPalette(findFunction(sourceFile, "buildCandidateMarker"), sourceFile, "candidate")
-    || !markerImageReturnsEncodedSvg(findFunction(sourceFile, "createMapMarkerImage"), sourceFile)
+    || !markerImageReturnsEncodedSvg(findFunction(sourceFile, "createMapMarkerImage"))
   ) {
     return new Set();
   }
 
   return allowedPositions;
+}
+
+function colorFunctionWithoutSemanticVariable(value) {
+  ARBITRARY_COLOR_FUNCTION.lastIndex = 0;
+  for (const match of value.matchAll(ARBITRARY_COLOR_FUNCTION)) {
+    let depth = 1;
+    let cursor = match.index + match[0].length;
+    while (cursor < value.length && depth > 0) {
+      if (value[cursor] === "(") depth += 1;
+      else if (value[cursor] === ")") depth -= 1;
+      cursor += 1;
+    }
+
+    const functionSource = value.slice(match.index, cursor);
+    if (!/\bvar\(\s*--[\w-]+/i.test(functionSource)) return true;
+  }
+
+  return false;
+}
+
+function containsNamedCssColor(value) {
+  const withoutVariables = value.replace(/\bvar\(\s*--[\w-]+(?:\s*,[^()]*)?\)/gi, "");
+  return (withoutVariables.match(/[a-z]+/gi) ?? [])
+    .some((word) => CSS_NAMED_COLORS.has(word.toLowerCase()));
 }
 
 function isDirectArbitraryColor(match) {
@@ -245,8 +354,127 @@ function isDirectArbitraryColor(match) {
   if (value.toLowerCase().startsWith("color:")) value = value.slice("color:".length).trim();
 
   return /^#(?:[\da-f]{3,4}|[\da-f]{6}|[\da-f]{8})$/i.test(value)
-    || ARBITRARY_COLOR_FUNCTION.test(value)
-    || /^[a-z]+$/i.test(value);
+    || /#(?:[\da-f]{8}|[\da-f]{6}|[\da-f]{4}|[\da-f]{3})(?![\da-f])/i.test(value)
+    || ARBITRARY_GRADIENT.test(value)
+    || TAILWIND_THEME_COLOR.test(value)
+    || colorFunctionWithoutSemanticVariable(value)
+    || containsNamedCssColor(value);
+}
+
+function collectConstBindings(sourceFile) {
+  const candidates = new Map();
+
+  visit(sourceFile, (node) => {
+    if (
+      !ts.isVariableDeclaration(node)
+      || !ts.isIdentifier(node.name)
+      || !node.initializer
+      || !ts.isVariableDeclarationList(node.parent)
+      || !(node.parent.flags & ts.NodeFlags.Const)
+    ) {
+      return;
+    }
+
+    const existing = candidates.get(node.name.text) ?? [];
+    existing.push(node.initializer);
+    candidates.set(node.name.text, existing);
+  });
+
+  return new Map(
+    [...candidates.entries()]
+      .filter(([, initializers]) => initializers.length === 1)
+      .map(([name, [initializer]]) => [name, initializer]),
+  );
+}
+
+function evaluateStaticValue(node, bindings, seen = new Set()) {
+  const expression = unwrapExpression(node);
+
+  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) {
+    return { kind: "string", value: expression.text };
+  }
+  if (ts.isNumericLiteral(expression)) return { kind: "number", value: Number(expression.text) };
+  if (ts.isPrefixUnaryExpression(expression) && [ts.SyntaxKind.PlusToken, ts.SyntaxKind.MinusToken].includes(expression.operator)) {
+    const operand = evaluateStaticValue(expression.operand, bindings, seen);
+    if (operand?.kind !== "number") return undefined;
+    return {
+      kind: "number",
+      value: expression.operator === ts.SyntaxKind.MinusToken ? -operand.value : operand.value,
+    };
+  }
+  if (ts.isIdentifier(expression)) {
+    if (seen.has(expression.text)) return undefined;
+    const initializer = bindings.get(expression.text);
+    if (!initializer) return undefined;
+    return evaluateStaticValue(initializer, bindings, new Set([...seen, expression.text]));
+  }
+  if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    const left = evaluateStaticValue(expression.left, bindings, seen);
+    const right = evaluateStaticValue(expression.right, bindings, seen);
+    if (!left || !right) return undefined;
+    if (left.kind === "string" || right.kind === "string") {
+      return { kind: "string", value: String(left.value) + String(right.value) };
+    }
+    return { kind: "number", value: left.value + right.value };
+  }
+  if (ts.isTemplateExpression(expression)) {
+    let value = expression.head.text;
+    for (const span of expression.templateSpans) {
+      const substitution = evaluateStaticValue(span.expression, bindings, seen);
+      if (!substitution) return undefined;
+      value += String(substitution.value) + span.literal.text;
+    }
+    return { kind: "string", value };
+  }
+
+  return undefined;
+}
+
+function hasCompositeStringAncestor(node) {
+  let parent = node.parent;
+  while (
+    parent
+    && (
+      ts.isParenthesizedExpression(parent)
+      || ts.isAsExpression(parent)
+      || ts.isSatisfiesExpression(parent)
+    )
+  ) {
+    parent = parent.parent;
+  }
+
+  return Boolean(
+    parent
+    && (
+      (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.PlusToken)
+      || ts.isTemplateSpan(parent)
+    )
+  );
+}
+
+function addStaticStringUtilityMatches(violations, path, source, sourceFile) {
+  const bindings = collectConstBindings(sourceFile);
+
+  visit(sourceFile, (node) => {
+    const composite = ts.isTemplateExpression(node)
+      || (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken);
+    if (!composite || hasCompositeStringAncestor(node)) return;
+
+    const resolved = evaluateStaticValue(node, bindings);
+    if (resolved?.kind !== "string") return;
+
+    for (const [pattern, predicate] of [
+      [NAMED_COLOR_UTILITY, () => true],
+      [ARBITRARY_COLOR_UTILITY, isDirectArbitraryColor],
+    ]) {
+      pattern.lastIndex = 0;
+      for (const match of resolved.value.matchAll(pattern)) {
+        if (!predicate(match[0])) continue;
+        const index = node.getStart(sourceFile);
+        violations.push({ path, line: lineNumberAt(source, index), match: match[0], index });
+      }
+    }
+  });
 }
 
 function lineNumberAt(source, index) {
@@ -282,6 +510,15 @@ export function findSemanticColorViolations(path, source) {
     isDirectArbitraryColor,
   );
 
+  const sourceFile = ts.createSourceFile(
+    normalizedPath,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    normalizedPath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  addStaticStringUtilityMatches(violations, normalizedPath, source, sourceFile);
+
   const approvedPositions = approvedMarkerColorPositions(path, source);
   for (const pattern of [RAW_HEX_COLOR, RAW_FUNCTION_COLOR]) {
     pattern.lastIndex = 0;
@@ -298,7 +535,11 @@ export function findSemanticColorViolations(path, source) {
     }
   }
 
-  return violations
+  const uniqueViolations = [...new Map(
+    violations.map((violation) => [`${violation.index}:${violation.match}`, violation]),
+  ).values()];
+
+  return uniqueViolations
     .sort((left, right) => left.index - right.index || left.match.localeCompare(right.match))
     .map((violation) => ({
       path: violation.path,

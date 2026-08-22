@@ -70,6 +70,45 @@ describe("시맨틱 색상 검사기", () => {
     ]);
   });
 
+  it("compound arbitrary 값 안의 직접 색상·theme 팔레트·gradient를 거부한다", () => {
+    const source = `
+      <div className="bg-[linear-gradient(red,blue)] shadow-[0_0_4px_red]
+        text-[color:theme(colors.red.500)] border-[color:rebeccapurple]
+        ring-[0_0_0_1px_rgb(1_2_3)]
+        from-[linear-gradient(var(--origin),var(--candidate))]
+        border-l-[3px] shadow-[0_0_4px_var(--border)]
+        text-[rgb(var(--text))] bg-[var(--surface)]" />
+    `;
+
+    expect(matches(source)).toEqual([
+      "bg-[linear-gradient(red,blue)]",
+      "shadow-[0_0_4px_red]",
+      "text-[color:theme(colors.red.500)]",
+      "border-[color:rebeccapurple]",
+      "ring-[0_0_0_1px_rgb(1_2_3)]",
+      "from-[linear-gradient(var(--origin),var(--candidate))]",
+    ]);
+  });
+
+  it("정적으로 계산 가능한 문자열 조합의 직접 색상 클래스도 거부한다", () => {
+    const source = `
+      const named = "bg-" + "red-500";
+      const opacity = (\`text-\${"black"}/50\`);
+      const nested = \`border-\${\`blue-\${500}\`}\`;
+      const dynamic = "fill-" + markerColor;
+      const length = "border-l-" + "[3px]";
+    `;
+
+    const violations = findSemanticColorViolations("app/example.tsx", source);
+
+    expect(violations.map((violation) => violation.match)).toEqual([
+      "bg-red-500",
+      "text-black/50",
+      "border-blue-500",
+    ]);
+    expect(formatSemanticColorViolation(violations[0])).toBe("app/example.tsx:2:bg-red-500");
+  });
+
   it("production TS와 TSX의 raw hex·rgb·rgba·hsl·hsla 리터럴을 거부한다", () => {
     const source = `
       const colors = ["#abc", "#abcd", "#aabbcc", "#aabbccdd"];
@@ -95,6 +134,56 @@ describe("시맨틱 색상 검사기", () => {
     expect(findSemanticColorViolations(path, source)).toEqual([]);
     expect(matches(`${source}\nconst copiedColor = "#397C8A";`, path)).toEqual(["#397C8A"]);
     expect(matches(source.replace("encodeURIComponent(svg)", "svg"), path)).toEqual([
+      "#397C8A",
+      "#235965",
+      "#B9604B",
+      "#843E30",
+    ]);
+  });
+
+  it("Kakao 팔레트 참조가 실제 fill·stroke 속성에서 벗어나면 예외를 닫는다", () => {
+    const path = resolve("components/map/mapVisuals.ts");
+    const source = readFileSync(path, "utf8")
+      .replaceAll('fill="${palette.fill}"', 'fill="white" data-contract="${palette.fill}"')
+      .replaceAll('stroke="${palette.stroke}"', 'stroke="black" data-contract-stroke="${palette.stroke}"');
+
+    expect(matches(source, path)).toEqual([
+      "#397C8A",
+      "#235965",
+      "#B9604B",
+      "#843E30",
+    ]);
+  });
+
+  it("svg 바인딩이 정확한 kind 조건부 빌더 호출이 아니면 예외를 닫는다", () => {
+    const path = resolve("components/map/mapVisuals.ts");
+    const source = readFileSync(path, "utf8").replace(
+      `const svg = kind === "origin"
+    ? buildOriginMarker(order, size.width, size.height, opacity)
+    : buildCandidateMarker(order, size.width, size.height, opacity);`,
+      `const svg = (
+    buildOriginMarker(order, size.width, size.height, opacity),
+    buildCandidateMarker(order, size.width, size.height, opacity),
+    "<svg/>"
+  );`,
+    );
+
+    expect(matches(source, path)).toEqual([
+      "#397C8A",
+      "#235965",
+      "#B9604B",
+      "#843E30",
+    ]);
+  });
+
+  it("src가 동일 svg 바인딩의 정확한 encoded data URL이 아니면 예외를 닫는다", () => {
+    const path = resolve("components/map/mapVisuals.ts");
+    const source = readFileSync(path, "utf8").replace(
+      'src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`',
+      'src: kind === "origin" ? `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}` : "/marker.svg"',
+    );
+
+    expect(matches(source, path)).toEqual([
       "#397C8A",
       "#235965",
       "#B9604B",
