@@ -115,4 +115,42 @@ describe("useLocationSearch", () => {
     expect(result.current.isOpen).toBe(false);
     expect(result.current.error).toBe("카카오 API 연동 중 오류가 발생했습니다.");
   });
+
+  it("새 query는 진행 중인 이전 요청을 즉시 무효화하고 새 검색은 계속한다", async () => {
+    const first = deferred<Response>();
+    const second = deferred<Response>();
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input: RequestInfo | URL) =>
+      String(input).includes("q=old") ? first.promise : second.promise,
+    );
+
+    const { result } = renderHook(() => useLocationSearch());
+    act(() => {
+      result.current.setQuery("old");
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    act(() => {
+      result.current.setQuery("new");
+    });
+    expect(result.current.query).toBe("new");
+    expect(result.current.results).toEqual([]);
+    expect(result.current.isOpen).toBe(false);
+
+    await act(async () => {
+      first.resolve(searchResponse("old-result"));
+      await Promise.resolve();
+    });
+    expect(result.current.results).toEqual([]);
+    expect(result.current.isOpen).toBe(false);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+      second.resolve(searchResponse("new-result"));
+      await Promise.resolve();
+    });
+    expect(result.current.results[0]?.place_name).toBe("new-result");
+  });
 });

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { KakaoLocation, KakaoSearchResponse } from "@/types/kakao";
 
 const LOCATION_SEARCH_DEBOUNCE_MS = 300;
 
 export function useLocationSearch() {
-  const [query, setQuery] = useState("");
+  const [query, setQueryState] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [results, setResults] = useState<KakaoLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +14,16 @@ export function useLocationSearch() {
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const requestSeqRef = useRef(0);
+
+  const setQuery = useCallback((nextQuery: string) => {
+    requestSeqRef.current += 1;
+    setQueryState(nextQuery);
+    setResults([]);
+    setIsOpen(false);
+    setIsLoading(false);
+    setError(null);
+    setHasSearched(false);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,6 +60,9 @@ export function useLocationSearch() {
 
         if (res.ok) {
           const data: KakaoSearchResponse = await res.json();
+          if (requestSeq !== requestSeqRef.current) {
+            return;
+          }
           setResults(data.documents);
           setIsOpen(true);
           setError(null);
