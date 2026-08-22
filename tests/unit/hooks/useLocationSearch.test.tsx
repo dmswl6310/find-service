@@ -154,6 +154,36 @@ describe("useLocationSearch", () => {
     expect(result.current.results[0]?.place_name).toBe("new-result");
   });
 
+  it("완료한 query로 debounce 전에 돌아오면 같은 query를 다시 검색한다", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(searchResponse("first-result"))
+      .mockResolvedValueOnce(searchResponse("refetched-result"));
+
+    const { result } = renderHook(() => useLocationSearch());
+    act(() => {
+      result.current.setQuery("same");
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(result.current.results[0]?.place_name).toBe("first-result");
+
+    act(() => {
+      result.current.setQuery("different");
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(299);
+    });
+    act(() => {
+      result.current.setQuery("same");
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    expect(result.current.results[0]?.place_name).toBe("refetched-result");
+  });
+
   it("지연된 실패 JSON은 새 query의 오류 상태를 덮어쓰지 않는다", async () => {
     const failedJson = deferred<{ error: string }>();
     vi.spyOn(globalThis, "fetch").mockResolvedValue({

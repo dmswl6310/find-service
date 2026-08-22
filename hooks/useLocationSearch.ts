@@ -18,6 +18,7 @@ export function useLocationSearch() {
   const setQuery = useCallback((nextQuery: string) => {
     requestSeqRef.current += 1;
     setQueryState(nextQuery);
+    setDebouncedQuery("");
     setResults([]);
     setIsOpen(false);
     setIsLoading(false);
