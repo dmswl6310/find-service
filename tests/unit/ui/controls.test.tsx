@@ -17,6 +17,22 @@ describe("UI 컨트롤", () => {
     expect(screen.getByRole("button", { name: "장소 제거" })).toBeVisible();
   });
 
+  it("아이콘 버튼 크기를 변형별 고정 정사각형으로 적용한다", () => {
+    render(
+      <>
+        <IconButton aria-label="중간" data-testid="icon-md" variant="primary" size="md">
+          내용이 긴 아이콘
+        </IconButton>
+        <IconButton aria-label="작은" data-testid="icon-sm" variant="ghost" size="sm">
+          작은 아이콘
+        </IconButton>
+      </>,
+    );
+
+    expect(screen.getByTestId("icon-md")).toHaveClass("h-11", "w-11");
+    expect(screen.getByTestId("icon-sm")).toHaveClass("h-9", "w-9");
+  });
+
   it("네이티브 버튼 속성과 시맨틱 danger 스타일을 전달한다", () => {
     const onClick = vi.fn();
     render(

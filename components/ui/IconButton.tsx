@@ -6,7 +6,7 @@ export type IconButtonProps = Omit<ButtonProps, "variant"> & {
 };
 
 export default function IconButton({ className = "", size = "md", ...props }: IconButtonProps) {
-  const sizeClass = size === "sm" ? "min-h-9 min-w-9 p-0" : "min-h-11 min-w-11 p-0";
+  const sizeClass = size === "sm" ? "h-9 w-9 p-0" : "h-11 w-11 p-0";
 
   return <Button {...props} size={size} className={`${sizeClass} ${className}`} />;
 }
