@@ -62,4 +62,10 @@ test("개발 환경 Design Lab이 고정 기반 컨트롤을 렌더링한다", a
 
   await expect(page.getByRole("heading", { name: "Design Lab" })).toBeVisible();
   await expect(page.getByRole("button", { name: "주요 동작" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "장소 상태: 비어 있음" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "장소 상태: 1개" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "장소 상태: 3개" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "장소 상태: 선택됨" })).toBeVisible();
+  await expect(page.getByText("검색 결과가 없습니다. 다른 키워드로 시도해 보세요.")).toBeVisible();
+  await expect(page.getByText("장소 검색 중 오류가 발생했습니다.")).toHaveAttribute("role", "alert");
 });
