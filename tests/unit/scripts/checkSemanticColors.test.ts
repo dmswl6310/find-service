@@ -90,6 +90,15 @@ describe("시맨틱 색상 검사기", () => {
     ]);
   });
 
+  it("var fallback의 직접 색상은 거부하고 URL 경로의 색상 단어는 허용한다", () => {
+    const source = `
+      <div className="bg-[var(--surface,red)] bg-[url(/assets/red.svg)]
+        shadow-[url('/markers/blue-pin.svg')] text-[var(--text)]" />
+    `;
+
+    expect(matches(source)).toEqual(["bg-[var(--surface,red)]"]);
+  });
+
   it("정적으로 계산 가능한 문자열 조합의 직접 색상 클래스도 거부한다", () => {
     const source = `
       const named = "bg-" + "red-500";
@@ -107,6 +116,55 @@ describe("시맨틱 색상 검사기", () => {
       "border-blue-500",
     ]);
     expect(formatSemanticColorViolation(violations[0])).toBe("app/example.tsx:2:bg-red-500");
+  });
+
+  it("서로 다른 함수의 동명 const를 각각의 lexical scope에서 계산한다", () => {
+    const source = `
+      function first() {
+        const shade = "red-500";
+        return "bg-" + shade;
+      }
+      function second() {
+        const shade = "blue-500";
+        return "text-" + shade;
+      }
+    `;
+
+    expect(matches(source)).toEqual(["bg-red-500", "text-blue-500"]);
+  });
+
+  it("동명 매개변수가 전역 const를 가리면 동적 값을 전역 값으로 오인하지 않는다", () => {
+    const source = `
+      const shade = "red-500";
+      function className(shade: string) {
+        return "bg-" + shade;
+      }
+    `;
+
+    expect(matches(source)).toEqual([]);
+  });
+
+  it("블록 바인딩을 바깥으로 누출하지 않고 선언 전 TDZ 값을 계산하지 않는다", () => {
+    const source = `
+      {
+        const blockShade = "blue-500";
+        const inside = "border-" + blockShade;
+      }
+      const outside = "text-" + blockShade;
+      const before = "bg-" + laterShade;
+      const laterShade = "red-500";
+    `;
+
+    expect(matches(source)).toEqual(["border-blue-500"]);
+  });
+
+  it("재귀적인 정적 바인딩은 순환 없이 미해결로 둔다", () => {
+    const source = `
+      const shade = shade + "red-500";
+      const className = "bg-" + shade;
+    `;
+
+    expect(matches(source)).toEqual([]);
   });
 
   it("production TS와 TSX의 raw hex·rgb·rgba·hsl·hsla 리터럴을 거부한다", () => {
@@ -189,6 +247,67 @@ describe("시맨틱 색상 검사기", () => {
       "#B9604B",
       "#843E30",
     ]);
+  });
+
+  it("palette·svg의 const·단일 write와 안전한 반환 객체 계약을 벗어나면 Kakao 예외를 닫는다", () => {
+    const path = resolve("components/map/mapVisuals.ts");
+    const source = readFileSync(path, "utf8");
+    const mutations = [
+      source.replace(
+        "  const palette = MAP_DOMAIN_COLORS.origin;",
+        "  let palette = MAP_DOMAIN_COLORS.origin;",
+      ),
+      source.replace(
+        "  const palette = MAP_DOMAIN_COLORS.origin;",
+        "  const palette = MAP_DOMAIN_COLORS.origin;\n  palette = MAP_DOMAIN_COLORS.origin;",
+      ),
+      source.replace(
+        "  const palette = MAP_DOMAIN_COLORS.origin;",
+        "  const palette = MAP_DOMAIN_COLORS.origin;\n  const palette = MAP_DOMAIN_COLORS.origin;",
+      ),
+      source.replace(
+        `  const svg = kind === "origin"
+    ? buildOriginMarker(order, size.width, size.height, opacity)
+    : buildCandidateMarker(order, size.width, size.height, opacity);`,
+        `  let svg = kind === "origin"
+    ? buildOriginMarker(order, size.width, size.height, opacity)
+    : buildCandidateMarker(order, size.width, size.height, opacity);`,
+      ),
+      source.replace(
+        `  const svg = kind === "origin"
+    ? buildOriginMarker(order, size.width, size.height, opacity)
+    : buildCandidateMarker(order, size.width, size.height, opacity);`,
+        `  const svg = kind === "origin"
+    ? buildOriginMarker(order, size.width, size.height, opacity)
+    : buildCandidateMarker(order, size.width, size.height, opacity);
+  svg = "<svg/>";`,
+      ),
+      source.replace(
+        '    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,',
+        '    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,\n    ...override,',
+      ),
+      source.replace(
+        '    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,',
+        '    get src() { return "marker.svg"; },',
+      ),
+      source.replace(
+        '    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,',
+        '    src() { return "marker.svg"; },',
+      ),
+      source.replace(
+        '    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,',
+        '    src: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,\n    src: "marker.svg",',
+      ),
+    ];
+
+    for (const mutation of mutations) {
+      expect(matches(mutation, path)).toEqual([
+        "#397C8A",
+        "#235965",
+        "#B9604B",
+        "#843E30",
+      ]);
+    }
   });
 
   it("위반을 file:line:match 형식으로 출력한다", () => {

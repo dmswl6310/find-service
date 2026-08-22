@@ -29,7 +29,6 @@ export const metadata: Metadata = {
     title: "모두스팟 이야기 | 원정 클라이머가 만든 약속 장소 비교 서비스",
     description:
       "대중교통으로 모두에게 공정한 약속 장소를 찾고 싶어 만든 모두스팟의 시작 이야기입니다.",
-    images: ["/opengraph-image"],
   },
 };
 

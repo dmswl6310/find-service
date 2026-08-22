@@ -184,24 +184,73 @@ function templateUsesPaletteAttribute(template, role) {
   return false;
 }
 
-function returnedSvgUsesPalette(functionNode, sourceFile, kind) {
-  if (!functionNode?.body) return false;
+function isConstDeclaration(declaration) {
+  return ts.isVariableDeclarationList(declaration.parent)
+    && Boolean(declaration.parent.flags & ts.NodeFlags.Const);
+}
 
-  let bindsApprovedPalette = false;
-
+function namedVariableDeclarations(functionNode, name) {
+  const declarations = [];
   visit(functionNode.body, (node) => {
-    if (
-      ts.isVariableDeclaration(node)
-      && ts.isIdentifier(node.name)
-      && node.name.text === "palette"
-      && node.initializer
-      && ts.isPropertyAccessExpression(node.initializer)
-      && node.initializer.expression.getText(sourceFile) === "MAP_DOMAIN_COLORS"
-      && node.initializer.name.text === kind
-    ) {
-      bindsApprovedPalette = true;
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name) {
+      declarations.push(node);
     }
   });
+  return declarations;
+}
+
+function assignmentTargetsName(expression, name) {
+  const target = unwrapExpression(expression);
+  if (ts.isIdentifier(target)) return target.text === name;
+  if (ts.isPropertyAccessExpression(target) || ts.isElementAccessExpression(target)) {
+    return assignmentTargetsName(target.expression, name);
+  }
+  if (ts.isArrayLiteralExpression(target) || ts.isObjectLiteralExpression(target)) {
+    let targetsName = false;
+    visit(target, (node) => {
+      if (ts.isIdentifier(node) && node.text === name) targetsName = true;
+    });
+    return targetsName;
+  }
+  return false;
+}
+
+function hasWriteAfter(functionNode, declaration, name) {
+  let hasWrite = false;
+  visit(functionNode.body, (node) => {
+    if (node.getStart() <= declaration.end) return;
+    if (
+      ts.isBinaryExpression(node)
+      && ts.isAssignmentOperator(node.operatorToken.kind)
+      && assignmentTargetsName(node.left, name)
+    ) {
+      hasWrite = true;
+    }
+    if (
+      (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node))
+      && [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(node.operator)
+      && assignmentTargetsName(node.operand, name)
+    ) {
+      hasWrite = true;
+    }
+  });
+  return hasWrite;
+}
+
+function returnedSvgUsesPalette(functionNode, sourceFile, kind) {
+  if (!functionNode?.body) return false;
+  const paletteDeclarations = namedVariableDeclarations(functionNode, "palette");
+  if (paletteDeclarations.length !== 1) return false;
+  const [paletteDeclaration] = paletteDeclarations;
+  const initializer = paletteDeclaration.initializer
+    ? unwrapExpression(paletteDeclaration.initializer)
+    : undefined;
+  const bindsApprovedPalette = isConstDeclaration(paletteDeclaration)
+    && initializer
+    && ts.isPropertyAccessExpression(initializer)
+    && initializer.expression.getText(sourceFile) === "MAP_DOMAIN_COLORS"
+    && initializer.name.text === kind
+    && !hasWriteAfter(functionNode, paletteDeclaration, "palette");
 
   const template = returnedSvgTemplate(functionNode);
   return Boolean(
@@ -252,15 +301,16 @@ function isExactEncodedSvgSource(expression) {
 function markerImageReturnsEncodedSvg(functionNode) {
   if (!functionNode?.body) return false;
 
-  const svgDeclaration = functionNode.body.statements
-    .filter(ts.isVariableStatement)
-    .flatMap((statement) => [...statement.declarationList.declarations])
-    .find((declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === "svg");
+  const svgDeclarations = namedVariableDeclarations(functionNode, "svg");
+  if (svgDeclarations.length !== 1) return false;
+  const [svgDeclaration] = svgDeclarations;
   const svgInitializer = svgDeclaration?.initializer
     ? unwrapExpression(svgDeclaration.initializer)
     : undefined;
   if (
-    !svgInitializer
+    !isConstDeclaration(svgDeclaration)
+    || hasWriteAfter(functionNode, svgDeclaration, "svg")
+    || !svgInitializer
     || !ts.isConditionalExpression(svgInitializer)
     || !isOriginKindCondition(svgInitializer.condition)
     || !isDirectBuilderCall(svgInitializer.whenTrue, "buildOriginMarker")
@@ -273,12 +323,9 @@ function markerImageReturnsEncodedSvg(functionNode) {
   const returned = returnStatement?.expression
     ? unwrapExpression(returnStatement.expression)
     : undefined;
-  if (!returned || !ts.isObjectLiteralExpression(returned)) return false;
-
-  const srcProperties = returned.properties.filter(
-    (property) => ts.isPropertyAssignment(property) && propertyName(property.name) === "src",
-  );
-  return srcProperties.length === 1 && isExactEncodedSvgSource(srcProperties[0].initializer);
+  const properties = returned ? objectProperties(returned) : undefined;
+  const src = properties?.get("src");
+  return Boolean(src && isExactEncodedSvgSource(src));
 }
 
 function approvedMarkerColorPositions(path, source) {
@@ -342,9 +389,44 @@ function colorFunctionWithoutSemanticVariable(value) {
   return false;
 }
 
+function withoutCssFunctions(value, functionName) {
+  const pattern = new RegExp(`\\b${functionName}\\s*\\(`, "gi");
+  let result = "";
+  let copiedUntil = 0;
+
+  for (const match of value.matchAll(pattern)) {
+    if (match.index < copiedUntil) continue;
+    let cursor = match.index + match[0].length;
+    let depth = 1;
+    let quote;
+
+    while (cursor < value.length && depth > 0) {
+      const character = value[cursor];
+      if (quote) {
+        if (character === "\\") cursor += 1;
+        else if (character === quote) quote = undefined;
+      } else if (character === '"' || character === "'") {
+        quote = character;
+      } else if (character === "(") {
+        depth += 1;
+      } else if (character === ")") {
+        depth -= 1;
+      }
+      cursor += 1;
+    }
+
+    if (depth !== 0) continue;
+    result += value.slice(copiedUntil, match.index) + " ";
+    copiedUntil = cursor;
+  }
+
+  return result + value.slice(copiedUntil);
+}
+
 function containsNamedCssColor(value) {
-  const withoutVariables = value.replace(/\bvar\(\s*--[\w-]+(?:\s*,[^()]*)?\)/gi, "");
-  return (withoutVariables.match(/[a-z]+/gi) ?? [])
+  const withoutUrls = withoutCssFunctions(value, "url");
+  const withoutVariableNames = withoutUrls.replace(/\bvar\(\s*--[\w-]+/gi, "var(");
+  return (withoutVariableNames.match(/[a-z]+/gi) ?? [])
     .some((word) => CSS_NAMED_COLORS.has(word.toLowerCase()));
 }
 
@@ -361,33 +443,103 @@ function isDirectArbitraryColor(match) {
     || containsNamedCssColor(value);
 }
 
-function collectConstBindings(sourceFile) {
-  const candidates = new Map();
+function isFunctionScope(node) {
+  return ts.isArrowFunction(node)
+    || ts.isFunctionDeclaration(node)
+    || ts.isFunctionExpression(node)
+    || ts.isMethodDeclaration(node)
+    || ts.isGetAccessorDeclaration(node)
+    || ts.isSetAccessorDeclaration(node)
+    || ts.isConstructorDeclaration(node);
+}
+
+function isLexicalScope(node) {
+  return ts.isSourceFile(node)
+    || ts.isBlock(node)
+    || ts.isModuleBlock(node)
+    || ts.isCaseBlock(node)
+    || ts.isCatchClause(node)
+    || ts.isForStatement(node)
+    || ts.isForInStatement(node)
+    || ts.isForOfStatement(node)
+    || isFunctionScope(node);
+}
+
+function nearestScope(node, predicate = isLexicalScope) {
+  let current = node.parent;
+  while (current && !predicate(current)) current = current.parent;
+  return current;
+}
+
+function collectLexicalBindings(sourceFile) {
+  const declarations = new Map();
+
+  function add(scope, name, binding) {
+    if (!scope) return;
+    const scopeBindings = declarations.get(scope) ?? new Map();
+    const existing = scopeBindings.get(name) ?? [];
+    existing.push(binding);
+    scopeBindings.set(name, existing);
+    declarations.set(scope, scopeBindings);
+  }
 
   visit(sourceFile, (node) => {
-    if (
-      !ts.isVariableDeclaration(node)
-      || !ts.isIdentifier(node.name)
-      || !node.initializer
-      || !ts.isVariableDeclarationList(node.parent)
-      || !(node.parent.flags & ts.NodeFlags.Const)
-    ) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
+      const declarationList = node.parent;
+      if (!ts.isVariableDeclarationList(declarationList)) return;
+      const isConst = Boolean(declarationList.flags & ts.NodeFlags.Const);
+      const scope = nearestScope(
+        node,
+        isConst
+          ? isLexicalScope
+          : (candidate) => ts.isSourceFile(candidate) || isFunctionScope(candidate),
+      );
+      add(scope, node.name.text, {
+        declaration: node,
+        initializer: isConst ? node.initializer : undefined,
+      });
       return;
     }
 
-    const existing = candidates.get(node.name.text) ?? [];
-    existing.push(node.initializer);
-    candidates.set(node.name.text, existing);
+    if (ts.isParameter(node) && ts.isIdentifier(node.name)) {
+      add(nearestScope(node, isFunctionScope), node.name.text, { declaration: node });
+      return;
+    }
+
+    if (
+      (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node))
+      && node.name
+    ) {
+      add(nearestScope(node), node.name.text, { declaration: node });
+    }
   });
 
-  return new Map(
-    [...candidates.entries()]
-      .filter(([, initializers]) => initializers.length === 1)
-      .map(([name, [initializer]]) => [name, initializer]),
-  );
+  return declarations;
 }
 
-function evaluateStaticValue(node, bindings, seen = new Set()) {
+function resolveLexicalBinding(identifier, declarations, sourceFile) {
+  let scope = nearestScope(identifier);
+
+  while (scope) {
+    const candidates = declarations.get(scope)?.get(identifier.text);
+    if (candidates) {
+      if (candidates.length !== 1) return undefined;
+      const [binding] = candidates;
+      if (
+        !binding.initializer
+        || binding.declaration.getStart(sourceFile) > identifier.getStart(sourceFile)
+      ) {
+        return undefined;
+      }
+      return binding;
+    }
+    scope = nearestScope(scope);
+  }
+
+  return undefined;
+}
+
+function evaluateStaticValue(node, declarations, sourceFile, seen = new Set()) {
   const expression = unwrapExpression(node);
 
   if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) {
@@ -395,7 +547,7 @@ function evaluateStaticValue(node, bindings, seen = new Set()) {
   }
   if (ts.isNumericLiteral(expression)) return { kind: "number", value: Number(expression.text) };
   if (ts.isPrefixUnaryExpression(expression) && [ts.SyntaxKind.PlusToken, ts.SyntaxKind.MinusToken].includes(expression.operator)) {
-    const operand = evaluateStaticValue(expression.operand, bindings, seen);
+    const operand = evaluateStaticValue(expression.operand, declarations, sourceFile, seen);
     if (operand?.kind !== "number") return undefined;
     return {
       kind: "number",
@@ -403,14 +555,18 @@ function evaluateStaticValue(node, bindings, seen = new Set()) {
     };
   }
   if (ts.isIdentifier(expression)) {
-    if (seen.has(expression.text)) return undefined;
-    const initializer = bindings.get(expression.text);
-    if (!initializer) return undefined;
-    return evaluateStaticValue(initializer, bindings, new Set([...seen, expression.text]));
+    const binding = resolveLexicalBinding(expression, declarations, sourceFile);
+    if (!binding || seen.has(binding.declaration)) return undefined;
+    return evaluateStaticValue(
+      binding.initializer,
+      declarations,
+      sourceFile,
+      new Set([...seen, binding.declaration]),
+    );
   }
   if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-    const left = evaluateStaticValue(expression.left, bindings, seen);
-    const right = evaluateStaticValue(expression.right, bindings, seen);
+    const left = evaluateStaticValue(expression.left, declarations, sourceFile, seen);
+    const right = evaluateStaticValue(expression.right, declarations, sourceFile, seen);
     if (!left || !right) return undefined;
     if (left.kind === "string" || right.kind === "string") {
       return { kind: "string", value: String(left.value) + String(right.value) };
@@ -420,7 +576,7 @@ function evaluateStaticValue(node, bindings, seen = new Set()) {
   if (ts.isTemplateExpression(expression)) {
     let value = expression.head.text;
     for (const span of expression.templateSpans) {
-      const substitution = evaluateStaticValue(span.expression, bindings, seen);
+      const substitution = evaluateStaticValue(span.expression, declarations, sourceFile, seen);
       if (!substitution) return undefined;
       value += String(substitution.value) + span.literal.text;
     }
@@ -453,14 +609,14 @@ function hasCompositeStringAncestor(node) {
 }
 
 function addStaticStringUtilityMatches(violations, path, source, sourceFile) {
-  const bindings = collectConstBindings(sourceFile);
+  const declarations = collectLexicalBindings(sourceFile);
 
   visit(sourceFile, (node) => {
     const composite = ts.isTemplateExpression(node)
       || (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken);
     if (!composite || hasCompositeStringAncestor(node)) return;
 
-    const resolved = evaluateStaticValue(node, bindings);
+    const resolved = evaluateStaticValue(node, declarations, sourceFile);
     if (resolved?.kind !== "string") return;
 
     for (const [pattern, predicate] of [
