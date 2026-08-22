@@ -1,7 +1,7 @@
 # 모두스팟 디자인 시스템
 
 - 방향: Calm Transit
-- 상태: 구현 목표 계약. 현재 Production 마이그레이션은 아직 완료되지 않음
+- 상태: 구현됨
 - 관련 명세: `docs/superpowers/specs/2026-08-22-moduspot-calm-transit-design.md`
 
 ## 1. 원칙
@@ -137,8 +137,19 @@
 - `LocationPanel`: 입력 상태를 표현한다.
 - `ResultPanel`: 결과 요약과 후보 순위를 표현한다.
 - `MapWorkspace`: 지도, 마커, 선택 경로, 지도 위 요약을 표현한다.
+- `ComparisonWorkspaceShell`: Production과 Design Lab이 함께 사용하는 지도 중심 반응형 셸이다.
+- `StaticMapSurface`: Design Lab과 시각 회귀에서만 사용하는 외부 API 없는 고정 지도다.
+- `SiteHeader`, `SiteFooter`: 모든 페이지가 공유하는 64px 앱 바와 서비스·정책 내비게이션이다.
 
 표현 컴포넌트 안에서 API를 호출하거나 황금 밸런스를 다시 계산하지 않는다.
+
+### 공유 셸 구현
+
+- 데스크톱 셸은 `minmax(320px, 360px) minmax(0, 1fr)` 열과 `calc(100svh - 4rem)` 높이를 사용한다.
+- 모바일은 같은 지도 위에 `BottomSheet` 하나만 올린다. 시트의 최대 높이는 `72svh`이며 시트 내부만 독립적으로 스크롤한다.
+- 입력, 계산 중, 결과, 경로표는 같은 패널 슬롯에서 전환하고 실시간 지도는 하나만 유지한다.
+- `MapWorkspace`는 Production의 실시간 Kakao 지도, 범례, 선택 후보 요약, 지도 실패 대체 상태를 소유한다.
+- `CandidateMapSummary`와 `MapFailureState`는 실시간 지도와 고정 시나리오가 공유하는 상태 표현이다.
 
 ## 7. 상태 문구 기준
 
@@ -184,7 +195,39 @@
 - 새 공통 컴포넌트 또는 새 variant를 추가하면 Design Lab 사례도 함께 추가한다.
 - 시각 회귀 테스트는 Design Lab의 고정 시나리오를 캡처한다.
 
-## 10. 변경 체크리스트
+### 시나리오 URL
+
+개발 서버에서 아래 URL을 직접 열면 같은 상태를 반복해서 확인할 수 있다.
+
+- 기반 카탈로그: `/design-lab?scenario=foundation`
+- 빈 상태: `/design-lab?scenario=empty`
+- 입력 완료: `/design-lab?scenario=input`
+- 계산 중: `/design-lab?scenario=loading`
+- 비교 결과: `/design-lab?scenario=result`
+- 부분 실패: `/design-lab?scenario=partial-failure`
+- 전체 실패: `/design-lab?scenario=total-failure`
+
+`NODE_ENV=production`에서는 `/design-lab`과 위 쿼리 URL 모두 `notFound()`를 통해 HTTP 404를 반환한다.
+
+## 10. 색상 계약 검사와 예외
+
+- `npm run lint:colors`는 `app`, `components` 아래의 모든 `.ts`, `.tsx`를 재귀 검사한다.
+- Tailwind 직접 팔레트 색상과 `white`·`black`, 직접 색상 arbitrary 유틸리티, raw hex·rgb·rgba·hsl·hsla 리터럴은 허용하지 않는다.
+- 유일한 raw hex 예외는 `components/map/mapVisuals.ts`의 인코딩된 Kakao 마커 SVG 값 `origin.fill`, `origin.stroke`, `candidate.fill`, `candidate.stroke`다. 검사기는 정확한 파일·값과 SVG marker data URL 연결을 함께 검증한다.
+- 경로선의 `ROUTE_VISUALS`는 raw 색상이 아니라 `--text-muted`, `--success`, `--origin` CSS 변수 이름을 사용한다.
+- 서버 생성 아이콘, Open Graph 이미지, manifest는 `lib/semanticColors.ts`를 통해 `app/globals.css`의 20개 토큰을 읽으며 색상 값을 중복 정의하지 않는다.
+
+검증 명령은 다음과 같다.
+
+```bash
+npm run lint:colors
+npm run test:colors
+npm run test:visual
+```
+
+`npm run test:visual`은 390px·1440px의 6개 상태, 총 12개 기준 이미지를 갱신하지 않고 비교한다. 승인된 시각 변경일 때만 별도로 `--update-snapshots`를 사용한다.
+
+## 11. 변경 체크리스트
 
 새 토큰이나 공통 컴포넌트를 추가할 때 다음을 확인한다.
 

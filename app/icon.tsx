@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { semanticColors } from "@/lib/semanticColors";
 
 export const size = {
   width: 64,
@@ -17,7 +18,7 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0EA5E9 0%, #10B981 100%)",
+          background: semanticColors.action,
           borderRadius: 14,
         }}
       >
@@ -27,7 +28,7 @@ export default function Icon() {
             width: 48,
             height: 48,
             borderRadius: 16,
-            background: "rgba(255,255,255,0.92)",
+            background: semanticColors.surfaceRaised,
           }}
         />
         <div
@@ -35,9 +36,9 @@ export default function Icon() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#0F766E",
+            color: semanticColors.action,
             fontSize: 34,
-            fontWeight: 900,
+            fontWeight: 600,
             fontFamily: "sans-serif",
           }}
         >

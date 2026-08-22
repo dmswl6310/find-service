@@ -123,7 +123,7 @@ export default function MiniMap({
       <>
         <Script src={kakaoScriptUrl} strategy="afterInteractive" onReady={() => setScriptReady(true)} onError={() => setLoadFailed(true)} />
         <div className="w-full h-full flex items-center justify-center bg-surface border border-border rounded-xl aspect-square md:aspect-auto" role="status" aria-live="polite" aria-busy="true">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-action border-t-transparent"></div>
           <span className="sr-only">지도를 불러오는 중입니다.</span>
         </div>
       </>
