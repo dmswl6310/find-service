@@ -5,6 +5,8 @@ import LocationPanel from "@/app/home/LocationPanel";
 import ResultPanel from "@/app/home/ResultPanel";
 import { designLabFixtures } from "@/components/design-lab/fixtures";
 import PlaceRow from "@/components/location/PlaceRow";
+import RouteDetailSheet from "@/components/result/RouteDetailSheet";
+import RouteMatrix from "@/components/result/RouteMatrix";
 import { buildCandidateSummaries } from "@/components/result/resultModel";
 import Button from "@/components/ui/Button";
 import BottomSheet from "@/components/ui/BottomSheet";
@@ -13,6 +15,7 @@ import InlineNotice from "@/components/ui/InlineNotice";
 import Progress from "@/components/ui/Progress";
 import type { LocationSearchProps } from "@/components/location/LocationSearch";
 import type { TransitFetchResult } from "@/types/odsay";
+import { useState } from "react";
 
 export const designLabScenarios = [
   "foundation",
@@ -108,6 +111,40 @@ function ResultState({ scenario }: { scenario: Exclude<DesignLabScenario, "found
 
 function FoundationState() {
   const partialFailureCount = designLabFixtures.partialFailureMatrix.filter((route) => route.error).length;
+  const [selectedRoute, setSelectedRoute] = useState<{
+    result: TransitFetchResult;
+    startName: string;
+    endName: string;
+  } | null>(null);
+  const routeExample: TransitFetchResult = {
+    fromId: designLabFixtures.starts[0].id,
+    toId: designLabFixtures.candidates[0].id,
+    timeMn: 35,
+    payment: 1_500,
+    pathType: 3,
+    transitCount: 1,
+    subPath: [
+      { trafficType: 3, distance: 360, sectionTime: 5 },
+      {
+        trafficType: 1,
+        distance: 5_100,
+        sectionTime: 20,
+        stationCount: 8,
+        startName: "강남역",
+        endName: "을지로3가역",
+        lane: [{ name: "지하철 2호선" }],
+      },
+      {
+        trafficType: 2,
+        distance: 900,
+        sectionTime: 7,
+        stationCount: 3,
+        startName: "을지로3가역",
+        endName: "을지로입구역",
+        lane: [{ busNo: "701" }],
+      },
+    ],
+  };
 
   return (
     <div className="space-y-8">
@@ -174,6 +211,27 @@ function FoundationState() {
             <p className="mt-3 text-sm text-danger" role="alert">장소 검색 중 오류가 발생했습니다.</p>
           </section>
         </div>
+      </section>
+
+      <section aria-labelledby="routes-heading" className="space-y-4 rounded-xl border border-border bg-surface p-5">
+        <div>
+          <h2 id="routes-heading" className="text-lg font-semibold text-text">경로 매트릭스와 상세 시트</h2>
+          <p className="mt-2 text-sm text-text-muted">고정 도보·지하철·버스 구간으로 지도 선택과 상세 열기를 점검합니다.</p>
+        </div>
+        <RouteMatrix
+          starts={[designLabFixtures.starts[0]]}
+          ends={[designLabFixtures.candidates[0]]}
+          matrixData={[routeExample]}
+          onSelectRoute={() => undefined}
+          onOpenRoute={(result, startName, endName) => setSelectedRoute({ result, startName, endName })}
+        />
+        <RouteDetailSheet
+          isOpen={selectedRoute !== null}
+          onClose={() => setSelectedRoute(null)}
+          result={selectedRoute?.result ?? null}
+          startName={selectedRoute?.startName ?? ""}
+          endName={selectedRoute?.endName ?? ""}
+        />
       </section>
     </div>
   );
