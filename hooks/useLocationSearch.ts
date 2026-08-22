@@ -74,6 +74,9 @@ export function useLocationSearch() {
         setIsOpen(false);
         setHasSearched(true);
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        if (requestSeq !== requestSeqRef.current) {
+          return;
+        }
         setError(data?.error || "장소 검색 중 오류가 발생했습니다.");
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {

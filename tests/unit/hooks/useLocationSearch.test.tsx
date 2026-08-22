@@ -153,4 +153,33 @@ describe("useLocationSearch", () => {
     });
     expect(result.current.results[0]?.place_name).toBe("new-result");
   });
+
+  it("지연된 실패 JSON은 새 query의 오류 상태를 덮어쓰지 않는다", async () => {
+    const failedJson = deferred<{ error: string }>();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      json: () => failedJson.promise,
+    } as Response);
+
+    const { result } = renderHook(() => useLocationSearch());
+    act(() => {
+      result.current.setQuery("old");
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    act(() => {
+      result.current.setQuery("new");
+    });
+    await act(async () => {
+      failedJson.resolve({ error: "이전 검색 오류" });
+      await Promise.resolve();
+    });
+
+    expect(result.current.query).toBe("new");
+    expect(result.current.results).toEqual([]);
+    expect(result.current.isOpen).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
 });
