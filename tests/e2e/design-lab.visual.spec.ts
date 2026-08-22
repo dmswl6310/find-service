@@ -79,8 +79,104 @@ test("모바일 시나리오는 뷰포트에 고정된 독립 스크롤 시트�
   expect(metrics.workspaceHeight).toBeLessThanOrEqual(780);
   expect(metrics.mapHeight).toBe(metrics.workspaceHeight);
   expect(metrics.sheetClientHeight).toBeLessThan(metrics.sheetScrollHeight);
-  expect(metrics.sheetClientHeight).toBeLessThanOrEqual(Math.round(844 * 0.6));
+  expect(metrics.sheetClientHeight).toBeLessThanOrEqual(Math.ceil(844 * 0.75));
+  expect(metrics.sheetClientHeight).toBeGreaterThanOrEqual(Math.floor(844 * 0.7));
+  expect(Math.abs(metrics.sheetClientHeight - Math.round(844 * 0.72))).toBeLessThanOrEqual(2);
 });
+
+for (const scenario of ["empty", "input"] as const) {
+  test(`${scenario} 모바일 첫 화면에서 출발지 입력을 시작할 수 있다`, async ({ page }) => {
+    await prepareScenario(page, scenario, { width: 390, height: 844 });
+
+    const sheet = page.getByRole("region", { name: "비교 패널", exact: true });
+    const originHeading = page.getByRole("heading", { name: "출발지", exact: true });
+    const originSearch = page.getByRole("textbox", { name: "출발지 검색", exact: true });
+    const [sheetBox, headingBox, searchBox] = await Promise.all([
+      sheet.boundingBox(),
+      originHeading.boundingBox(),
+      originSearch.boundingBox(),
+    ]);
+    expect(sheetBox).not.toBeNull();
+    expect(headingBox).not.toBeNull();
+    expect(searchBox).not.toBeNull();
+    expect(headingBox!.y).toBeGreaterThanOrEqual(sheetBox!.y);
+    expect(headingBox!.y + headingBox!.height).toBeLessThanOrEqual(
+      sheetBox!.y + sheetBox!.height,
+    );
+    const visibleSearchHeight = Math.max(
+      0,
+      Math.min(searchBox!.y + searchBox!.height, sheetBox!.y + sheetBox!.height)
+        - Math.max(searchBox!.y, sheetBox!.y),
+    );
+    expect(visibleSearchHeight).toBeGreaterThanOrEqual(searchBox!.height * 0.6);
+  });
+}
+
+for (const scenario of ["result", "partial-failure"] as const) {
+  test(`${scenario} 모바일 지도 문맥이 72svh 시트 위에 남는다`, async ({ page }) => {
+    await prepareScenario(page, scenario, { width: 390, height: 844 });
+
+    const map = page.getByTestId("design-lab-map");
+    const sheet = page.getByRole("region", { name: "비교 패널", exact: true });
+    const summary = page.getByLabel("선택 후보 요약", { exact: true });
+    const origin = map.getByLabel("출발지 1", { exact: true });
+    const candidate = map.getByLabel("후보지 A", { exact: true });
+    const route = map.getByLabel("선택 경로", { exact: true });
+
+    await expect(summary).toBeInViewport();
+    await expect(origin).toBeInViewport();
+    await expect(candidate).toBeInViewport();
+    await expect(route).toBeInViewport();
+
+    const [sheetBox, summaryBox, originBox, candidateBox, routeBox] = await Promise.all([
+      sheet.boundingBox(),
+      summary.boundingBox(),
+      origin.boundingBox(),
+      candidate.boundingBox(),
+      route.boundingBox(),
+    ]);
+    expect(sheetBox).not.toBeNull();
+    expect(summaryBox).not.toBeNull();
+    expect(originBox).not.toBeNull();
+    expect(candidateBox).not.toBeNull();
+    expect(routeBox).not.toBeNull();
+
+    const summaryBottom = summaryBox!.y + summaryBox!.height;
+    const sheetTop = sheetBox!.y;
+    expect(summaryBottom).toBeLessThanOrEqual(sheetTop);
+    for (const contextBox of [originBox!, candidateBox!, routeBox!]) {
+      expect(contextBox.y).toBeGreaterThanOrEqual(summaryBottom);
+      expect(contextBox.y + contextBox.height).toBeLessThanOrEqual(sheetTop);
+    }
+    expect(routeBox!.width).toBeGreaterThanOrEqual(140);
+  });
+}
+
+for (const scenario of ["loading", "total-failure"] as const) {
+  test(`${scenario} 모바일 지도 marker가 서로 겹치지 않는다`, async ({ page }) => {
+    await prepareScenario(page, scenario, { width: 390, height: 844 });
+    const markers = page.getByTestId("design-lab-map").locator("[aria-label^='출발지 '], [aria-label^='후보지 ']");
+    const boxes = await markers.evaluateAll((elements) =>
+      elements.map((element) => {
+        const box = element.getBoundingClientRect();
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+      }),
+    );
+
+    expect(boxes).toHaveLength(6);
+    for (let first = 0; first < boxes.length; first += 1) {
+      for (let second = first + 1; second < boxes.length; second += 1) {
+        const overlaps = !(
+          boxes[first].right <= boxes[second].left
+          || boxes[second].right <= boxes[first].left
+          || boxes[first].bottom <= boxes[second].top
+          || boxes[second].bottom <= boxes[first].top
+        );
+        expect(overlaps, `marker ${first + 1}과 ${second + 1}이 겹칩니다.`).toBe(false);
+      }
+    }
+  });
+}
 
 test("좁은 데스크톱 패널에서도 시간 입력 동작이 잘리지 않는다", async ({ page }) => {
   await prepareScenario(page, "input", { width: 1440, height: 1000 });

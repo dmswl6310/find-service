@@ -2,13 +2,13 @@ import CandidateMapSummary from "@/components/map/CandidateMapSummary";
 import type { CandidateSummary } from "@/components/result/resultModel";
 
 const ORIGIN_MARKERS = [
-  { label: "1", position: "left-[12%] top-[22%]" },
+  { label: "1", position: "left-[12%] top-[16%] md:top-[22%]" },
   { label: "2", position: "left-[16%] top-[68%]" },
   { label: "3", position: "left-[42%] top-[34%]" },
 ] as const;
 
 const CANDIDATE_MARKERS = [
-  { label: "A", position: "right-[16%] top-[20%]" },
+  { label: "A", position: "right-[16%] top-[16%] md:top-[20%]" },
   { label: "B", position: "right-[10%] top-[58%]" },
   { label: "C", position: "right-[34%] top-[70%]" },
 ] as const;
@@ -45,9 +45,9 @@ export default function StaticMapSurface({
           <>
             <div
               aria-label="선택 경로"
-              className="absolute left-[20%] top-[24%] h-1.5 w-[58%] origin-left rotate-[-4deg] rounded-full bg-origin shadow-sm"
+              className="absolute left-[20%] top-[17%] h-1.5 w-[58%] origin-left rotate-[-4deg] rounded-full bg-origin shadow-sm md:top-[24%]"
             />
-            <div className="absolute left-[47%] top-[25%] h-1.5 w-[31%] origin-left rotate-[24deg] rounded-full bg-success shadow-sm" />
+            <div className="absolute left-[47%] top-[18%] h-1.5 w-[31%] origin-left rotate-[24deg] rounded-full bg-success shadow-sm md:top-[25%]" />
           </>
         ) : null}
 

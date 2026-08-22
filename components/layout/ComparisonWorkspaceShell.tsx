@@ -33,7 +33,7 @@ export default function ComparisonWorkspaceShell({
       >
         <BottomSheet
           title="비교 패널"
-          className="max-h-[58svh] overflow-y-auto md:h-full md:max-h-none md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
+          className="max-h-[72svh] overflow-y-auto md:h-full md:max-h-none md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
         >
           <div className="min-w-0 p-4 sm:p-5">
             <header className="mb-5 border-b border-border pb-5">
