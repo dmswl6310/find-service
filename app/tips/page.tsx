@@ -49,13 +49,13 @@ export default function TipsPage() {
   return (
     <main className="flex-1 w-full max-w-[960px] mx-auto p-6 md:p-10 mb-20 mt-4 md:mt-8 bg-surface rounded-3xl shadow-sm border border-border">
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      <article className="prose prose-slate prose-lg max-w-none">
+      <article className="prose prose-lg max-w-none">
         <header className="mb-10 border-b border-border pb-8">
-          <p className="mb-3 text-sm font-bold text-primary">모두스팟 활용 가이드</p>
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 text-foreground leading-tight">
+          <p className="mb-3 text-sm font-semibold text-action">모두스팟 활용 가이드</p>
+          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-5 text-text leading-tight">
               여러 출발지가 있을 때 중간 약속 장소를 공정하게 고르는 방법
           </h1>
-          <p className="text-base md:text-lg text-foreground/65 leading-8">
+          <p className="text-base md:text-lg text-text/65 leading-8">
             모임 장소를 정할 때 한 사람에게만 이동 부담이 몰리면 약속 자체가
             피곤해집니다. 모두스팟은 출발지와 후보 목적지를 여러 개 넣고
             대중교통 소요시간을 비교해, 대화로 결정하기 어려운 부분을 숫자와
@@ -63,15 +63,15 @@ export default function TipsPage() {
             여러명 거리비교, 중간지점 찾기, 중간거리 비교가 필요한 상황에 맞춰
             평균 이동시간과 가장 오래 걸리는 사람의 시간을 함께 보는 것이 핵심입니다.
           </p>
-          <p className="mt-4 text-sm text-foreground/50">마지막 업데이트: 2026년 4월 28일</p>
+          <p className="mt-4 text-sm text-text/50">마지막 업데이트: 2026년 4월 28일</p>
         </header>
 
-        <section className="mb-12 rounded-3xl border border-primary/15 bg-primary/5 p-6 md:p-8">
-          <h2 className="mt-0 text-2xl font-bold text-foreground">빠른 체크리스트</h2>
-          <ul className="mt-5 space-y-3 pl-0 list-none text-foreground/75">
+        <section className="mb-12 rounded-3xl border border-action/15 bg-action/5 p-6 md:p-8">
+          <h2 className="mt-0 text-2xl font-semibold text-text">빠른 체크리스트</h2>
+          <ul className="mt-5 space-y-3 pl-0 list-none text-text/75">
             {checklist.map((item) => (
               <li key={item} className="flex gap-3">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-action text-xs font-semibold text-action-foreground">
                   ✓
                 </span>
                 <span>{item}</span>
@@ -80,9 +80,9 @@ export default function TipsPage() {
           </ul>
         </section>
 
-        <section className="space-y-10 text-foreground/80">
+        <section className="space-y-10 text-text/80">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">0. 중간지점은 지도상 가운데가 아니라 실제 이동시간 기준입니다</h2>
+            <h2 className="text-2xl font-semibold text-text">0. 중간지점은 지도상 가운데가 아니라 실제 이동시간 기준입니다</h2>
             <p>
               서울 지도에서 직선거리로 가운데인 곳이 실제 중간 약속 장소가 되는 것은
               아닙니다. 지하철 노선, 버스 환승, 도보 구간 때문에 같은 중간거리라도
@@ -92,7 +92,7 @@ export default function TipsPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">1. 평균보다 편차를 먼저 봅니다</h2>
+            <h2 className="text-2xl font-semibold text-text">1. 평균보다 편차를 먼저 봅니다</h2>
             <p>
               약속 장소를 고를 때 평균 이동시간만 보면 한 명이 과도하게 오래
               이동하는 상황을 놓치기 쉽습니다. 후보 장소별로 가장 오래 걸리는
@@ -102,7 +102,7 @@ export default function TipsPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">2. 환승과 도보 부담도 결정 기준입니다</h2>
+            <h2 className="text-2xl font-semibold text-text">2. 환승과 도보 부담도 결정 기준입니다</h2>
             <p>
               같은 45분이라도 환승 3번과 직통 45분은 체감 피로도가 다릅니다.
               대중교통 결과를 확인한 뒤에는 환승 횟수, 도보 이동 거리, 역에서
@@ -112,7 +112,7 @@ export default function TipsPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">3. 시간대를 실제 약속 시간에 맞춥니다</h2>
+            <h2 className="text-2xl font-semibold text-text">3. 시간대를 실제 약속 시간에 맞춥니다</h2>
             <p>
               출근 시간, 퇴근 시간, 주말 저녁은 대중교통 배차와 혼잡도가 크게
               달라집니다. 모두스팟의 출발 시간 옵션을 켜고 실제 이동할 날짜와
@@ -121,7 +121,7 @@ export default function TipsPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">4. 후보지는 3~5개 정도로 좁혀 비교합니다</h2>
+            <h2 className="text-2xl font-semibold text-text">4. 후보지는 3~5개 정도로 좁혀 비교합니다</h2>
             <p>
               후보가 너무 많으면 결과를 해석하기 어렵고, 너무 적으면 좋은 대안을
               놓칠 수 있습니다. 지하철 환승역, 주요 상권, 참석자들이 이미 알고
@@ -130,7 +130,7 @@ export default function TipsPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">5. 최종 결정 전에는 공유 링크로 함께 확인합니다</h2>
+            <h2 className="text-2xl font-semibold text-text">5. 최종 결정 전에는 공유 링크로 함께 확인합니다</h2>
             <p>
               계산 결과를 공유하면 각자가 같은 출발지와 후보 장소를 기준으로
               판단할 수 있습니다. 이동시간 숫자만 캡처하는 것보다 공유 링크로
@@ -140,9 +140,9 @@ export default function TipsPage() {
           </div>
         </section>
 
-        <section className="mt-12 rounded-3xl border border-border bg-background/70 p-6 md:p-8">
-          <h2 className="mt-0 text-2xl font-bold text-foreground">모두스팟을 이렇게 사용해보세요</h2>
-          <ol className="space-y-3 pl-5 text-foreground/75">
+        <section className="mt-12 rounded-3xl border border-border bg-canvas/70 p-6 md:p-8">
+          <h2 className="mt-0 text-2xl font-semibold text-text">모두스팟을 이렇게 사용해보세요</h2>
+          <ol className="space-y-3 pl-5 text-text/75">
             <li>참석자별 출발지를 모두 추가합니다.</li>
             <li>가능한 후보 장소를 목적지 후보에 추가합니다.</li>
             <li>필요하면 출발 시간 반영을 켭니다.</li>
@@ -151,16 +151,16 @@ export default function TipsPage() {
           </ol>
         </section>
 
-        <section className="mt-12 rounded-3xl border border-primary/15 bg-primary/5 p-6 md:p-8">
-          <h2 className="mt-0 text-2xl font-bold text-foreground">관련 가이드</h2>
-          <ul className="space-y-3 pl-0 list-none text-foreground/75">
+        <section className="mt-12 rounded-3xl border border-action/15 bg-action/5 p-6 md:p-8">
+          <h2 className="mt-0 text-2xl font-semibold text-text">관련 가이드</h2>
+          <ul className="space-y-3 pl-0 list-none text-text/75">
             <li>
-              <Link href="/middle-point" className="font-bold text-primary hover:underline">
+              <Link href="/middle-point" className="font-semibold text-action hover:underline">
                 중간지점·중간거리 비교 기준 보기
               </Link>
             </li>
             <li>
-              <Link href="/multi-route" className="font-bold text-primary hover:underline">
+              <Link href="/multi-route" className="font-semibold text-action hover:underline">
                 여러 출발지·여러 목적지 다대다 비교 방법 보기
               </Link>
             </li>
@@ -168,10 +168,10 @@ export default function TipsPage() {
         </section>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <Link href="/" className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-hover transition-colors">
+          <Link href="/" className="inline-flex items-center justify-center rounded-xl bg-action px-6 py-3 text-sm font-semibold text-action-foreground hover:bg-action-hover transition-colors">
             경로 비교 시작하기
           </Link>
-          <Link href="/about" className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground hover:text-primary transition-colors">
+          <Link href="/about" className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-semibold text-text hover:text-action transition-colors">
             서비스 소개 보기
           </Link>
         </div>

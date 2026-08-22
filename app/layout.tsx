@@ -2,8 +2,9 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import Link from "next/link";
 import AdSenseScript from "@/components/ads/AdSenseScript";
+import SiteFooter from "@/components/layout/SiteFooter";
+import SiteHeader from "@/components/layout/SiteHeader";
 import "./globals.css";
 
 const pretendard = localFont({
@@ -66,102 +67,10 @@ export default function RootLayout({
       <head>
         <AdSenseScript />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
-        <header className="border-b border-border bg-surface/80 backdrop-blur">
-          <nav className="mx-auto flex w-full max-w-[1400px] flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8">
-            <Link href="/" className="text-xl font-semibold tracking-tight text-foreground">
-              모두스팟
-            </Link>
-            <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-foreground/70">
-              <Link href="/" className="hover:text-primary transition-colors">
-                경로 비교
-              </Link>
-              <Link href="/tips" className="hover:text-primary transition-colors">
-                장소 선택 팁
-              </Link>
-              <Link href="/middle-point" className="hover:text-primary transition-colors">
-                중간지점 찾기
-              </Link>
-              <Link href="/multi-route" className="hover:text-primary transition-colors">
-                다대다 비교
-              </Link>
-              <Link href="/story" className="hover:text-primary transition-colors">
-                모두스팟 이야기
-              </Link>
-              <Link href="/about" className="hover:text-primary transition-colors">
-                서비스 소개
-              </Link>
-              <Link href="/contact" className="hover:text-primary transition-colors">
-                문의
-              </Link>
-            </div>
-          </nav>
-        </header>
+      <body className="min-h-full flex flex-col bg-canvas text-text">
+        <SiteHeader />
         {children}
-        <footer className="w-full py-10 mt-auto border-t border-border bg-surface/50">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-foreground/60">
-              <p>© {new Date().getFullYear()} 모두스팟. Made by Eunji.</p>
-              <div className="flex items-center gap-4 flex-wrap justify-center">
-                <Link
-                  href="/privacy"
-                  className="hover:text-primary transition-colors"
-                >
-                  개인정보처리방침
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/terms"
-                  className="hover:text-primary transition-colors"
-                >
-                  이용약관
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/tips"
-                  className="hover:text-primary transition-colors font-medium"
-                >
-                  장소 선택 팁
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/middle-point"
-                  className="hover:text-primary transition-colors"
-                >
-                  중간지점 찾기
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/multi-route"
-                  className="hover:text-primary transition-colors"
-                >
-                  다대다 비교
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/story"
-                  className="hover:text-primary transition-colors"
-                >
-                  모두스팟 이야기
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/about"
-                  className="hover:text-primary transition-colors"
-                >
-                  서비스 소개
-                </Link>
-                <span className="text-border">|</span>
-                <Link
-                  href="/contact"
-                  className="hover:text-primary transition-colors"
-                >
-                  문의
-                </Link>
-              </div>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
         <Analytics />
         <GoogleAnalytics gaId="G-0H0N7H4EFN" />
       </body>

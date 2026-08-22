@@ -18,6 +18,48 @@ test("모바일은 한 줄 앱 바와 지도 바텀시트를 사용한다", asyn
   expect(bodyWidth).toBeLessThanOrEqual(390);
 });
 
+test("모바일 헤더는 한 줄을 유지하고 보조 내비게이션을 제공한다", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const header = page.getByRole("banner");
+  expect((await header.boundingBox())?.height).toBeLessThanOrEqual(64);
+  await page.getByRole("button", { name: "메뉴 열기" }).click();
+  await expect(page.getByRole("navigation", { name: "모바일 메뉴" }).getByRole("link", { name: "서비스 소개" })).toBeVisible();
+});
+
+test("모바일 메뉴는 상태를 알리고 Escape와 링크 선택 시 닫힌다", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const menuButton = page.getByRole("button", { name: "메뉴 열기" });
+  await menuButton.click();
+  const closeButton = page.getByRole("button", { name: "메뉴 닫기" });
+  await expect(closeButton).toHaveAttribute("aria-expanded", "true");
+  await expect(closeButton).toHaveAttribute("aria-controls", "site-mobile-menu");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("button", { name: "메뉴 열기" })).toBeFocused();
+
+  await menuButton.click();
+  await page.getByRole("navigation", { name: "모바일 메뉴" }).getByRole("link", { name: "이용 방법" }).click();
+  await expect(page).toHaveURL(/\/tips$/);
+  await expect(page.getByRole("button", { name: "메뉴 열기" })).toHaveAttribute("aria-expanded", "false");
+});
+
+test("데스크톱 내비게이션과 푸터는 핵심 및 보조 경로를 제공한다", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+
+  await expect(page.getByRole("navigation", { name: "주요 내비게이션" }).getByRole("link", { name: "장소 비교" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "주요 내비게이션" }).getByRole("link", { name: "이용 방법" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "주요 내비게이션" }).getByRole("link", { name: "서비스 소개" })).toBeVisible();
+  const footer = page.getByRole("contentinfo", { name: "사이트 정보" });
+  await expect(footer.getByRole("link", { name: "개인정보처리방침" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "문의" })).toBeVisible();
+  await expect(footer.getByRole("navigation", { name: "서비스 안내" }).getByRole("link", { name: "중간지점 찾기" })).toBeVisible();
+});
+
 test("비교 작업공간은 320px에서 가로로 넘치지 않는다", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/");
