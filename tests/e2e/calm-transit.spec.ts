@@ -78,6 +78,35 @@ test("데스크톱 내비게이션과 푸터는 핵심 및 보조 경로를 제�
   await expect(footer.getByRole("navigation", { name: "서비스 안내" }).getByRole("link", { name: "중간지점 찾기" })).toBeVisible();
 });
 
+test("이야기 페이지는 OG와 Twitter 정적 이미지를 각각 한 번 제공한다", async ({ page }) => {
+  await page.goto("/story");
+
+  const expectedAlt = "모두스팟 - 여러 출발지와 목적지 후보의 대중교통 소요시간 비교";
+  const openGraphImage = page.locator('meta[property="og:image"]');
+  const twitterImage = page.locator('meta[name="twitter:image"]');
+
+  await expect(openGraphImage).toHaveCount(1);
+  await expect(twitterImage).toHaveCount(1);
+  await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute("content", "1200");
+  await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute("content", "630");
+  await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute("content", expectedAlt);
+  await expect(page.locator('meta[name="twitter:image:width"]')).toHaveAttribute("content", "1200");
+  await expect(page.locator('meta[name="twitter:image:height"]')).toHaveAttribute("content", "630");
+  await expect(page.locator('meta[name="twitter:image:alt"]')).toHaveAttribute("content", expectedAlt);
+
+  const openGraphUrl = new URL((await openGraphImage.getAttribute("content"))!);
+  const twitterUrl = new URL((await twitterImage.getAttribute("content"))!);
+  expect(openGraphUrl.pathname).toBe("/opengraph-image.png");
+  expect(twitterUrl.pathname).toBe("/twitter-image.png");
+
+  for (const imageUrl of [openGraphUrl, twitterUrl]) {
+    const response = await page.request.get(`${imageUrl.pathname}${imageUrl.search}`);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+    expect((await response.body()).byteLength).toBeLessThan(500 * 1024);
+  }
+});
+
 test("비교 작업공간은 320px에서 가로로 넘치지 않는다", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/");

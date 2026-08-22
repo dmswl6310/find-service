@@ -10,19 +10,30 @@ function decodeMarker(kind: "origin" | "candidate", order: number, state: "defau
 }
 
 describe("지도 시맨틱 시각 요소", () => {
-  it("승인된 도메인 색상과 서로 다른 마커 형태·문자를 사용한다", () => {
-    const origin = decodeMarker("origin", 1, "default");
-    const candidate = decodeMarker("candidate", 27, "default");
+  it("marker data URL의 실제 SVG가 kind별 승인 fill·stroke·형태를 사용한다", () => {
+    const dataUrlPrefix = "data:image/svg+xml;charset=UTF-8,";
+    const originImage = createMapMarkerImage("origin", 1, "default");
+    const candidateImage = createMapMarkerImage("candidate", 27, "default");
+    const originSvg = decodeURIComponent(originImage.src.slice(dataUrlPrefix.length));
+    const candidateSvg = decodeURIComponent(candidateImage.src.slice(dataUrlPrefix.length));
 
     expect(MAP_DOMAIN_COLORS).toEqual({
       origin: { fill: "#397C8A", stroke: "#235965" },
       candidate: { fill: "#B9604B", stroke: "#843E30" },
     });
-    expect(origin).toContain("<circle");
-    expect(origin).toContain(">1</text>");
-    expect(candidate).toContain("<rect");
-    expect(candidate).toContain(">AA</text>");
-    expect(origin).not.toEqual(candidate);
+    expect(originImage.src).toBe(`${dataUrlPrefix}${encodeURIComponent(originSvg)}`);
+    expect(candidateImage.src).toBe(`${dataUrlPrefix}${encodeURIComponent(candidateSvg)}`);
+    expect(originSvg).toContain('fill="#397C8A"');
+    expect(originSvg).toContain('stroke="#235965"');
+    expect(originSvg).not.toContain('fill="#B9604B"');
+    expect(originSvg).toContain("<circle");
+    expect(originSvg).toContain(">1</text>");
+    expect(candidateSvg).toContain('fill="#B9604B"');
+    expect(candidateSvg).toContain('stroke="#843E30"');
+    expect(candidateSvg).not.toContain('fill="#397C8A"');
+    expect(candidateSvg).toContain("<rect");
+    expect(candidateSvg).toContain(">AA</text>");
+    expect(originSvg).not.toEqual(candidateSvg);
   });
 
   it("기본·활성·약화 상태를 크기와 투명도로 구분한다", () => {

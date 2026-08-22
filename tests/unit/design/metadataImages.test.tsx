@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { size as appleIconSize } from "@/app/apple-icon";
 import manifest from "@/app/manifest";
+import { metadata as storyMetadata } from "@/app/story/page";
 
 const APP_DIRECTORY = resolve("app");
 const SOCIAL_IMAGE_LIMIT = 500 * 1024;
@@ -65,16 +66,27 @@ describe("소셜 메타데이터 이미지", () => {
     }
 
     const layout = readFileSync(resolve(APP_DIRECTORY, "layout.tsx"), "utf8");
-    const storyPage = readFileSync(resolve(APP_DIRECTORY, "story/page.tsx"), "utf8");
     expect(layout).not.toContain('url: "/opengraph-image"');
     expect(layout).not.toContain('images: ["/opengraph-image"]');
-    expect(storyPage).not.toContain('images: ["/opengraph-image"]');
     expect(layout).not.toContain("Pretendard-Regular.otf");
 
     const clientFont = readFileSync(resolve(APP_DIRECTORY, "fonts/PretendardVariable.woff2"));
     expect(createHash("sha256").update(clientFont).digest("hex")).toBe(
       "9599f12fd42fc0bce1cd50b47a0c022e108d7aa64dd0d1bb0ed44f3282d900b4",
     );
+  });
+
+  it("이야기 metadata가 shallow override 뒤에도 두 정적 이미지를 명시한다", () => {
+    const alt = "모두스팟 - 여러 출발지와 목적지 후보의 대중교통 소요시간 비교";
+
+    expect(storyMetadata).toMatchObject({
+      openGraph: {
+        images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt }],
+      },
+      twitter: {
+        images: [{ url: "/twitter-image.png", width: 1200, height: 630, alt }],
+      },
+    });
   });
 
   it("manifest의 Apple 아이콘 크기가 실제 생성 자산과 일치한다", () => {

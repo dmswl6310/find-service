@@ -212,10 +212,11 @@
 ## 10. 색상 계약 검사와 예외
 
 - `npm run lint:colors`는 `app`, `components` 아래의 모든 `.ts`, `.tsx`를 재귀 검사한다.
-- Tailwind 직접 팔레트 색상과 `white`·`black`, 직접 색상 arbitrary 유틸리티, raw hex·rgb·rgba·hsl·hsla 리터럴은 허용하지 않는다.
-- 유일한 raw hex 예외는 `components/map/mapVisuals.ts`의 인코딩된 Kakao 마커 SVG 값 `origin.fill`, `origin.stroke`, `candidate.fill`, `candidate.stroke`다. 검사기는 정확한 파일·값과 SVG marker data URL 연결을 함께 검증한다.
+- 검사기는 raw source에 완성된 literal token으로 존재해 Tailwind가 추출할 수 있는 직접 팔레트 색상과 `white`·`black`, compound를 포함한 직접 색상 arbitrary 유틸리티를 거부한다. raw hex·rgb·rgba·hsl·hsla 리터럴도 허용하지 않는다.
+- 문자열 `+`, template substitution, 매개변수, 구조 분해처럼 실행 중 조합되는 class는 평가하지 않는다. 이런 동적 class 조합은 Tailwind도 CSS를 생성하지 않으므로 검사 계약 밖이며, class는 항상 완성된 literal token으로 작성한다.
+- 유일한 raw hex 예외는 `components/map/mapVisuals.ts`의 `MAP_DOMAIN_COLORS`에 정확한 key와 값으로 선언된 `origin.fill`, `origin.stroke`, `candidate.fill`, `candidate.stroke` 네 literal 위치다. checker는 파일·객체 위치·key·값을 확인하고, `tests/unit/map/mapVisuals.test.ts`는 origin/candidate marker data URL을 decode해 실제 SVG의 fill·stroke·형태가 이 계약과 일치하는지 검증한다.
 - 경로선의 `ROUTE_VISUALS`는 raw 색상이 아니라 `--text-muted`, `--success`, `--origin` CSS 변수 이름을 사용한다.
-- 서버 생성 아이콘, Open Graph 이미지, manifest는 `lib/semanticColors.ts`를 통해 `app/globals.css`의 20개 토큰을 읽으며 색상 값을 중복 정의하지 않는다.
+- 서버 생성 icon과 manifest는 `lib/semanticColors.ts`를 통해 `app/globals.css`의 20개 토큰을 읽는다. 소셜 이미지는 검증된 1200×630 정적 `opengraph-image.png`와 `twitter-image.png`이며 각각 한글 `.alt.txt`를 사용한다. `/story`처럼 `openGraph`·`twitter` 객체를 덮어쓰는 페이지는 두 정적 이미지 descriptor를 각각 명시한다.
 
 검증 명령은 다음과 같다.
 
