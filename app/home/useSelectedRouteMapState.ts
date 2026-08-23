@@ -11,11 +11,24 @@ type Params = {
   isCalculating: boolean;
 };
 
+type RouteGeometryState = {
+  geometryRoute: TransitFetchResult | null;
+  geometryRouteId: string | null;
+  routeSegments: MapRouteSegment[];
+  detailedPath: MapPathPoint[];
+};
+
+const emptyRouteGeometry: RouteGeometryState = {
+  geometryRoute: null,
+  geometryRouteId: null,
+  routeSegments: [],
+  detailedPath: [],
+};
+
 export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculating }: Params) {
   const [activeMapRouteId, setActiveMapRouteId] = useState<string | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<TransitFetchResult | null>(null);
-  const [routeSegments, setRouteSegments] = useState<MapRouteSegment[]>([]);
-  const [detailedPath, setDetailedPath] = useState<MapPathPoint[]>([]);
+  const [routeGeometry, setRouteGeometry] = useState<RouteGeometryState>(emptyRouteGeometry);
 
   const fairestEndId = useMemo(() => getFairestEndId(starts, ends, matrixData), [starts, ends, matrixData]);
 
@@ -23,8 +36,7 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
     if (!isCalculating && matrixData.length === 0) {
       setActiveMapRouteId(null);
       setSelectedRoute(null);
-      setRouteSegments([]);
-      setDetailedPath([]);
+      setRouteGeometry(emptyRouteGeometry);
       return;
     }
 
@@ -41,27 +53,29 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
       } else {
         setActiveMapRouteId(null);
         setSelectedRoute(null);
-        setRouteSegments([]);
-        setDetailedPath([]);
+        setRouteGeometry(emptyRouteGeometry);
       }
     } else if (isCalculating) {
       setActiveMapRouteId(null);
       setSelectedRoute(null);
-      setRouteSegments([]);
-      setDetailedPath([]);
+      setRouteGeometry(emptyRouteGeometry);
     }
   }, [isCalculating, matrixData, fairestEndId]);
 
   useEffect(() => {
     if (!selectedRoute) {
-      setRouteSegments([]);
-      setDetailedPath([]);
+      setRouteGeometry(emptyRouteGeometry);
       return;
     }
 
+    const geometryRouteId = `${selectedRoute.fromId}-${selectedRoute.toId}`;
     const fallbackSegments = buildRouteSegments(selectedRoute, starts, ends);
-    setRouteSegments(fallbackSegments);
-    setDetailedPath([]);
+    setRouteGeometry({
+      geometryRoute: selectedRoute,
+      geometryRouteId,
+      routeSegments: fallbackSegments,
+      detailedPath: [],
+    });
 
     if (!selectedRoute.mapObj) {
       return;
@@ -85,7 +99,11 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
         const nextDetailedPath = extractGraphicPath(data);
 
         if (!controller.signal.aborted && nextDetailedPath.length >= 2) {
-          setDetailedPath(nextDetailedPath);
+          setRouteGeometry((current) =>
+            current.geometryRoute === selectedRoute
+              ? { ...current, detailedPath: nextDetailedPath }
+              : current,
+          );
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -111,8 +129,10 @@ export function useSelectedRouteMapState({ starts, ends, matrixData, isCalculati
   return {
     activeMapRouteId,
     selectedRoute,
-    routeSegments,
-    detailedPath,
+    geometryRoute: routeGeometry.geometryRoute,
+    geometryRouteId: routeGeometry.geometryRouteId,
+    routeSegments: routeGeometry.routeSegments,
+    detailedPath: routeGeometry.detailedPath,
     handleSelectRoute,
   };
 }

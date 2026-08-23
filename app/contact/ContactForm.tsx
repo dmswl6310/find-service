@@ -43,58 +43,58 @@ export default function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="not-prose rounded-3xl border border-primary/15 bg-primary/5 p-5 md:p-6">
+    <form onSubmit={handleSubmit} className="not-prose rounded-3xl border border-action/15 bg-action/5 p-5 md:p-6">
       <div className="mb-5">
-        <h2 className="text-xl font-bold text-foreground">익명 문의 보내기</h2>
-        <p className="mt-2 text-sm leading-6 text-foreground/65">
+        <h2 className="text-xl font-semibold text-text">익명 문의 보내기</h2>
+        <p className="mt-2 text-sm leading-6 text-text/65">
           이름과 이메일은 선택사항입니다. 답변을 원하면 이메일을 남겨주세요.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm font-semibold text-foreground/80">
+        <label className="flex flex-col gap-2 text-sm font-semibold text-text/80">
           이름 또는 닉네임 선택
           <input
             value={senderName}
             onChange={(event) => setSenderName(event.target.value)}
             placeholder="익명"
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-normal text-foreground outline-none transition-colors focus:border-primary"
+            className="rounded-xl border border-border bg-canvas px-4 py-3 text-sm font-normal text-text outline-none transition-colors focus:border-action"
             maxLength={60}
           />
         </label>
-        <label className="flex flex-col gap-2 text-sm font-semibold text-foreground/80">
+        <label className="flex flex-col gap-2 text-sm font-semibold text-text/80">
           답장 받을 이메일 선택
           <input
             type="email"
             value={senderEmail}
             onChange={(event) => setSenderEmail(event.target.value)}
             placeholder="name@example.com"
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-normal text-foreground outline-none transition-colors focus:border-primary"
+            className="rounded-xl border border-border bg-canvas px-4 py-3 text-sm font-normal text-text outline-none transition-colors focus:border-action"
             maxLength={120}
           />
         </label>
       </div>
 
-      <label className="mt-4 flex flex-col gap-2 text-sm font-semibold text-foreground/80">
+      <label className="mt-4 flex flex-col gap-2 text-sm font-semibold text-text/80">
         문의 내용
         <textarea
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           placeholder="서비스 오류, 경로 데이터 문제, 개선 아이디어를 적어주세요."
-          className="min-h-40 resize-y rounded-xl border border-border bg-background px-4 py-3 text-sm font-normal leading-6 text-foreground outline-none transition-colors focus:border-primary"
+          className="min-h-40 resize-y rounded-xl border border-border bg-canvas px-4 py-3 text-sm font-normal leading-6 text-text outline-none transition-colors focus:border-action"
           maxLength={2000}
           required
         />
       </label>
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs leading-5 text-foreground/55">
+        <p className="text-xs leading-5 text-text/55">
           공개된 화면에 글이 올라가지 않고 운영자 메일로만 전송됩니다.
         </p>
         <button
           type="submit"
           disabled={submitState === "submitting"}
-          className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-xl bg-action px-6 py-3 text-sm font-semibold text-action-foreground transition-colors hover:bg-action-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitState === "submitting" ? "전송 중..." : "문의 보내기"}
         </button>
@@ -103,7 +103,7 @@ export default function ContactForm() {
       {statusMessage && (
         <p
           className={`mt-4 rounded-xl px-4 py-3 text-sm font-semibold ${
-            submitState === "success" ? "bg-emerald-500/10 text-emerald-700" : "bg-red-500/10 text-red-600"
+            submitState === "success" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
           }`}
           role="status"
         >

@@ -1,0 +1,225 @@
+{
+  "experimentStartedAt": "2026-07-28T13:36:28.630Z",
+  "experimentCompletedAt": "2026-07-28T13:36:51.840Z",
+  "config": {
+    "baseUrl": "https://moduspot.vercel.app",
+    "intervals": [
+      1000,
+      500,
+      250,
+      150,
+      100,
+      50,
+      0
+    ],
+    "cases": [
+      "1x1"
+    ],
+    "repeats": 1,
+    "budget": 7,
+    "cooldownMs": 2000,
+    "timeoutMs": 30000,
+    "outputDir": "docs/results"
+  },
+  "plannedRequests": 7,
+  "executedRequests": 7,
+  "stoppedEarly": false,
+  "runs": [
+    {
+      "runId": "1x1-1000ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 1000,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:28.633Z",
+      "totalDurationMs": 3139,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:28.633Z",
+          "completedAt": "2026-07-28T13:36:30.755Z",
+          "startGapMs": null,
+          "durationMs": 2122,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    },
+    {
+      "runId": "1x1-500ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 500,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:33.786Z",
+      "totalDurationMs": 1519,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:33.787Z",
+          "completedAt": "2026-07-28T13:36:34.799Z",
+          "startGapMs": null,
+          "durationMs": 1012,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    },
+    {
+      "runId": "1x1-250ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 250,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:37.315Z",
+      "totalDurationMs": 1715,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:37.316Z",
+          "completedAt": "2026-07-28T13:36:38.775Z",
+          "startGapMs": null,
+          "durationMs": 1459,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    },
+    {
+      "runId": "1x1-150ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 150,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:41.032Z",
+      "totalDurationMs": 1593,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:41.032Z",
+          "completedAt": "2026-07-28T13:36:42.472Z",
+          "startGapMs": null,
+          "durationMs": 1440,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    },
+    {
+      "runId": "1x1-100ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 100,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:44.635Z",
+      "totalDurationMs": 1110,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:44.635Z",
+          "completedAt": "2026-07-28T13:36:45.643Z",
+          "startGapMs": null,
+          "durationMs": 1008,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    },
+    {
+      "runId": "1x1-50ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 50,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:47.747Z",
+      "totalDurationMs": 1069,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:47.747Z",
+          "completedAt": "2026-07-28T13:36:48.757Z",
+          "startGapMs": null,
+          "durationMs": 1010,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    },
+    {
+      "runId": "1x1-0ms-1",
+      "caseId": "1x1",
+      "description": "단일 요청 기준선",
+      "intervalMs": 0,
+      "iteration": 1,
+      "starts": 1,
+      "ends": 1,
+      "startedAt": "2026-07-28T13:36:50.827Z",
+      "totalDurationMs": 1012,
+      "requests": [
+        {
+          "fromId": "gangnam",
+          "fromName": "강남역",
+          "toId": "seoul",
+          "toName": "서울역",
+          "startedAt": "2026-07-28T13:36:50.827Z",
+          "completedAt": "2026-07-28T13:36:51.839Z",
+          "startGapMs": null,
+          "durationMs": 1012,
+          "status": 200,
+          "errorCode": null,
+          "errorSource": null,
+          "classification": "success",
+          "totalTime": 35
+        }
+      ]
+    }
+  ]
+}

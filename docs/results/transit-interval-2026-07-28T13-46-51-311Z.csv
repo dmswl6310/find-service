@@ -1,0 +1,10 @@
+runId,caseId,intervalMs,iteration,starts,ends,totalRequests,totalDurationMs,successCount,walkOnlyCount,noRouteCount,http429Count,odsayMinus1Count,http5xxCount,otherErrorCount,responseAverageMs,responseP50Ms,responseP95Ms,responseMaxMs,startGapMinMs,startGapAverageMs,startGapMaxMs
+5x5-0ms-1,5x5,0,1,5,5,25,14142,25,0,0,0,0,0,0,565,610,766,1491,416,563,1494
+5x5-0ms-2,5x5,0,2,5,5,25,14325,25,0,0,0,0,0,0,573,612,708,1499,416,571,1499
+5x5-0ms-3,5x5,0,3,5,5,25,15287,25,0,0,0,0,0,0,611,469,1040,1616,444,608,1616
+identical-0ms-1,identical,0,1,1,1,1,917,0,1,0,0,0,0,0,917,917,917,917,,,
+identical-0ms-2,identical,0,2,1,1,1,954,0,1,0,0,0,0,0,954,954,954,954,,,
+identical-0ms-3,identical,0,3,1,1,1,928,0,1,0,0,0,0,0,928,928,928,928,,,
+nearby-0ms-1,nearby,0,1,1,1,1,922,0,1,0,0,0,0,0,922,922,922,922,,,
+nearby-0ms-2,nearby,0,2,1,1,1,884,0,1,0,0,0,0,0,884,884,884,884,,,
+nearby-0ms-3,nearby,0,3,1,1,1,911,0,1,0,0,0,0,0,911,911,911,911,,,

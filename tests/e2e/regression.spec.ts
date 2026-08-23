@@ -64,11 +64,71 @@ test("share URL round-trip restores chips and auto-runs calculation", async ({ p
 
   await page.goto(`/?s=${s}&e=${e}`);
 
+  await expect(page.getByText("15분").first()).toBeVisible();
+  await expect.poll(() => transitCalls).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "장소 수정하기" }).click();
   await expect(page.locator("li", { hasText: "start-a" }).first()).toBeVisible();
   await expect(page.locator("li", { hasText: "end-b" }).first()).toBeVisible();
-  await expect(page.getByText("15분")).toBeVisible();
-  await expect.poll(() => transitCalls).toBeGreaterThan(0);
   expect(graphicCalls).toBeGreaterThanOrEqual(0);
+});
+
+test("transit matrix uses the stable C3/S500 browser schedule", async ({ page }: { page: Page }) => {
+  const startedAt: number[] = [];
+  const releaseRequests: Array<() => void> = [];
+  let activeRequests = 0;
+  let maxActiveRequests = 0;
+
+  await page.route("**/api/transit?**", async (route: Route) => {
+    startedAt.push(Date.now());
+    activeRequests += 1;
+    maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
+
+    await new Promise<void>((resolve) => {
+      releaseRequests.push(resolve);
+    });
+
+    activeRequests -= 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        totalTime: 15,
+        payment: 1400,
+        pathType: 3,
+        transitCount: 1,
+        subPath: [],
+        mapObj: "scheduled-route",
+      }),
+    });
+  });
+
+  const starts = [{ id: "s1", place_name: "start-a", x: "127.0276", y: "37.4979" }];
+  const ends = [
+    { id: "e1", place_name: "end-1", x: "126.9237", y: "37.5563" },
+    { id: "e2", place_name: "end-2", x: "127.0447", y: "37.5447" },
+    { id: "e3", place_name: "end-3", x: "126.9707", y: "37.5546" },
+    { id: "e4", place_name: "end-4", x: "126.9240", y: "37.5216" },
+  ];
+
+  await page.goto(`/?s=${encodeShareParam(starts)}&e=${encodeShareParam(ends)}`);
+
+  await expect.poll(() => startedAt.length).toBe(3);
+  expect(startedAt[1] - startedAt[0]).toBeGreaterThanOrEqual(450);
+  expect(startedAt[2] - startedAt[1]).toBeGreaterThanOrEqual(450);
+  expect(maxActiveRequests).toBe(3);
+
+  await page.waitForTimeout(550);
+  expect(startedAt).toHaveLength(3);
+
+  releaseRequests.shift()?.();
+  await expect.poll(() => startedAt.length).toBe(4);
+  expect(maxActiveRequests).toBe(3);
+
+  while (releaseRequests.length > 0) {
+    releaseRequests.shift()?.();
+  }
+
+  await expect(page.getByText("15분").first()).toBeVisible();
 });
 
 test("share button copies a restorable URL with Korean place names", async ({ page, context }) => {
@@ -137,6 +197,8 @@ test("share button copies a restorable URL with Korean place names", async ({ pa
   expect(copied.searchParams.has("e")).toBe(true);
 
   await page.goto(copiedUrl);
+  await expect(page.getByRole("button", { name: "홍대-result 선택" })).toBeVisible();
+  await page.getByRole("button", { name: "장소 수정하기" }).click();
   await expect(page.locator("li", { hasText: "강남-result" }).first()).toBeVisible();
   await expect(page.locator("li", { hasText: "홍대-result" }).first()).toBeVisible();
 });
@@ -242,7 +304,8 @@ test("result cell selection updates active map-synced route", async ({ page }: {
   await expect(page.getByText("성수-result", { exact: true })).toBeVisible();
   await page.getByText("성수-result", { exact: true }).click();
 
-  await page.getByRole("button", { name: "소요시간 비교하기 🚀" }).click();
+  await page.getByRole("button", { name: "4개 경로 비교하기" }).click();
+  await page.getByRole("button", { name: "경로표 열기" }).click();
 
   const button44 = page.getByRole("button", { name: /44분/ });
   const button11 = page.getByRole("button", { name: /11분/ });
@@ -254,8 +317,22 @@ test("result cell selection updates active map-synced route", async ({ page }: {
   await button11.click();
   await expect(button11).toHaveClass(/ring-2/);
 
-  await page.locator("li", { hasText: "강남-result" }).getByRole("button", { name: "제거" }).click();
+  await page.getByRole("button", { name: "강남-result에서 홍대-result까지 상세 경로 보기" }).click();
+  await expect(page.getByRole("dialog", { name: "강남-result에서 홍대-result까지 상세 경로" })).toBeVisible();
+  await page.getByRole("button", { name: "상세 경로 닫기" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "비교 결과로 돌아가기" }).click();
+  const selectedCandidateSummary = page.getByLabel("선택 후보 요약");
+  await expect(selectedCandidateSummary).toContainText("홍대-result");
+  await expect(selectedCandidateSummary).toContainText("평균 22분 · 최장 33분");
+  await page.getByRole("button", { name: "장소 수정하기" }).click();
+  await expect(page.getByRole("region", { name: "장소 입력" })).toBeVisible();
+  await expect(selectedCandidateSummary).toContainText("홍대-result");
+  await expect(selectedCandidateSummary).toContainText("평균 22분 · 최장 33분");
+  await page.getByRole("button", { name: "강남-result 제거" }).click();
   await expect(page.locator("li", { hasText: "강남-result" })).toHaveCount(0);
+  await expect(selectedCandidateSummary).toHaveCount(0);
   await expect(page.getByRole("button", { name: /44분/ })).toHaveCount(0);
 
   await page.getByPlaceholder("목적지 후보 추가").fill("건대");
@@ -351,10 +428,20 @@ test("search + transit matrix keeps successful cells on partial failure", async 
   await expect(page.getByText("잠실-result", { exact: true })).toBeVisible();
   await page.getByText("잠실-result", { exact: true }).click();
 
-  await page.getByRole("button", { name: "소요시간 비교하기 🚀" }).click();
+  await page.getByRole("button", { name: "2개 경로 비교하기" }).click();
 
-  await expect(page.getByText("일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.")).toBeVisible();
-  await expect(page.getByText("21분")).toBeVisible();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "성공한 1개 경로는 그대로 표시합니다" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "경로표 열기" }).click();
+  await expect(
+    page.getByRole("button", { name: /강남-result에서 홍대-result까지 21분, 지도에서 보기/ }),
+  ).toBeVisible();
   await expect(page.getByText("이용 가능한 대중교통 경로가 없습니다.")).toBeVisible();
+  await page.getByRole("button", { name: "강남-result에서 잠실-result까지 실패 상세 보기" }).click();
+  await expect(page.getByRole("dialog", { name: "강남-result에서 잠실-result까지 상세 경로" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText("이용 가능한 대중교통 경로가 없습니다.");
+  await page.getByRole("button", { name: "상세 경로 닫기" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect.poll(() => graphicCalls).toBeGreaterThan(0);
 });

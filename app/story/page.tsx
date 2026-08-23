@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const socialImageAlt = "모두스팟 - 여러 출발지와 목적지 후보의 대중교통 소요시간 비교";
+
 export const metadata: Metadata = {
   title: "모두스팟 이야기 | 원정 클라이머가 만든 약속 장소 비교 서비스",
   description:
@@ -23,13 +25,28 @@ export const metadata: Metadata = {
       "여러 후보지와 여러 출발지를 한눈에 비교하고 싶었던 불편함에서 모두스팟이 시작됐습니다.",
     url: "/story",
     type: "article",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: socialImageAlt,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "모두스팟 이야기 | 원정 클라이머가 만든 약속 장소 비교 서비스",
     description:
       "대중교통으로 모두에게 공정한 약속 장소를 찾고 싶어 만든 모두스팟의 시작 이야기입니다.",
-    images: ["/opengraph-image"],
+    images: [
+      {
+        url: "/twitter-image.png",
+        width: 1200,
+        height: 630,
+        alt: socialImageAlt,
+      },
+    ],
   },
 };
 
@@ -62,23 +79,23 @@ export default function StoryPage() {
   return (
     <main className="flex-1 w-full max-w-[960px] mx-auto p-6 md:p-10 mb-20 mt-4 md:mt-8 bg-surface rounded-3xl shadow-sm border border-border">
       <script type="application/ld+json">{jsonLdText}</script>
-      <article className="prose prose-slate prose-lg max-w-none">
+      <article className="prose prose-lg max-w-none">
         <header className="mb-10 border-b border-border pb-8">
-          <p className="mb-3 text-sm font-bold text-primary">모두스팟 이야기</p>
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5 text-foreground leading-tight">
+          <p className="mb-3 text-sm font-semibold text-action">모두스팟 이야기</p>
+          <h1 className="text-3xl md:text-5xl font-semibold tracking-tight mb-5 text-text leading-tight">
             원정 클라이머가 약속 장소 비교 서비스를 만들게 된 이유
           </h1>
-          <p className="text-base md:text-lg text-foreground/65 leading-8">
+          <p className="text-base md:text-lg text-text/65 leading-8">
             모두스팟은 거창한 기획서가 아니라 아주 현실적인 질문에서 시작됐습니다.
             “오늘 우리 모두에게 가장 부담 없는 장소는 어디일까?”라는 질문에 더 빨리,
             더 공정하게 답하고 싶었습니다.
           </p>
-          <p className="mt-4 text-sm text-foreground/50">작성: Eunji · 마지막 업데이트: 2026년 5월 6일</p>
+          <p className="mt-4 text-sm text-text/50">작성: Eunji · 마지막 업데이트: 2026년 5월 6일</p>
         </header>
 
-        <section className="space-y-10 text-foreground/80">
+        <section className="space-y-10 text-text/80">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">시작은 클라이밍 약속이었습니다</h2>
+            <h2 className="text-2xl font-semibold text-text">시작은 클라이밍 약속이었습니다</h2>
             <p>
               저는 평소 클라이밍을 즐기는 이른바 원정 클라이머입니다. 한 곳의 홈 암장만
               다니기보다 전국의 다양한 암장을 돌아다니며 새로운 문제를 푸는 것을
@@ -92,7 +109,7 @@ export default function StoryPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">지도 앱으로는 한눈에 비교하기 어려웠습니다</h2>
+            <h2 className="text-2xl font-semibold text-text">지도 앱으로는 한눈에 비교하기 어려웠습니다</h2>
             <p>
               국내 대표 지도 서비스들은 훌륭합니다. 하지만 제가 원한 방식과는 조금
               달랐습니다. 도착지를 한 곳만 찍어야 하거나, 여러 장소를 넣더라도 경유지처럼
@@ -106,7 +123,7 @@ export default function StoryPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">그래서 모두스팟을 만들었습니다</h2>
+            <h2 className="text-2xl font-semibold text-text">그래서 모두스팟을 만들었습니다</h2>
             <p>
               모두스팟은 처음에는 저를 위한 작은 도구였습니다. 여러 목적지 후보를 넣고,
               내 출발지에서 각각 얼마나 걸리는지 한눈에 보고 싶었습니다. 그런데 개발하다
@@ -121,7 +138,7 @@ export default function StoryPage() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-foreground">여러 출발지와 여러 목적지를 함께 비교합니다</h2>
+            <h2 className="text-2xl font-semibold text-text">여러 출발지와 여러 목적지를 함께 비교합니다</h2>
             <p>
               모두스팟은 다중 출발지와 다중 목적지 후보를 지원합니다. 친구들의 집 주소나
               현재 위치를 출발지에 넣고, 오늘 가보고 싶은 클라이밍장이나 모임 장소 후보를
@@ -136,9 +153,9 @@ export default function StoryPage() {
           </div>
         </section>
 
-        <section className="mt-12 rounded-3xl border border-primary/15 bg-primary/5 p-6 md:p-8">
-          <h2 className="mt-0 text-2xl font-bold text-foreground">모두스팟이 줄이고 싶은 것</h2>
-          <p className="text-foreground/75">
+        <section className="mt-12 rounded-3xl border border-action/15 bg-action/5 p-6 md:p-8">
+          <h2 className="mt-0 text-2xl font-semibold text-text">모두스팟이 줄이고 싶은 것</h2>
+          <p className="text-text/75">
             우리는 약속 장소를 정하는 데 생각보다 많은 에너지를 씁니다. 누가 멀리 오는지,
             어느 후보가 공정한지, 결과를 어떻게 공유할지 고민하다 보면 정작 만나서 할
             이야기를 시작하기도 전에 지치곤 합니다. 모두스팟은 그 과정을 데이터로
@@ -146,8 +163,8 @@ export default function StoryPage() {
           </p>
         </section>
 
-        <section className="mt-12 space-y-4 text-foreground/80">
-          <h2 className="text-2xl font-bold text-foreground">앞으로의 모두스팟</h2>
+        <section className="mt-12 space-y-4 text-text/80">
+          <h2 className="text-2xl font-semibold text-text">앞으로의 모두스팟</h2>
           <p>
             앞으로도 모두스팟은 클라이밍뿐만 아니라 친구 모임, 스터디, 회식, 데이트,
             동호회처럼 여러 사람이 만나는 모든 순간에 도움이 되는 약속 장소 비교 서비스가
@@ -157,10 +174,10 @@ export default function StoryPage() {
         </section>
 
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          <Link href="/" className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-hover transition-colors">
+          <Link href="/" className="inline-flex items-center justify-center rounded-xl bg-action px-6 py-3 text-sm font-semibold text-action-foreground hover:bg-action-hover transition-colors">
             모두스팟으로 장소 비교하기
           </Link>
-          <Link href="/middle-point" className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground hover:text-primary transition-colors">
+          <Link href="/middle-point" className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-6 py-3 text-sm font-semibold text-text hover:text-action transition-colors">
             중간지점 기준 보기
           </Link>
         </div>

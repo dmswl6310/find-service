@@ -36,7 +36,7 @@ export default function AdBanner({
   if (!adClientId) {
     if (process.env.NODE_ENV === "development") {
       return (
-        <div className="w-full h-24 bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm rounded-lg my-4">
+        <div className="my-4 flex h-24 w-full items-center justify-center rounded-lg border border-dashed border-border bg-canvas text-sm text-text-muted">
           Google AdSense Banner Area ({dataAdSlot})
         </div>
       );

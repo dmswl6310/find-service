@@ -5,12 +5,14 @@ import { createTransitClientExceptionResult, parseTransitApiResult } from "@/lib
 import type { KakaoLocation } from "@/types/kakao";
 import type { TransitFetchResult } from "@/types/odsay";
 
-const TRANSIT_REQUEST_STAGGER_MS = 250;
+const TRANSIT_MAX_CONCURRENCY = 3;
+const TRANSIT_MIN_START_GAP_MS = 500;
 const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.";
 
 export type CalculationProgress = {
   completed: number;
   total: number;
+  currentCandidate?: string;
 };
 
 async function fetchTransitCell(params: {
@@ -96,67 +98,164 @@ async function fetchTransitCell(params: {
   }
 }
 
-function createStaggeredTransitRequests(params: {
+function isTransitRateLimitResult(result: TransitFetchResult): boolean {
+  return result.errorStatus === 429 || result.errorCode === "-1";
+}
+
+function abortableDelay(milliseconds: number, signal?: AbortSignal): Promise<void> {
+  if (milliseconds <= 0) return Promise.resolve();
+  if (signal?.aborted) {
+    return Promise.reject(new DOMException("요청이 취소되었습니다.", "AbortError"));
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", handleAbort);
+      resolve();
+    }, milliseconds);
+
+    const handleAbort = () => {
+      clearTimeout(timeoutId);
+      reject(new DOMException("요청이 취소되었습니다.", "AbortError"));
+    };
+
+    signal?.addEventListener("abort", handleAbort, { once: true });
+  });
+}
+
+type ScheduledTransitCell = {
+  end: KakaoLocation;
+  promise: Promise<TransitFetchResult>;
+  resolve: (result: TransitFetchResult) => void;
+  start: KakaoLocation;
+  status: "queued" | "started" | "settled";
+};
+
+function createScheduledTransitRequests(params: {
   starts: KakaoLocation[];
   ends: KakaoLocation[];
   targetDate?: string;
   targetTime?: string;
   signal?: AbortSignal;
-  timeoutIds: ReturnType<typeof setTimeout>[];
   cancelers: (() => void)[];
 }): Promise<TransitFetchResult>[] {
-  const { starts, ends, targetDate, targetTime, signal, timeoutIds, cancelers } = params;
-  const requests: Promise<TransitFetchResult>[] = [];
-  let currentChain = Promise.resolve();
-
-  starts.forEach((start) => {
-    ends.forEach((end) => {
-      let isSettled = false;
-      let resolvePromise: (value: TransitFetchResult) => void;
-
-      const promise = new Promise<TransitFetchResult>((resolve) => {
-        resolvePromise = resolve;
-      });
-
-      requests.push(promise);
-
-      const resolveCancelled = () => {
-        if (isSettled) return;
-        isSettled = true;
-        resolvePromise(
-          createTransitClientExceptionResult({
-            fromId: start.id,
-            toId: end.id,
-            caughtError: new Error("요청이 취소되었습니다."),
-          })
-        );
-      };
-
-      cancelers.push(resolveCancelled);
-
-      currentChain = currentChain.then(async () => {
-        if (isSettled || signal?.aborted) {
-          if (!isSettled) resolveCancelled();
-          return;
-        }
-
-        const result = await fetchTransitCell({ start, end, targetDate, targetTime, signal });
-        
-        if (!isSettled) {
-          isSettled = true;
-          resolvePromise(result);
-        }
-
-        // ODsay API 동시성 에러(컴포넌트 에러 -1)를 방지하기 위해 다음 요청 전 대기
-        await new Promise<void>((res) => {
-          const timeoutId = setTimeout(res, TRANSIT_REQUEST_STAGGER_MS);
-          timeoutIds.push(timeoutId);
-        });
-      });
+  const { starts, ends, targetDate, targetTime, signal, cancelers } = params;
+  const cells = starts.flatMap((start) => ends.map((end) => ({ start, end })));
+  const scheduledCells: ScheduledTransitCell[] = cells.map(({ start, end }) => {
+    let resolve!: (result: TransitFetchResult) => void;
+    const promise = new Promise<TransitFetchResult>((promiseResolve) => {
+      resolve = promiseResolve;
     });
+
+    return {
+      end,
+      promise,
+      resolve,
+      start,
+      status: "queued",
+    };
   });
 
-  return requests;
+  const settleCell = (
+    cell: ScheduledTransitCell,
+    result: TransitFetchResult
+  ) => {
+    if (cell.status === "settled") return;
+    cell.status = "settled";
+    cell.resolve(result);
+  };
+
+  const cancellationResult = (
+    cell: ScheduledTransitCell,
+    message = "요청이 취소되었습니다."
+  ) =>
+    createTransitClientExceptionResult({
+      fromId: cell.start.id,
+      toId: cell.end.id,
+      caughtError: new Error(message),
+    });
+
+  scheduledCells.forEach((cell) => {
+    cancelers.push(() => settleCell(cell, cancellationResult(cell)));
+  });
+
+  let nextCellIndex = 0;
+  let nextAllowedStartAt = 0;
+  let stopAdmission = false;
+  let startGate = Promise.resolve();
+
+  const reserveStartSlot = () => {
+    const reservation = startGate.then(async () => {
+      const delayMs = Math.max(0, nextAllowedStartAt - Date.now());
+      await abortableDelay(delayMs, signal);
+      if (signal?.aborted) {
+        throw new DOMException("요청이 취소되었습니다.", "AbortError");
+      }
+      nextAllowedStartAt = Date.now() + TRANSIT_MIN_START_GAP_MS;
+    });
+    startGate = reservation.catch(() => undefined);
+    return reservation;
+  };
+
+  const stopQueuedRequests = () => {
+    stopAdmission = true;
+    scheduledCells.forEach((cell) => {
+      if (cell.status !== "queued") return;
+      settleCell(
+        cell,
+        cancellationResult(
+          cell,
+          "요청 제한이 감지되어 남은 경로 계산을 중단했습니다."
+        )
+      );
+    });
+  };
+
+  const runWorker = async () => {
+    while (!signal?.aborted && !stopAdmission) {
+      const cellIndex = nextCellIndex;
+      nextCellIndex += 1;
+      const cell = scheduledCells[cellIndex];
+      if (!cell) return;
+
+      try {
+        await reserveStartSlot();
+      } catch {
+        settleCell(cell, cancellationResult(cell));
+        continue;
+      }
+
+      if (
+        cell.status === "settled" ||
+        stopAdmission ||
+        signal?.aborted
+      ) {
+        settleCell(cell, cancellationResult(cell));
+        continue;
+      }
+
+      cell.status = "started";
+      const result = await fetchTransitCell({
+        start: cell.start,
+        end: cell.end,
+        targetDate,
+        targetTime,
+        signal,
+      });
+      settleCell(cell, result);
+
+      if (isTransitRateLimitResult(result)) {
+        stopQueuedRequests();
+      }
+    }
+  };
+
+  const workerCount = Math.min(TRANSIT_MAX_CONCURRENCY, scheduledCells.length);
+  for (let workerIndex = 0; workerIndex < workerCount; workerIndex += 1) {
+    void runWorker();
+  }
+
+  return scheduledCells.map((cell) => cell.promise);
 }
 
 export function useTransitMatrix() {
@@ -166,14 +265,11 @@ export function useTransitMatrix() {
   const [calculationProgress, setCalculationProgress] = useState<CalculationProgress>({ completed: 0, total: 0 });
   const calculationSeqRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const timeoutIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const cancelersRef = useRef<(() => void)[]>([]);
 
   const cancelPendingRequests = () => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
-    timeoutIdsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
-    timeoutIdsRef.current = [];
     cancelersRef.current.forEach((cancel) => cancel());
     cancelersRef.current = [];
   };
@@ -210,27 +306,38 @@ export function useTransitMatrix() {
     cancelPendingRequests();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
-    timeoutIdsRef.current = [];
     cancelersRef.current = [];
 
-    const fetchPromises = createStaggeredTransitRequests({
+    const fetchPromises = createScheduledTransitRequests({
       starts,
       ends,
       targetDate,
       targetTime,
       signal: abortController.signal,
-      timeoutIds: timeoutIdsRef.current,
       cancelers: cancelersRef.current,
     });
+    const settledResults: Array<TransitFetchResult | undefined> = new Array(
+      fetchPromises.length,
+    );
 
     try {
       const results = await Promise.all(
-        fetchPromises.map((promise) =>
+        fetchPromises.map((promise, cellIndex) =>
           promise.then((result) => {
             if (calculationSeq === calculationSeqRef.current) {
+              settledResults[cellIndex] = result;
+              setMatrixData(
+                settledResults.filter(
+                  (settledResult): settledResult is TransitFetchResult =>
+                    settledResult !== undefined,
+                ),
+              );
               setCalculationProgress((current) => ({
                 completed: Math.min(current.completed + 1, current.total),
                 total: current.total,
+                currentCandidate:
+                  ends.find((end) => end.id === result.toId)?.place_name ??
+                  current.currentCandidate,
               }));
             }
 
@@ -243,10 +350,7 @@ export function useTransitMatrix() {
       }
 
       abortControllerRef.current = null;
-      timeoutIdsRef.current = [];
       cancelersRef.current = [];
-
-      setMatrixData(results);
 
       if (results.some((result) => result.error)) {
         setError(PARTIAL_FAILURE_MESSAGE);

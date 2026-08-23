@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useTransitMatrix } from "@/hooks/useTransitMatrix";
-import MainContent from "./MainContent";
+import ComparisonWorkspace from "./ComparisonWorkspace";
 import RouteSync from "./RouteSync";
 
 export default function HomePageClient() {
@@ -10,10 +10,10 @@ export default function HomePageClient() {
     useTransitMatrix();
 
   return (
-    <main className="flex-1 w-full max-w-[1400px] mx-auto p-4 sm:p-6 md:p-8 mb-20">
+    <main className="min-w-0 flex-1 overflow-x-clip">
       <Suspense fallback={<div className="p-8 text-center">로딩 중...</div>}>
         <RouteSync calculateMatrix={calculateMatrix} />
-        <MainContent
+        <ComparisonWorkspace
           matrixData={matrixData}
           isCalculating={isCalculating}
           calculateMatrix={calculateMatrix}
