@@ -25,15 +25,15 @@ export default function ComparisonWorkspaceShell({
   return (
     <section
       aria-label={accessibleLabel}
-      className="relative isolate grid h-[calc(100svh-4rem)] min-h-[640px] min-w-0 overflow-hidden bg-canvas md:grid-cols-[minmax(320px,360px)_minmax(0,1fr)]"
+      className="relative isolate grid h-[calc(100svh-4rem)] min-h-[640px] min-w-0 overflow-hidden bg-canvas md:grid-cols-[minmax(320px,360px)_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]"
     >
       <aside
         data-testid={panelTestId}
-        className="absolute inset-x-0 bottom-0 z-20 min-w-0 md:static md:col-start-1 md:row-start-1 md:h-full"
+        className="absolute inset-x-0 bottom-0 z-20 min-w-0 md:static md:col-start-1 md:row-start-1 md:h-full md:min-h-0"
       >
         <BottomSheet
           title="비교 패널"
-          className="max-h-[72svh] overflow-y-auto md:h-full md:max-h-none md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
+          className="max-h-[72svh] overflow-y-auto md:h-full md:max-h-none md:overflow-y-auto md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
         >
           <div className="min-w-0 p-4 sm:p-5">
             <header className="mb-5 border-b border-border pb-5">

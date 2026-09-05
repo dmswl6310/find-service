@@ -43,7 +43,7 @@ describe("UI 피드백과 바텀시트", () => {
     expect(screen.getByRole("alert")).toHaveClass("border-l-danger");
   });
 
-  it("이름이 있는 피드백·시트 영역과 aria-hidden 그랩 핸들을 렌더링한다", () => {
+  it("이름이 있는 피드백·정적 시트 영역을 렌더링한다", () => {
     render(
       <>
         <InlineNotice tone="danger" title="일부 경로 실패">성공 결과는 유지됩니다.</InlineNotice>
@@ -54,6 +54,6 @@ describe("UI 피드백과 바텀시트", () => {
     const sheet = screen.getByRole("region", { name: "비교 결과" });
     expect(sheet).toBeVisible();
     expect(sheet).toHaveClass("추가 클래스", "shadow-xl");
-    expect(sheet.querySelector('[aria-hidden="true"]')).toHaveClass("bg-border-strong");
+    expect(sheet.querySelector('[aria-hidden="true"]')).toBeNull();
   });
 });

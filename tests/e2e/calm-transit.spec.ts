@@ -9,6 +9,33 @@ test("Calm Transit 데스크톱 작업공간에서 비교 동작과 지도를 �
   await expect(page.getByRole("region", { name: "출발지와 후보지 지도" })).toBeVisible();
 });
 
+test("데스크톱 비교 패널과 지도는 푸터 위 작업공간 안에서 스크롤된다", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 844 });
+  await page.goto("/");
+
+  const workspace = page.getByRole("region", { name: "장소 비교 작업공간" });
+  const panel = page.getByRole("region", { name: "비교 패널" });
+  const map = page.getByRole("region", { name: "출발지와 후보지 지도" });
+  const bounds = await Promise.all(
+    [workspace, panel, map].map((locator) => locator.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const styles = getComputedStyle(element);
+      return {
+        bottom: rect.bottom,
+        clientHeight: element.clientHeight,
+        overflowY: styles.overflowY,
+        scrollHeight: element.scrollHeight,
+      };
+    })),
+  );
+
+  const [workspaceBounds, panelBounds, mapBounds] = bounds;
+  expect(panelBounds.bottom).toBeLessThanOrEqual(workspaceBounds.bottom + 1);
+  expect(mapBounds.bottom).toBeLessThanOrEqual(workspaceBounds.bottom + 1);
+  expect(panelBounds.scrollHeight).toBeGreaterThan(panelBounds.clientHeight);
+  expect(panelBounds.overflowY).toBe("auto");
+});
+
 test("모바일은 한 줄 앱 바와 지도 바텀시트를 사용한다", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
