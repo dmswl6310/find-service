@@ -178,7 +178,7 @@ export function getTransitRequestLimiterConfig(): RequestLimiterConfig {
     ),
     minStartGapMs: parseNonNegativeInteger(
       process.env.TRANSIT_SERVER_MIN_START_GAP_MS,
-      500
+      250
     ),
     maxStartsPerWindow: parseNonNegativeInteger(
       process.env.TRANSIT_SERVER_MAX_STARTS_PER_WINDOW,

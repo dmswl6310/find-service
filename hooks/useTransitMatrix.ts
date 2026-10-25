@@ -6,7 +6,7 @@ import type { KakaoLocation } from "@/types/kakao";
 import type { TransitFetchResult } from "@/types/odsay";
 
 const TRANSIT_MAX_CONCURRENCY = 3;
-const TRANSIT_MIN_START_GAP_MS = 500;
+const TRANSIT_MIN_START_GAP_MS = 250;
 const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.";
 
 export type CalculationProgress = {
