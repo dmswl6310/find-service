@@ -72,7 +72,7 @@ test("share URL round-trip restores chips and auto-runs calculation", async ({ p
   expect(graphicCalls).toBeGreaterThanOrEqual(0);
 });
 
-test("transit matrix uses the stable C3/S500 browser schedule", async ({ page }: { page: Page }) => {
+test("transit matrix uses the C3/S250 browser schedule", async ({ page }: { page: Page }) => {
   const startedAt: number[] = [];
   const releaseRequests: Array<() => void> = [];
   let activeRequests = 0;
@@ -113,8 +113,8 @@ test("transit matrix uses the stable C3/S500 browser schedule", async ({ page }:
   await page.goto(`/?s=${encodeShareParam(starts)}&e=${encodeShareParam(ends)}`);
 
   await expect.poll(() => startedAt.length).toBe(3);
-  expect(startedAt[1] - startedAt[0]).toBeGreaterThanOrEqual(450);
-  expect(startedAt[2] - startedAt[1]).toBeGreaterThanOrEqual(450);
+  expect(startedAt[1] - startedAt[0]).toBeGreaterThanOrEqual(225);
+  expect(startedAt[2] - startedAt[1]).toBeGreaterThanOrEqual(225);
   expect(maxActiveRequests).toBe(3);
 
   await page.waitForTimeout(550);

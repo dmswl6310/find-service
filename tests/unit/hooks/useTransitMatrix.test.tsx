@@ -144,7 +144,7 @@ describe("useTransitMatrix", () => {
     );
   });
 
-  it("starts requests 500ms apart and keeps at most three requests active", async () => {
+  it("starts requests 250ms apart and keeps at most three requests active", async () => {
     const thirdEnd: KakaoLocation = {
       id: "e3",
       place_name: "도착지3",
@@ -197,7 +197,7 @@ describe("useTransitMatrix", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(499);
+      await vi.advanceTimersByTimeAsync(249);
     });
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
@@ -207,12 +207,12 @@ describe("useTransitMatrix", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(250);
     });
     expect(fetchMock).toHaveBeenCalledTimes(3);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(250);
     });
     expect(fetchMock).toHaveBeenCalledTimes(3);
 
