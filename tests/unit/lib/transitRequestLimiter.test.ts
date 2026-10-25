@@ -26,7 +26,7 @@ describe("createRequestLimiter", () => {
     vi.useRealTimers();
   });
 
-  it("uses the C3/S250/R2 defaults", () => {
+  it("uses the C3/S250/R4 defaults", () => {
     vi.stubEnv("TRANSIT_SERVER_MAX_CONCURRENCY", "");
     vi.stubEnv("TRANSIT_SERVER_MIN_START_GAP_MS", "");
     vi.stubEnv("TRANSIT_SERVER_MAX_STARTS_PER_WINDOW", "");
@@ -35,7 +35,7 @@ describe("createRequestLimiter", () => {
     expect(getTransitRequestLimiterConfig()).toEqual({
       concurrency: 3,
       minStartGapMs: 250,
-      maxStartsPerWindow: 2,
+      maxStartsPerWindow: 4,
       windowMs: 1_000,
     });
   });

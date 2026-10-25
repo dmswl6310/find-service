@@ -60,7 +60,7 @@ npm run start
 | `NEXT_PUBLIC_APP_URL` | ODsay 요청의 `Referer`·`Origin`과 사이트 메타데이터 기준 URL. 로컬 설정은 `http://localhost:3000` |
 | `TRANSIT_SERVER_MAX_CONCURRENCY` | 서버 인스턴스 내 경로 조회 최대 동시 실행 수. 기본 `3` |
 | `TRANSIT_SERVER_MIN_START_GAP_MS` | 서버 경로 조회의 최소 시작 간격. 기본 `250`ms |
-| `TRANSIT_SERVER_MAX_STARTS_PER_WINDOW` | 시간 창 내 최대 요청 시작 수. 기본 `2`, `0`이면 시간 창 제한 해제 |
+| `TRANSIT_SERVER_MAX_STARTS_PER_WINDOW` | 시간 창 내 최대 요청 시작 수. 기본 `4`, `0`이면 시간 창 제한 해제 |
 | `TRANSIT_SERVER_RATE_WINDOW_MS` | 요청 시작 수를 집계하는 시간 창. 기본 `1000`ms |
 | `CONTACT_SMTP_HOST` | 문의 메일 SMTP 호스트. 예시 `smtp.gmail.com` |
 | `CONTACT_SMTP_PORT` | SMTP 포트. 예시 파일은 `465`, 미설정 시 코드는 `587` 사용 |
@@ -171,7 +171,7 @@ docs/                      # 디자인 시스템, 요청 실험 계획 및 결�
 
 #### 적용 판단
 
-실험 결과를 반영해 클라이언트 최소 시작 간격과 서버 기본값을 `250ms`로 조정했습니다. 완성 배치에서 250ms와 500ms 모두 성공률 100%를 보였고, 250ms의 전체 완료 시간이 더 짧았습니다. 더 짧은 125ms와 200ms는 본문 `429`가 반복되어 적용하지 않았습니다. 서버 동시 실행 상한 `3`과 최근 1초 최대 시작 `2회`는 유지해 요청량을 제한합니다. 서버 환경에 `TRANSIT_SERVER_MIN_START_GAP_MS`가 명시돼 있으면 그 값이 기본값보다 우선합니다. 같은 경로의 5일 추가 비교 계획도 마련해 두었습니다.
+실험 결과를 반영해 클라이언트 최소 시작 간격과 서버 기본값을 `250ms`로 조정했습니다. 완성 배치에서 250ms와 500ms 모두 성공률 100%를 보였고, 250ms의 전체 완료 시간이 더 짧았습니다. 더 짧은 125ms와 200ms는 본문 `429`가 반복되어 적용하지 않았습니다. 서버 동시 실행 상한 `3`은 유지하고, 최근 1초 최대 시작 수는 `4회`로 올렸습니다. 재실험에서 1초에 4회 시작된 250ms 배치는 모두 성공했고, 5회 이상 시작된 200ms·125ms에서 본문 `429`가 나왔기 때문입니다. 이전 값 `2회`는 250ms 간격에서도 서버가 1초에 두 번만 시작하게 만들어, 실제 앱의 시작 속도를 500ms 수준으로 묶었습니다. 서버 환경에 `TRANSIT_SERVER_MIN_START_GAP_MS`가 명시돼 있으면 그 값이 기본값보다 우선합니다. 같은 경로의 5일 추가 비교 계획도 마련해 두었습니다.
 
 실험별 오류 분류와 전체 실행 결과는 [누적 매트릭스](docs/results/transit-reexperiment-overall-matrix.md), 후속 비교 절차는 [재실험 계획](docs/superpowers/plans/2026-10-06-transit-scheduling-reexperiment.md)에 정리했습니다.
 

@@ -182,7 +182,7 @@ export function getTransitRequestLimiterConfig(): RequestLimiterConfig {
     ),
     maxStartsPerWindow: parseNonNegativeInteger(
       process.env.TRANSIT_SERVER_MAX_STARTS_PER_WINDOW,
-      2
+      4
     ),
     windowMs: Math.max(
       1,
