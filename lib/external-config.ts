@@ -1,5 +1,6 @@
 export const KAKAO_MAP_SDK_URL = "//dapi.kakao.com/v2/maps/sdk.js";
 export const KAKAO_LOCAL_SEARCH_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
+export const KAKAO_LOCAL_CATEGORY_URL = "https://dapi.kakao.com/v2/local/search/category.json";
 
 export const ODSAY_SEARCH_TRANSIT_PATH_URL = "https://api.odsay.com/v1/api/searchPubTransPathT";
 export const ODSAY_LOAD_LANE_URL = "https://api.odsay.com/v1/api/loadLane";
