@@ -1,0 +1,4 @@
+id,gapMs,requests,success,errors,http429,odsay429,odsayMinus1,totalMs,minStartGapMs,maxActive,maxStarts1s,unscheduled,eligible,stopReason
+"batch-001",250,9,9,0,0,0,0,2205,250,2,4,0,true,""
+"batch-002",500,9,9,0,0,0,0,4624,501,2,2,0,true,""
+"batch-003",500,12,12,0,0,0,0,5640,500,1,2,0,true,""

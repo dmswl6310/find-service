@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "dateKst": "2026-10-19",
+  "dailyLimit": 30,
+  "quotaEvidence": {
+    "used": 0,
+    "limit": 30,
+    "confirmedAt": "2026-10-19T00:20:06Z",
+    "source": "standing-user-confirmation-unused-service"
+  },
+  "otherReservedAtStart": 0,
+  "allowance": 30,
+  "plannedGaps": [
+    500,
+    500
+  ],
+  "reservedCalls": 30,
+  "batches": [
+    {
+      "id": "batch-001",
+      "caseId": "3x3",
+      "sessions": 2,
+      "sessionMetrics": [
+        {
+          "sessionId": 1,
+          "planned": 9,
+          "requests": 9,
+          "success": 9,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 0,
+          "completionMs": 8293
+        },
+        {
+          "sessionId": 2,
+          "planned": 9,
+          "requests": 9,
+          "success": 9,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 507,
+          "completionMs": 8720
+        }
+      ],
+      "role": "two-session-confirmation",
+      "begunAt": 1792369210998,
+      "endedAt": 1792369219718,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 18,
+      "success": 18,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 8720,
+      "minStartGapMs": 501,
+      "maxActive": 1,
+      "maxStarts1s": 2,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    },
+    {
+      "id": "batch-002",
+      "caseId": "3x3",
+      "sessions": 2,
+      "sessionMetrics": [
+        {
+          "sessionId": 1,
+          "planned": 6,
+          "requests": 6,
+          "success": 6,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 0,
+          "completionMs": 5166
+        },
+        {
+          "sessionId": 2,
+          "planned": 6,
+          "requests": 6,
+          "success": 6,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 506,
+          "completionMs": 5720
+        }
+      ],
+      "role": "partial-repeat-not-comparable",
+      "begunAt": 1792369249753,
+      "endedAt": 1792369255473,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 12,
+      "success": 12,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 5720,
+      "minStartGapMs": 500,
+      "maxActive": 1,
+      "maxStarts1s": 2,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    }
+  ],
+  "pending": null,
+  "halted": null,
+  "source": "direct fetch issuance/full JSON receipt, not remote processing",
+  "departureCondition": "no explicit date/time",
+  "complete": true,
+  "nextStage": {
+    "caseId": "3x3",
+    "sessions": 2,
+    "gapMs": 250,
+    "fullCalls": 18,
+    "partialCalls": 12
+  }
+}

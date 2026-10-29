@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "budget": 400,
+  "dateKst": "2026-10-06",
+  "dailyLimit": 1000,
+  "priorUsageUserReported": 0,
+  "source": "direct ODsay fetch issuance; bypasses production server/browser limiters",
+  "timestampMeaning": "local fetch issuance and full JSON receipt, not upstream internal processing or wire arrival",
+  "departureCondition": "no explicit date/time, same as departure-time toggle off",
+  "createdAt": "2026-10-06T07:17:01.240Z",
+  "reservedCalls": 1,
+  "batches": [
+    {
+      "id": "batch-001",
+      "stage": "explore",
+      "caseId": "3x3",
+      "sessions": 1,
+      "begunAt": 1791271021266,
+      "endedAt": 1791271021337,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 1,
+      "success": 0,
+      "errors": 1,
+      "http429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 71,
+      "minStartGapMs": null,
+      "maxActive": 1,
+      "maxStarts1s": 1,
+      "slotBlockedMs": 0,
+      "unscheduled": 8,
+      "stopReason": "network-error",
+      "eligible": false
+    }
+  ],
+  "halted": "network-error",
+  "explorationComplete": false,
+  "pending": null
+}

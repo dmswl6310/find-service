@@ -1,0 +1,28 @@
+{
+  "begunAt": 1791271021266,
+  "endedAt": 1791271021337,
+  "gapMs": 500,
+  "concurrency": 9,
+  "timeoutMs": 30000,
+  "totalTasks": 9,
+  "issued": 1,
+  "unscheduled": 8,
+  "stopReason": "network-error",
+  "maxActive": 1,
+  "slotBlockedMs": 0,
+  "records": [
+    {
+      "status": null,
+      "errorCode": null,
+      "classification": "network-error",
+      "totalTime": null,
+      "taskIndex": 0,
+      "fromId": "gangnam",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1791271021267,
+      "completedAt": 1791271021337,
+      "durationMs": 70
+    }
+  ]
+}

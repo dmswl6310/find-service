@@ -1,0 +1,67 @@
+{
+  "begunAt": 1791271175378,
+  "endedAt": 1791271176942,
+  "gapMs": 500,
+  "concurrency": 9,
+  "timeoutMs": 30000,
+  "totalTasks": 9,
+  "issued": 4,
+  "unscheduled": 5,
+  "stopReason": "odsay-error",
+  "maxActive": 1,
+  "slotBlockedMs": 0,
+  "records": [
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 35,
+      "taskIndex": 0,
+      "fromId": "gangnam",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1791271175378,
+      "completedAt": 1791271175448,
+      "durationMs": 70
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 29,
+      "taskIndex": 1,
+      "fromId": "gangnam",
+      "toId": "jongno3",
+      "sessionId": 1,
+      "startedAt": 1791271175890,
+      "completedAt": 1791271175921,
+      "durationMs": 31
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 24,
+      "taskIndex": 2,
+      "fromId": "gangnam",
+      "toId": "seongsu",
+      "sessionId": 1,
+      "startedAt": 1791271176402,
+      "completedAt": 1791271176434,
+      "durationMs": 32
+    },
+    {
+      "status": 200,
+      "errorCode": "429",
+      "classification": "odsay-error",
+      "totalTime": null,
+      "taskIndex": 3,
+      "fromId": "hongdae",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1791271176910,
+      "completedAt": 1791271176921,
+      "durationMs": 11
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+id,role,caseId,gapMs,requests,success,errors,totalMs,minStartGapMs,maxActive,maxStarts1s,unscheduled,eligible,stopReason
+"batch-001","large-load-confirmation","5x5",200,6,5,1,1221,205,2,5,19,false,"odsay-429"
+"batch-002","500ms-recovery-and-baseline","3x3",500,9,9,0,4091,501,1,2,0,true,""
+"batch-003","500ms-partial-15-not-comparable","5x5-partial",500,15,15,0,7145,500,1,2,0,true,""
