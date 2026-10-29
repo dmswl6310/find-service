@@ -1,0 +1,93 @@
+{
+  "begunAt": 1791327988327,
+  "endedAt": 1791327989023,
+  "gapMs": 125,
+  "concurrency": 9,
+  "timeoutMs": 30000,
+  "totalTasks": 9,
+  "issued": 6,
+  "unscheduled": 3,
+  "stopReason": "odsay-429",
+  "maxActive": 2,
+  "slotBlockedMs": 0,
+  "records": [
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 35,
+      "taskIndex": 0,
+      "fromId": "gangnam",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1791327988327,
+      "completedAt": 1791327988393,
+      "durationMs": 66
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 29,
+      "taskIndex": 1,
+      "fromId": "gangnam",
+      "toId": "jongno3",
+      "sessionId": 1,
+      "startedAt": 1791327988463,
+      "completedAt": 1791327988492,
+      "durationMs": 29
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 24,
+      "taskIndex": 2,
+      "fromId": "gangnam",
+      "toId": "seongsu",
+      "sessionId": 1,
+      "startedAt": 1791327988603,
+      "completedAt": 1791327988628,
+      "durationMs": 25
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 12,
+      "taskIndex": 3,
+      "fromId": "hongdae",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1791327988728,
+      "completedAt": 1791327988933,
+      "durationMs": 205
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 22,
+      "taskIndex": 4,
+      "fromId": "hongdae",
+      "toId": "jongno3",
+      "sessionId": 1,
+      "startedAt": 1791327988854,
+      "completedAt": 1791327988903,
+      "durationMs": 49
+    },
+    {
+      "status": 200,
+      "errorCode": "429",
+      "classification": "odsay-429",
+      "totalTime": null,
+      "taskIndex": 5,
+      "fromId": "hongdae",
+      "toId": "seongsu",
+      "sessionId": 1,
+      "startedAt": 1791327988992,
+      "completedAt": 1791327989001,
+      "durationMs": 9
+    }
+  ]
+}

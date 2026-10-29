@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "dateKst": "2026-10-13",
+  "dailyLimit": 30,
+  "quotaEvidence": {
+    "used": 0,
+    "limit": 30,
+    "confirmedAt": "2026-10-13T04:33:41Z",
+    "source": "standing-user-confirmation-unused-service"
+  },
+  "otherReservedAtStart": 0,
+  "allowance": 30,
+  "plannedGaps": [
+    200,
+    200
+  ],
+  "reservedCalls": 30,
+  "batches": [
+    {
+      "id": "batch-001",
+      "caseId": "5x5",
+      "role": "large-load-confirmation",
+      "begunAt": 1791866039887,
+      "endedAt": 1791866041108,
+      "gapMs": 200,
+      "cap": "none",
+      "requests": 6,
+      "success": 5,
+      "errors": 1,
+      "http429": 0,
+      "odsay429": 1,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 1221,
+      "minStartGapMs": 205,
+      "maxActive": 2,
+      "maxStarts1s": 5,
+      "slotBlockedMs": 0,
+      "unscheduled": 19,
+      "stopReason": "odsay-429",
+      "eligible": false
+    },
+    {
+      "id": "batch-002",
+      "role": "500ms-recovery-and-baseline",
+      "caseId": "3x3",
+      "begunAt": 1791866341134,
+      "endedAt": 1791866345225,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 9,
+      "success": 9,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 4091,
+      "minStartGapMs": 501,
+      "maxActive": 1,
+      "maxStarts1s": 2,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    },
+    {
+      "id": "batch-003",
+      "role": "500ms-partial-15-not-comparable",
+      "caseId": "5x5-partial",
+      "begunAt": 1791866375262,
+      "endedAt": 1791866382407,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 15,
+      "success": 15,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 7145,
+      "minStartGapMs": 500,
+      "maxActive": 1,
+      "maxStarts1s": 2,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    }
+  ],
+  "pending": null,
+  "halted": "odsay-429",
+  "source": "direct fetch issuance/full JSON receipt, not remote processing",
+  "departureCondition": "no explicit date/time",
+  "complete": false,
+  "supplement": {
+    "previousHalt": "odsay-429",
+    "authorization": "user explicitly requests full30 daily attempts; daily starting usage0, service unused",
+    "status": "complete",
+    "dailyAttemptBudgetExhausted": true
+  },
+  "nextStage": {
+    "caseId": "5x5",
+    "gapMs": 500,
+    "fullCalls": 25,
+    "partialCalls": 5
+  },
+  "failedConditionRecheck": {
+    "caseId": "5x5",
+    "gapMs": 200,
+    "failedDays": [
+      "2026-10-13"
+    ],
+    "additionalDaysAllowed": 1
+  }
+}

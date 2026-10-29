@@ -1,0 +1,93 @@
+{
+  "begunAt": 1792133281292,
+  "endedAt": 1792133282444,
+  "gapMs": 200,
+  "concurrency": 25,
+  "timeoutMs": 30000,
+  "totalTasks": 25,
+  "issued": 6,
+  "unscheduled": 19,
+  "stopReason": "odsay-429",
+  "maxActive": 4,
+  "slotBlockedMs": 0,
+  "records": [
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 35,
+      "taskIndex": 0,
+      "fromId": "gangnam",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1792133281293,
+      "completedAt": 1792133282009,
+      "durationMs": 716
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 29,
+      "taskIndex": 1,
+      "fromId": "gangnam",
+      "toId": "jongno3",
+      "sessionId": 1,
+      "startedAt": 1792133281526,
+      "completedAt": 1792133282040,
+      "durationMs": 514
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 24,
+      "taskIndex": 2,
+      "fromId": "gangnam",
+      "toId": "seongsu",
+      "sessionId": 1,
+      "startedAt": 1792133281740,
+      "completedAt": 1792133282025,
+      "durationMs": 285
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 27,
+      "taskIndex": 3,
+      "fromId": "gangnam",
+      "toId": "yeouido",
+      "sessionId": 1,
+      "startedAt": 1792133281974,
+      "completedAt": 1792133282326,
+      "durationMs": 352
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 36,
+      "taskIndex": 4,
+      "fromId": "gangnam",
+      "toId": "gwanghwamun",
+      "sessionId": 1,
+      "startedAt": 1792133282190,
+      "completedAt": 1792133282444,
+      "durationMs": 254
+    },
+    {
+      "status": 200,
+      "errorCode": "429",
+      "classification": "odsay-429",
+      "totalTime": null,
+      "taskIndex": 5,
+      "fromId": "hongdae",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1792133282390,
+      "completedAt": 1792133282406,
+      "durationMs": 16
+    }
+  ]
+}

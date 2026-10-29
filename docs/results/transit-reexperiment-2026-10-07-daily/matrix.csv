@@ -1,0 +1,5 @@
+id,gapMs,requests,success,errors,http429,odsay429,odsayMinus1,totalMs,minStartGapMs,maxActive,maxStarts1s,unscheduled,eligible,stopReason,role
+"batch-001",250,9,9,0,0,0,0,2086,251,1,4,0,true,"",""
+"batch-002",125,6,5,1,0,1,0,696,125,2,6,3,false,"odsay-429",""
+"batch-003",250,6,6,0,0,0,0,1290,252,1,4,0,true,"","recovery-probe"
+"batch-004",200,9,9,0,0,0,0,1648,200,1,5,0,true,"","candidate-comparison"
