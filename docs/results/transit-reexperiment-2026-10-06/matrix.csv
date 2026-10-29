@@ -1,0 +1,2 @@
+stage,caseId,sessions,gapMs,cap,requests,success,errors,http429,odsayMinus1,timeouts,totalMs,minStartGapMs,maxActive,maxStarts1s,slotBlockedMs,unscheduled,stopReason,eligible
+"explore","3x3",1,500,"none",1,0,1,0,0,0,71,"",1,1,0,8,"network-error",false

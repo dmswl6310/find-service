@@ -1,0 +1,5 @@
+id,stage,caseId,gapMs,requests,success,errors,http429,odsay429,totalMs,minStartGapMs,maxActive,maxStarts1s,unscheduled,eligible
+"batch-001","explore","3x3",500,9,9,0,0,0,4179,500,1,2,0,true
+"batch-002","explore","3x3",250,9,9,0,0,0,2153,250,2,4,0,true
+"batch-003","reverse-check","3x3",250,9,9,0,0,0,2078,251,2,4,0,true
+"batch-004","reverse-check","3x3",500,4,3,1,0,1,1564,508,1,2,5,false

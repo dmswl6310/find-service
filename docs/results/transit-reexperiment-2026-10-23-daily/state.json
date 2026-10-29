@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "dateKst": "2026-10-23",
+  "dailyLimit": 30,
+  "quotaEvidence": {
+    "used": 0,
+    "limit": 30,
+    "confirmedAt": "2026-10-23T05:39:39Z",
+    "source": "standing-user-confirmation-unused-service"
+  },
+  "otherReservedAtStart": 0,
+  "allowance": 30,
+  "plannedGaps": [
+    500,
+    500
+  ],
+  "reservedCalls": 30,
+  "batches": [
+    {
+      "id": "batch-001",
+      "caseId": "3x3",
+      "sessions": 2,
+      "sessionMetrics": [
+        {
+          "sessionId": 1,
+          "planned": 9,
+          "requests": 9,
+          "success": 9,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 0,
+          "completionMs": 8251
+        },
+        {
+          "sessionId": 2,
+          "planned": 9,
+          "requests": 9,
+          "success": 9,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 511,
+          "completionMs": 8762
+        }
+      ],
+      "role": "two-session-confirmation",
+      "begunAt": 1792733989794,
+      "endedAt": 1792733998556,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 18,
+      "success": 18,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 8762,
+      "minStartGapMs": 502,
+      "maxActive": 2,
+      "maxStarts1s": 2,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    },
+    {
+      "id": "batch-002",
+      "caseId": "3x3",
+      "sessions": 2,
+      "sessionMetrics": [
+        {
+          "sessionId": 1,
+          "planned": 6,
+          "requests": 6,
+          "success": 6,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 0,
+          "completionMs": 5103
+        },
+        {
+          "sessionId": 2,
+          "planned": 6,
+          "requests": 6,
+          "success": 6,
+          "errors": 0,
+          "unscheduled": 0,
+          "firstStartDelayMs": 507,
+          "completionMs": 5592
+        }
+      ],
+      "role": "partial-repeat-not-comparable",
+      "begunAt": 1792734028603,
+      "endedAt": 1792734034195,
+      "gapMs": 500,
+      "cap": "none",
+      "requests": 12,
+      "success": 12,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 5592,
+      "minStartGapMs": 502,
+      "maxActive": 1,
+      "maxStarts1s": 2,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    }
+  ],
+  "pending": null,
+  "halted": null,
+  "source": "direct fetch issuance/full JSON receipt, not remote processing",
+  "departureCondition": "no explicit date/time",
+  "complete": true
+}

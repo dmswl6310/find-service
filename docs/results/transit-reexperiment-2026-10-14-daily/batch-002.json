@@ -1,0 +1,80 @@
+{
+  "begunAt": 1791932172901,
+  "endedAt": 1791932174950,
+  "gapMs": 500,
+  "concurrency": 5,
+  "timeoutMs": 30000,
+  "totalTasks": 5,
+  "issued": 5,
+  "unscheduled": 0,
+  "stopReason": null,
+  "maxActive": 1,
+  "slotBlockedMs": 0,
+  "records": [
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 35,
+      "taskIndex": 0,
+      "fromId": "gangnam",
+      "toId": "seoul",
+      "sessionId": 1,
+      "startedAt": 1791932172901,
+      "completedAt": 1791932172962,
+      "durationMs": 61
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 29,
+      "taskIndex": 1,
+      "fromId": "gangnam",
+      "toId": "jongno3",
+      "sessionId": 1,
+      "startedAt": 1791932173413,
+      "completedAt": 1791932173442,
+      "durationMs": 29
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 24,
+      "taskIndex": 2,
+      "fromId": "gangnam",
+      "toId": "seongsu",
+      "sessionId": 1,
+      "startedAt": 1791932173914,
+      "completedAt": 1791932173945,
+      "durationMs": 31
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 27,
+      "taskIndex": 3,
+      "fromId": "gangnam",
+      "toId": "yeouido",
+      "sessionId": 1,
+      "startedAt": 1791932174414,
+      "completedAt": 1791932174453,
+      "durationMs": 39
+    },
+    {
+      "status": 200,
+      "errorCode": null,
+      "classification": "success",
+      "totalTime": 36,
+      "taskIndex": 4,
+      "fromId": "gangnam",
+      "toId": "gwanghwamun",
+      "sessionId": 1,
+      "startedAt": 1791932174917,
+      "completedAt": 1791932174950,
+      "durationMs": 33
+    }
+  ]
+}

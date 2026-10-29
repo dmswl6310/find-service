@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "dateKst": "2026-10-12",
+  "dailyLimit": 30,
+  "quotaEvidence": {
+    "used": 0,
+    "limit": 30,
+    "confirmedAt": "2026-10-11T22:58:26Z",
+    "source": "standing-user-confirmation-unused-service"
+  },
+  "otherReservedAtStart": 0,
+  "allowance": 30,
+  "plannedGaps": [
+    200,
+    200
+  ],
+  "reservedCalls": 30,
+  "batches": [
+    {
+      "id": "batch-001",
+      "caseId": "5x5",
+      "role": "large-load-confirmation",
+      "begunAt": 1791759515385,
+      "endedAt": 1791759520397,
+      "gapMs": 200,
+      "cap": "none",
+      "requests": 25,
+      "success": 25,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 5012,
+      "minStartGapMs": 200,
+      "maxActive": 2,
+      "maxStarts1s": 5,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    },
+    {
+      "id": "batch-002",
+      "caseId": "5x5",
+      "role": "partial-repeat-not-comparable",
+      "begunAt": 1791759550426,
+      "endedAt": 1791759551276,
+      "gapMs": 200,
+      "cap": "none",
+      "requests": 5,
+      "success": 5,
+      "errors": 0,
+      "http429": 0,
+      "odsay429": 0,
+      "odsayMinus1": 0,
+      "timeouts": 0,
+      "totalMs": 850,
+      "minStartGapMs": 200,
+      "maxActive": 1,
+      "maxStarts1s": 5,
+      "slotBlockedMs": 0,
+      "unscheduled": 0,
+      "stopReason": null,
+      "eligible": true
+    }
+  ],
+  "pending": null,
+  "halted": null,
+  "source": "direct fetch issuance/full JSON receipt, not remote processing",
+  "departureCondition": "no explicit date/time",
+  "complete": true,
+  "nextStage": {
+    "caseId": "5x5",
+    "gapMs": 200,
+    "repeat": 2,
+    "fullCalls": 25,
+    "partialCalls": 5
+  }
+}
