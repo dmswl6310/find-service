@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCentroid } from "@/utils/centroid";
+import { getCentroid, getDistanceMeters } from "@/utils/centroid";
 
 describe("getCentroid", () => {
   it("averages the coordinates of all starts", () => {
@@ -18,5 +18,13 @@ describe("getCentroid", () => {
 
   it("returns null when there is no valid coordinate", () => {
     expect(getCentroid([])).toBeNull();
+  });
+});
+
+describe("getDistanceMeters", () => {
+  it("measures about 10km between Gangnam and Hongik Univ. stations", () => {
+    const d = getDistanceMeters({ x: 127.0276, y: 37.4979 }, { x: 126.9237, y: 37.5572 });
+    expect(d).toBeGreaterThan(10_000);
+    expect(d).toBeLessThan(12_000);
   });
 });

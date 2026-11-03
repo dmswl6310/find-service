@@ -16,3 +16,14 @@ export function getCentroid(locations: Pick<KakaoLocation, "x" | "y">[]): Coordi
   const sum = points.reduce((acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }), { x: 0, y: 0 });
   return { x: sum.x / points.length, y: sum.y / points.length };
 }
+
+const EARTH_RADIUS_M = 6_371_000;
+
+// 두 좌표 사이 직선거리(m), 하버사인 공식
+export function getDistanceMeters(a: Coordinate, b: Coordinate): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(b.y - a.y);
+  const dLng = toRad(b.x - a.x);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.y)) * Math.cos(toRad(b.y)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
+}

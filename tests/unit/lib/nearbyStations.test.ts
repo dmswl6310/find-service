@@ -11,6 +11,8 @@ import {
   EXPANDED_STATION_RADIUS_M,
   findNearbyStations,
   getStationBaseName,
+  rankStationsByFairDistance,
+  TARGET_STATION_COUNT,
 } from "@/lib/nearbyStations";
 import type { KakaoLocation, KakaoSearchResponse } from "@/types/kakao";
 
@@ -37,12 +39,25 @@ describe("getStationBaseName", () => {
   });
 });
 
+describe("rankStationsByFairDistance", () => {
+  it("puts the station that is fair to every start ahead of one close to a single start", () => {
+    const gangnam = { x: 127.0276, y: 37.4979 };
+    const hongdae = { x: 126.9237, y: 37.5572 };
+    const nearGangnam = { ...station("a", "신논현역 9호선"), x: "127.0250", y: "37.5046" };
+    const between = { ...station("b", "동작역 4호선"), x: "126.9801", y: "37.5028" };
+
+    const ranked = rankStationsByFairDistance([nearGangnam, between], [gangnam, hongdae]);
+
+    expect(ranked.map((s) => s.id)).toEqual(["b", "a"]);
+  });
+});
+
 describe("findNearbyStations", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("searches around the centroid and returns up to 20 stations", async () => {
+  it("searches around the centroid and returns the target number of stations", async () => {
     vi.mocked(searchSubwayStations)
       .mockResolvedValueOnce(page(stations(15, "a"), false))
       .mockResolvedValueOnce(page(stations(15, "b"), false));
@@ -56,7 +71,7 @@ describe("findNearbyStations", () => {
       page: 1,
     });
     expect(result?.radius).toBe(DEFAULT_STATION_RADIUS_M);
-    expect(result?.stations).toHaveLength(20);
+    expect(result?.stations).toHaveLength(TARGET_STATION_COUNT);
   });
 
   it("merges the same station on different lines into one", async () => {
