@@ -9,6 +9,8 @@ export const COLLECT_STATION_COUNT = 30;
 export const TARGET_STATION_COUNT = 10;
 // 이보다 적으면 반경을 한 번 넓혀 다시 찾는다
 export const MIN_STATION_COUNT = 5;
+// 이미 고른 역에서 이 거리 안에 있는 역은 같은 동네로 보고 뺀다 (예: 용산역·신용산역 약 290m)
+export const MIN_STATION_SPACING_M = 500;
 
 export interface NearbyStationsResult {
   center: Coordinate;
@@ -65,6 +67,19 @@ export function rankStationsByFairDistance(
   return scored.sort((a, b) => a.max - b.max || a.sum - b.sum).map((item) => item.station);
 }
 
+// 앞(더 공평한 역)부터 차례로 담되, 이미 담은 역과 너무 가까운 역은 건너뛴다
+export function spreadOutStations(stations: KakaoLocation[], minSpacingM = MIN_STATION_SPACING_M): KakaoLocation[] {
+  const picked: KakaoLocation[] = [];
+  for (const station of stations) {
+    const point = { x: Number(station.x), y: Number(station.y) };
+    const tooClose = picked.some(
+      (other) => getDistanceMeters(point, { x: Number(other.x), y: Number(other.y) }) < minSpacingM
+    );
+    if (!tooClose) picked.push(station);
+  }
+  return picked;
+}
+
 export async function findNearbyStations(
   starts: Pick<KakaoLocation, "x" | "y">[]
 ): Promise<NearbyStationsResult | null> {
@@ -73,7 +88,7 @@ export async function findNearbyStations(
   if (!center) return null;
   const startPoints = starts.map((start) => ({ x: Number(start.x), y: Number(start.y) }));
   const pick = (stations: KakaoLocation[]) =>
-    rankStationsByFairDistance(stations, startPoints).slice(0, TARGET_STATION_COUNT);
+    spreadOutStations(rankStationsByFairDistance(stations, startPoints)).slice(0, TARGET_STATION_COUNT);
 
   const stations = await collectStations(center, DEFAULT_STATION_RADIUS_M, COLLECT_STATION_COUNT);
   if (!stations) return null;

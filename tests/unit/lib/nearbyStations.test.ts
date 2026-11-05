@@ -12,6 +12,7 @@ import {
   findNearbyStations,
   getStationBaseName,
   rankStationsByFairDistance,
+  spreadOutStations,
   TARGET_STATION_COUNT,
 } from "@/lib/nearbyStations";
 import type { KakaoLocation, KakaoSearchResponse } from "@/types/kakao";
@@ -21,8 +22,12 @@ const starts = [
   { x: "127.1", y: "37.6" },
 ];
 
+// 역마다 약 1km씩 떨어진 좌표를 줘서, 거리 간격 필터에 걸리지 않게 한다
+let nextStationOffset = 0;
 function station(id: string, placeName: string): KakaoLocation {
-  return { id, place_name: placeName, address_name: "서울", road_address_name: "", x: "127.05", y: "37.55" };
+  const x = (127.0 + nextStationOffset * 0.012).toFixed(4);
+  nextStationOffset += 1;
+  return { id, place_name: placeName, address_name: "서울", road_address_name: "", x, y: "37.55" };
 }
 
 function page(documents: KakaoLocation[], isEnd: boolean): KakaoSearchResponse {
@@ -49,6 +54,16 @@ describe("rankStationsByFairDistance", () => {
     const ranked = rankStationsByFairDistance([nearGangnam, between], [gangnam, hongdae]);
 
     expect(ranked.map((s) => s.id)).toEqual(["b", "a"]);
+  });
+});
+
+describe("spreadOutStations", () => {
+  it("drops a station within 500m of one already picked, keeping the earlier one", () => {
+    const yongsan = { ...station("1", "용산역 경의중앙선"), x: "126.96475753", y: "37.52960692" };
+    const sinyongsan = { ...station("2", "신용산역 4호선"), x: "126.96796504", y: "37.52925915" };
+    const itaewon = { ...station("3", "이태원역 6호선"), x: "126.99433386", y: "37.53452520" };
+
+    expect(spreadOutStations([yongsan, sinyongsan, itaewon]).map((s) => s.id)).toEqual(["1", "3"]);
   });
 });
 
