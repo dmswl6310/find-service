@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import LocationPanel from "@/app/home/LocationPanel";
+import AiSuggestSection from "@/components/suggest/AiSuggestSection";
 import ResultPanel from "@/app/home/ResultPanel";
 import { useSelectedRouteMapState } from "@/app/home/useSelectedRouteMapState";
 import MapWorkspace from "@/components/map/MapWorkspace";
@@ -274,6 +275,7 @@ export default function ComparisonWorkspace({
       onSelectStart={setSelectedStartId}
       onSelectEnd={setSelectedEndId}
       onCalculate={handleCalculate}
+      aiSuggest={<AiSuggestSection starts={starts} ends={ends} onAddEnd={handleAddEnd} />}
     />
   );
 

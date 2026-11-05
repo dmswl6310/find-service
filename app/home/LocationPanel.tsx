@@ -22,6 +22,8 @@ export interface LocationPanelProps {
   onSelectEnd: (id: string) => void;
   onCalculate: () => void;
   SearchComponent?: ComponentType<LocationSearchProps>;
+  // 출발지와 목적지 후보 사이에 끼워 넣는 영역 (AI 후보 찾기)
+  aiSuggest?: ReactNode;
   controls?: {
     shareButton: ReactNode;
     timeFilter: ReactNode;
@@ -42,6 +44,7 @@ export default function LocationPanel({
   onSelectEnd,
   onCalculate,
   SearchComponent,
+  aiSuggest,
   controls,
 }: LocationPanelProps) {
   const routeCount = starts.length * ends.length;
@@ -56,6 +59,7 @@ export default function LocationPanel({
       {controls?.timeFilter ?? <TimeFilter />}
       <div className="grid gap-5">
         <LocationGroup kind="origin" title="출발지" locations={starts} selectedId={selectedStartId} onSelectLocation={onSelectStart} onRemove={onRemoveStart} onAdd={onAddStart} SearchComponent={SearchComponent} />
+        {aiSuggest}
         <LocationGroup kind="candidate" title="목적지 후보" locations={ends} selectedId={selectedEndId} onSelectLocation={onSelectEnd} onRemove={onRemoveEnd} onAdd={onAddEnd} SearchComponent={SearchComponent} />
       </div>
       <Button type="button" onClick={onCalculate} disabled={!canCalculate} isLoading={isCalculating} className="w-full">
