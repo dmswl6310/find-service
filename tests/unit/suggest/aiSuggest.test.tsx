@@ -88,6 +88,24 @@ describe("AiSuggestPanel", () => {
     expect(screen.getByRole("button", { name: "용산역 추가됨" })).toBeDisabled();
   });
 
+  it("shows a done button with the added count and calls onDone", () => {
+    const station = toCandidateLocation(yongsan);
+    const onDone = vi.fn();
+    const props = panelProps({ status: "success", candidates: [{ station, reason: "활기찬 분위기" }], onDone });
+    const { rerender } = render(<AiSuggestPanel {...props} />);
+
+    expect(screen.getByRole("button", { name: "완료" })).toBeVisible();
+
+    rerender(<AiSuggestPanel {...props} ends={[station]} />);
+    fireEvent.click(screen.getByRole("button", { name: "완료 (1곳 추가됨)" }));
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides the done button before results", () => {
+    render(<AiSuggestPanel {...panelProps({ onDone: vi.fn() })} />);
+    expect(screen.queryByRole("button", { name: /^완료/ })).not.toBeInTheDocument();
+  });
+
   it("shows the fallback notice on error", () => {
     render(<AiSuggestPanel {...panelProps({ status: "error", error: SUGGEST_FALLBACK_MESSAGE })} />);
     expect(screen.getByRole("status")).toHaveTextContent(SUGGEST_FALLBACK_MESSAGE);

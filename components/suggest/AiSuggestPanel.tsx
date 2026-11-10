@@ -17,10 +17,12 @@ export interface AiSuggestPanelProps {
   error: string | null;
   onSuggest: (purpose: string) => void;
   onAddEnd: (location: KakaoLocation) => void;
+  // 결과를 다 고른 뒤 팝업을 닫는다 (없으면 완료 버튼을 그리지 않음)
+  onDone?: () => void;
 }
 
 // 팝업 안의 내용만 그리는 컴포넌트. 요청 상태는 부모(AiSuggestSection)가 넘겨 준다.
-export default function AiSuggestPanel({ startCount, ends, status, candidates, error, onSuggest, onAddEnd }: AiSuggestPanelProps) {
+export default function AiSuggestPanel({ startCount, ends, status, candidates, error, onSuggest, onAddEnd, onDone }: AiSuggestPanelProps) {
   const [purpose, setPurpose] = useState("");
   const inputId = useId();
 
@@ -35,6 +37,7 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
   const trimmed = purpose.trim();
   const isLoading = status === "loading";
   const addedIds = new Set(ends.map((end) => end.id));
+  const addedCount = candidates.filter(({ station }) => addedIds.has(station.id)).length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,6 +93,7 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
                   size="sm"
                   disabled={isAdded}
                   onClick={() => onAddEnd(station)}
+                  className="shrink-0 whitespace-nowrap"
                   aria-label={isAdded ? `${station.place_name} 추가됨` : `${station.place_name} 후보에 추가`}
                 >
                   {isAdded ? "추가됨" : "추가"}
@@ -98,6 +102,12 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
             );
           })}
         </ul>
+      )}
+
+      {status === "success" && onDone && (
+        <Button type="button" className="w-full" onClick={onDone}>
+          {addedCount > 0 ? `완료 (${addedCount}곳 추가됨)` : "완료"}
+        </Button>
       )}
     </div>
   );
