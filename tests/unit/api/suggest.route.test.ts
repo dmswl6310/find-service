@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const generateTextMock = vi.fn();
 const findNearbyStationsMock = vi.fn();
@@ -38,12 +38,17 @@ function makeRequest(ip: string) {
 
 describe("POST /api/suggest", () => {
   beforeEach(() => {
+    vi.stubEnv("NODE_ENV", "production");
     generateTextMock.mockReset();
     findNearbyStationsMock.mockReset();
     findNearbyStationsMock.mockResolvedValue({ stations });
     generateTextMock.mockResolvedValue({
       output: { candidates: stations.map((s) => ({ stationId: s.id, reason: "좋아요" })) },
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("returns 429 with Retry-After after 5 requests in a minute from the same IP", async () => {
@@ -57,6 +62,13 @@ describe("POST /api/suggest", () => {
 
     // 다른 IP는 영향 없음
     expect((await POST(makeRequest("10.0.0.2"))).status).toBe(200);
+  });
+
+  it("does not rate limit outside production (local dev and eval)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    for (let i = 0; i < 7; i += 1) {
+      expect((await POST(makeRequest("10.0.0.9"))).status).toBe(200);
+    }
   });
 
   it("passes a timeout to the model call and returns 504 when it times out", async () => {
