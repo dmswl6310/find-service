@@ -4,6 +4,10 @@ import AiSuggestPanel from "@/components/suggest/AiSuggestPanel";
 import AiSuggestSection from "@/components/suggest/AiSuggestSection";
 import {
   SUGGEST_FALLBACK_MESSAGE,
+  SUGGEST_NO_STATIONS_MESSAGE,
+  SUGGEST_RATE_LIMIT_MESSAGE,
+  SUGGEST_TIMEOUT_MESSAGE,
+  getSuggestErrorMessage,
   toCandidateLocation,
   useSuggestCandidates,
 } from "@/hooks/useSuggestCandidates";
@@ -119,12 +123,29 @@ describe("useSuggestCandidates", () => {
   });
 
   it("falls back to manual entry when the API fails", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "x" }), { status: 503 })));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "x" }), { status: 500 })));
     const { result } = renderHook(() => useSuggestCandidates());
 
     await act(() => result.current.suggest(starts, "회식"));
 
     expect(result.current.status).toBe("error");
     expect(result.current.error).toBe(SUGGEST_FALLBACK_MESSAGE);
+  });
+
+  it("tells the user to wait when rate limited", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: "x" }), { status: 429 })));
+    const { result } = renderHook(() => useSuggestCandidates());
+
+    await act(() => result.current.suggest(starts, "회식"));
+
+    expect(result.current.error).toBe(SUGGEST_RATE_LIMIT_MESSAGE);
+  });
+
+  it("maps each server status to a message", () => {
+    expect(getSuggestErrorMessage(429)).toBe(SUGGEST_RATE_LIMIT_MESSAGE);
+    expect(getSuggestErrorMessage(503)).toBe(SUGGEST_NO_STATIONS_MESSAGE);
+    expect(getSuggestErrorMessage(504)).toBe(SUGGEST_TIMEOUT_MESSAGE);
+    expect(getSuggestErrorMessage(502)).toBe(SUGGEST_FALLBACK_MESSAGE);
+    expect(getSuggestErrorMessage(400)).toBe(SUGGEST_FALLBACK_MESSAGE);
   });
 });
