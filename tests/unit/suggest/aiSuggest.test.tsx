@@ -1,6 +1,7 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AiSuggestPanel from "@/components/suggest/AiSuggestPanel";
+import AiSuggestSection from "@/components/suggest/AiSuggestSection";
 import {
   SUGGEST_FALLBACK_MESSAGE,
   toCandidateLocation,
@@ -37,10 +38,24 @@ describe("toCandidateLocation", () => {
   });
 });
 
+describe("AiSuggestSection", () => {
+  it("shows only a button until opened, then opens and closes the dialog", () => {
+    render(<AiSuggestSection starts={starts} ends={[]} onAddEnd={() => undefined} />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "✨ AI로 찾기" }));
+    expect(screen.getByRole("dialog", { name: "AI로 목적지 후보 찾기" })).toBeVisible();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
 describe("AiSuggestPanel", () => {
-  it("is hidden until there are at least two starts", () => {
-    const { container } = render(<AiSuggestPanel {...panelProps({ startCount: 1 })} />);
-    expect(container).toBeEmptyDOMElement();
+  it("asks for two starts instead of the form", () => {
+    render(<AiSuggestPanel {...panelProps({ startCount: 1 })} />);
+    expect(screen.getByText("출발지를 2곳 이상 넣어 주세요")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "AI로 후보 3곳 찾기" })).not.toBeInTheDocument();
   });
 
   it("fills the purpose from an example and submits the trimmed text", () => {
@@ -80,14 +95,14 @@ describe("useSuggestCandidates", () => {
     vi.unstubAllGlobals();
   });
 
-  it("posts starts and purpose, then stores cleaned candidates", async () => {
+  it("posts starts, purpose and existing ends, then stores cleaned candidates", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ candidates: [{ reason: "활기찬 분위기", station: yongsan }] }), { status: 200 })
     );
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useSuggestCandidates());
 
-    await act(() => result.current.suggest(starts, "사람 많은 곳"));
+    await act(() => result.current.suggest(starts, "사람 많은 곳", [makeLocation("e1", "성수")]));
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("/api/suggest");
@@ -97,6 +112,7 @@ describe("useSuggestCandidates", () => {
         { name: "홍대입구역", x: "127.0", y: "37.5" },
       ],
       purpose: "사람 많은 곳",
+      ends: [{ x: "127.0", y: "37.5" }],
     });
     expect(result.current.status).toBe("success");
     expect(result.current.candidates[0].station.place_name).toBe("용산역");

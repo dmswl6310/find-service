@@ -1,4 +1,4 @@
-import { findNearbyStations } from "@/lib/nearbyStations";
+import { excludeStationsNear, findNearbyStations } from "@/lib/nearbyStations";
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateText, Output } from "ai";
 import { z } from "zod";
@@ -21,6 +21,8 @@ const InputCandidateSchema = z.object({
 const InputSchema = z.object({
   starts: z.array(InputCandidateSchema).min(2),
   purpose: z.string().trim().min(1).max(100).describe("목적"),
+  // 이미 목적지 후보에 넣은 곳 (근처 역은 추천에서 제외)
+  ends: z.array(z.object({ x: z.string(), y: z.string() })).max(20).default([]),
 });
 
 export async function POST(req: Request) {
@@ -38,7 +40,10 @@ export async function POST(req: Request) {
     if (nearbyResult === null) {
       return Response.json({ error: "직접 입력해 주세요" }, { status: 503 });
     }
-    const { stations } = nearbyResult;
+    const stations = excludeStationsNear(nearbyResult.stations, validatedData.data.ends);
+    if (stations.length < 3) {
+      return Response.json({ error: "직접 입력해 주세요" }, { status: 503 });
+    }
     const filteredPrompt = {
       purpose: validatedData.data.purpose,
       stations: stations.map((station) => ({

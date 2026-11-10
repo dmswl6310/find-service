@@ -42,7 +42,7 @@ export function useSuggestCandidates() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const suggest = useCallback(async (starts: KakaoLocation[], purpose: string) => {
+  const suggest = useCallback(async (starts: KakaoLocation[], purpose: string, ends: KakaoLocation[] = []) => {
     // 이전 요청이 아직 진행 중이면 취소하고 마지막 요청 결과만 보여 준다
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -59,6 +59,8 @@ export function useSuggestCandidates() {
         body: JSON.stringify({
           starts: starts.map((start) => ({ name: start.place_name, x: start.x, y: start.y })),
           purpose,
+          // 이미 넣은 목적지 근처 역은 서버에서 추천 대상에서 뺀다
+          ends: ends.map((end) => ({ x: end.x, y: end.y })),
         }),
         signal: controller.signal,
       });

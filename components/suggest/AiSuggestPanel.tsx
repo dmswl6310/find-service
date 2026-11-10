@@ -19,24 +19,28 @@ export interface AiSuggestPanelProps {
   onAddEnd: (location: KakaoLocation) => void;
 }
 
-// 화면만 그리는 컴포넌트. 요청 상태는 부모(AiSuggestSection)가 넘겨 준다.
+// 팝업 안의 내용만 그리는 컴포넌트. 요청 상태는 부모(AiSuggestSection)가 넘겨 준다.
 export default function AiSuggestPanel({ startCount, ends, status, candidates, error, onSuggest, onAddEnd }: AiSuggestPanelProps) {
   const [purpose, setPurpose] = useState("");
-  const headingId = useId();
   const inputId = useId();
 
-  if (startCount < 2) return null;
+  if (startCount < 2) {
+    return (
+      <InlineNotice tone="info" title="출발지를 2곳 이상 넣어 주세요">
+        AI는 출발지 모두에게 공평한 역 중에서 후보를 골라요. 출발지를 추가한 뒤 다시 열어 주세요.
+      </InlineNotice>
+    );
+  }
 
   const trimmed = purpose.trim();
   const isLoading = status === "loading";
   const addedIds = new Set(ends.map((end) => end.id));
 
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
-      <div>
-        <h2 id={headingId} className="text-xl font-semibold text-text">AI로 후보 찾기</h2>
-        <p className="mt-1 text-sm text-text-muted">모임 목적을 적으면 출발지 모두에게 공평한 역 중에서 3곳을 골라 드려요.</p>
-      </div>
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-text-muted">
+        모임 목적을 적으면 출발지 모두에게 공평한 역 중에서 3곳을 골라 드려요. 이미 넣은 목적지 근처는 빼고 찾아요.
+      </p>
 
       <form
         className="flex flex-col gap-3"
@@ -95,6 +99,6 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
           })}
         </ul>
       )}
-    </section>
+    </div>
   );
 }

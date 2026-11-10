@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentType, useId } from "react";
+import { type ComponentType, type ReactNode, useId } from "react";
 import LocationSearch, { type LocationSearchProps } from "@/components/location/LocationSearch";
 import PlaceRow from "@/components/location/PlaceRow";
 import type { KakaoLocation } from "@/types/kakao";
@@ -14,9 +14,11 @@ export interface LocationGroupProps {
   onRemove: (id: string) => void;
   onAdd: (location: KakaoLocation) => void;
   SearchComponent?: ComponentType<LocationSearchProps>;
+  // 제목 줄 오른쪽에 붙는 추가 버튼 (예: 목적지 후보의 "AI로 찾기")
+  headerAction?: ReactNode;
 }
 
-export default function LocationGroup({ kind, title, locations, selectedId, onSelectLocation, onRemove, onAdd, SearchComponent = LocationSearch }: LocationGroupProps) {
+export default function LocationGroup({ kind, title, locations, selectedId, onSelectLocation, onRemove, onAdd, SearchComponent = LocationSearch, headerAction }: LocationGroupProps) {
   const isOrigin = kind === "origin";
   const headingId = useId();
   const emptyMessage = isOrigin ? "친구들이 출발하는 역이나 장소를 추가해 주세요." : "비교하고 싶은 약속 장소 후보를 추가해 주세요.";
@@ -25,7 +27,10 @@ export default function LocationGroup({ kind, title, locations, selectedId, onSe
     <section aria-labelledby={headingId} className={`flex flex-col gap-4 rounded-lg border p-5 ${isOrigin ? "border-origin bg-origin-soft" : "border-candidate bg-candidate-soft"}`}>
       <div className="flex items-center justify-between gap-3">
         <h2 id={headingId} className="text-xl font-semibold text-text">{title}</h2>
-        <span className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-text-muted">{locations.length}개</span>
+        <div className="flex items-center gap-2">
+          {headerAction}
+          <span className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-text-muted">{locations.length}개</span>
+        </div>
       </div>
       <SearchComponent
         label={`${title} 검색`}
