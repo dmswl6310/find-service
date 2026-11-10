@@ -80,6 +80,23 @@ export function spreadOutStations(stations: KakaoLocation[], minSpacingM = MIN_S
   return picked;
 }
 
+// 사용자가 이미 목적지 후보에 넣은 곳 근처 역은 빼서, AI가 다른 동네를 고르게 한다
+export function excludeStationsNear(
+  stations: KakaoLocation[],
+  points: Pick<KakaoLocation, "x" | "y">[],
+  minSpacingM = MIN_STATION_SPACING_M
+): KakaoLocation[] {
+  const excluded = points
+    .map((point) => ({ x: Number(point.x), y: Number(point.y) }))
+    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+  if (excluded.length === 0) return stations;
+
+  return stations.filter((station) => {
+    const point = { x: Number(station.x), y: Number(station.y) };
+    return excluded.every((other) => getDistanceMeters(point, other) >= minSpacingM);
+  });
+}
+
 export async function findNearbyStations(
   starts: Pick<KakaoLocation, "x" | "y">[]
 ): Promise<NearbyStationsResult | null> {

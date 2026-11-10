@@ -13,6 +13,7 @@ import {
   getStationBaseName,
   rankStationsByFairDistance,
   spreadOutStations,
+  excludeStationsNear,
   TARGET_STATION_COUNT,
 } from "@/lib/nearbyStations";
 import type { KakaoLocation, KakaoSearchResponse } from "@/types/kakao";
@@ -64,6 +65,17 @@ describe("spreadOutStations", () => {
     const itaewon = { ...station("3", "이태원역 6호선"), x: "126.99433386", y: "37.53452520" };
 
     expect(spreadOutStations([yongsan, sinyongsan, itaewon]).map((s) => s.id)).toEqual(["1", "3"]);
+  });
+});
+
+describe("excludeStationsNear", () => {
+  it("drops stations within 500m of a place the user already added", () => {
+    const yongsan = { ...station("1", "용산역 경의중앙선"), x: "126.96475753", y: "37.52960692" };
+    const itaewon = { ...station("3", "이태원역 6호선"), x: "126.99433386", y: "37.53452520" };
+    const addedSinyongsan = { x: "126.96796504", y: "37.52925915" };
+
+    expect(excludeStationsNear([yongsan, itaewon], [addedSinyongsan]).map((s) => s.id)).toEqual(["3"]);
+    expect(excludeStationsNear([yongsan, itaewon], [])).toHaveLength(2);
   });
 });
 
