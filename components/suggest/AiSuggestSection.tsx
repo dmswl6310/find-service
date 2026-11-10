@@ -79,6 +79,7 @@ export default function AiSuggestSection({ starts, ends, onAddEnd }: AiSuggestSe
                 error={error}
                 onSuggest={(purpose) => suggest(starts, purpose, ends)}
                 onAddEnd={onAddEnd}
+                onDone={() => setIsOpen(false)}
               />
             </div>
           </div>

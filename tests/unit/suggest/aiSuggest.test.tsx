@@ -53,6 +53,30 @@ describe("AiSuggestSection", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("adds nothing when closed with the X after selecting", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ candidates: [{ reason: "활기찬 분위기", station: yongsan }] }), { status: 200 })
+      )
+    );
+    const onAddEnd = vi.fn();
+    render(<AiSuggestSection starts={starts} ends={[]} onAddEnd={onAddEnd} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "✨ AI로 찾기" }));
+    fireEvent.change(screen.getByLabelText("모임 목적"), { target: { value: "회식" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "AI로 후보 3곳 찾기" }));
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "용산역 선택" }));
+    fireEvent.click(screen.getByRole("button", { name: "AI 후보 찾기 닫기" }));
+
+    expect(onAddEnd).not.toHaveBeenCalled();
+    // 다시 열면 선택이 지워져 있다
+    fireEvent.click(screen.getByRole("button", { name: "✨ AI로 찾기" }));
+    expect(screen.getByRole("button", { name: "용산역 선택" })).toHaveAttribute("aria-pressed", "false");
+  });
 });
 
 describe("AiSuggestPanel", () => {
@@ -75,17 +99,48 @@ describe("AiSuggestPanel", () => {
     expect(props.onSuggest).toHaveBeenCalledWith("카페에서 오래 수다");
   });
 
-  it("shows results and adds a candidate once", () => {
-    const station = toCandidateLocation(yongsan);
-    const props = panelProps({ status: "success", candidates: [{ station, reason: "활기찬 분위기" }] });
-    const { rerender } = render(<AiSuggestPanel {...props} />);
+  it("selects candidates first and adds them only with the bottom button", () => {
+    const first = toCandidateLocation(yongsan);
+    const second = toCandidateLocation({ ...yongsan, id: "st2", place_name: "삼각지역" });
+    const onDone = vi.fn();
+    const props = panelProps({
+      status: "success",
+      candidates: [
+        { station: first, reason: "활기찬 분위기" },
+        { station: second, reason: "조용한 골목" },
+      ],
+      onDone,
+    });
+    render(<AiSuggestPanel {...props} />);
 
     expect(screen.getByText("활기찬 분위기")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "용산역 후보에 추가" }));
-    expect(props.onAddEnd).toHaveBeenCalledWith(station);
+    expect(screen.getByRole("button", { name: "추가할 곳을 선택해 주세요" })).toBeDisabled();
 
-    rerender(<AiSuggestPanel {...props} ends={[station]} />);
-    expect(screen.getByRole("button", { name: "용산역 추가됨" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "용산역 선택" }));
+    fireEvent.click(screen.getByRole("button", { name: "삼각지역 선택" }));
+    expect(screen.getByRole("button", { name: "용산역 선택" })).toHaveAttribute("aria-pressed", "true");
+    // 고르기만 해서는 추가되지 않는다
+    expect(props.onAddEnd).not.toHaveBeenCalled();
+
+    // 다시 누르면 선택 해제
+    fireEvent.click(screen.getByRole("button", { name: "삼각지역 선택" }));
+    fireEvent.click(screen.getByRole("button", { name: "선택한 1곳 추가" }));
+
+    expect(props.onAddEnd).toHaveBeenCalledTimes(1);
+    expect(props.onAddEnd).toHaveBeenCalledWith(first);
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows stations already in the list as added and not selectable", () => {
+    const station = toCandidateLocation(yongsan);
+    render(<AiSuggestPanel {...panelProps({ status: "success", ends: [station], candidates: [{ station, reason: "활기찬 분위기" }] })} />);
+    expect(screen.getByRole("button", { name: "용산역 이미 추가됨" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "추가할 곳을 선택해 주세요" })).toBeDisabled();
+  });
+
+  it("hides the add button before results", () => {
+    render(<AiSuggestPanel {...panelProps({ onDone: vi.fn() })} />);
+    expect(screen.queryByRole("button", { name: /선택해 주세요|곳 추가/ })).not.toBeInTheDocument();
   });
 
   it("shows the fallback notice on error", () => {

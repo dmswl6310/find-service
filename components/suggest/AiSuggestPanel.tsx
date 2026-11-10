@@ -17,11 +17,15 @@ export interface AiSuggestPanelProps {
   error: string | null;
   onSuggest: (purpose: string) => void;
   onAddEnd: (location: KakaoLocation) => void;
+  // 고른 후보를 추가한 뒤 팝업을 닫는다
+  onDone?: () => void;
 }
 
 // 팝업 안의 내용만 그리는 컴포넌트. 요청 상태는 부모(AiSuggestSection)가 넘겨 준다.
-export default function AiSuggestPanel({ startCount, ends, status, candidates, error, onSuggest, onAddEnd }: AiSuggestPanelProps) {
+export default function AiSuggestPanel({ startCount, ends, status, candidates, error, onSuggest, onAddEnd, onDone }: AiSuggestPanelProps) {
   const [purpose, setPurpose] = useState("");
+  // 고르기만 한 후보. 아래 "선택한 N곳 추가"를 눌러야 실제로 추가된다 (✕로 닫으면 버려짐)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const inputId = useId();
 
   if (startCount < 2) {
@@ -35,6 +39,22 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
   const trimmed = purpose.trim();
   const isLoading = status === "loading";
   const addedIds = new Set(ends.map((end) => end.id));
+  const selected = candidates.filter(({ station }) => selectedIds.has(station.id) && !addedIds.has(station.id));
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const addSelected = () => {
+    selected.forEach(({ station }) => onAddEnd(station));
+    setSelectedIds(new Set());
+    onDone?.();
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,7 +66,9 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
         className="flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault();
-          if (trimmed && !isLoading) onSuggest(trimmed);
+          if (!trimmed || isLoading) return;
+          setSelectedIds(new Set()); // 새로 찾으면 고른 것 초기화
+          onSuggest(trimmed);
         }}
       >
         <label htmlFor={inputId} className="text-sm font-medium text-text">모임 목적</label>
@@ -78,6 +100,7 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
         <ul className="flex flex-col gap-2" aria-label="AI 추천 후보">
           {candidates.map(({ station, reason }) => {
             const isAdded = addedIds.has(station.id);
+            const isSelected = !isAdded && selectedIds.has(station.id);
             return (
               <li key={station.id} className="flex items-center justify-between gap-3 rounded-lg border border-candidate bg-candidate-soft p-3">
                 <div className="min-w-0">
@@ -86,18 +109,26 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
                 </div>
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant={isSelected ? "primary" : "secondary"}
                   size="sm"
                   disabled={isAdded}
-                  onClick={() => onAddEnd(station)}
-                  aria-label={isAdded ? `${station.place_name} 추가됨` : `${station.place_name} 후보에 추가`}
+                  aria-pressed={isAdded ? undefined : isSelected}
+                  onClick={() => toggleSelected(station.id)}
+                  className="shrink-0 whitespace-nowrap"
+                  aria-label={isAdded ? `${station.place_name} 이미 추가됨` : `${station.place_name} 선택`}
                 >
-                  {isAdded ? "추가됨" : "추가"}
+                  {isAdded ? "이미 추가됨" : isSelected ? "✓ 선택됨" : "선택"}
                 </Button>
               </li>
             );
           })}
         </ul>
+      )}
+
+      {status === "success" && candidates.length > 0 && (
+        <Button type="button" className="w-full" disabled={selected.length === 0} onClick={addSelected}>
+          {selected.length > 0 ? `선택한 ${selected.length}곳 추가` : "추가할 곳을 선택해 주세요"}
+        </Button>
       )}
     </div>
   );
