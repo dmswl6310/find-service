@@ -43,8 +43,9 @@ function isTimeoutError(e: unknown): boolean {
 }
 
 export async function POST(req: Request) {
-  // 같은 IP의 반복 요청 제한 (크레딧 남용 방지)
-  const limit = suggestRateLimiter.check(getClientIp(req));
+  // 같은 IP의 반복 요청 제한 (크레딧 남용 방지). 로컬 개발·eval(npm run dev)에서는 끈다
+  const limit =
+    process.env.NODE_ENV === "production" ? suggestRateLimiter.check(getClientIp(req)) : ({ ok: true } as const);
   if (!limit.ok) {
     return Response.json(
       { error: "요청이 많아요. 잠시 후 다시 시도해 주세요" },
