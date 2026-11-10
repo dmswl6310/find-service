@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useTransitMatrix } from "@/hooks/useTransitMatrix";
+import { ODSAY_DAILY_LIMIT_MESSAGE, useTransitMatrix } from "@/hooks/useTransitMatrix";
 import type { KakaoLocation } from "@/types/kakao";
 
 function jsonResponse(body: unknown, status = 200) {
@@ -377,9 +377,7 @@ describe("useTransitMatrix", () => {
         }),
       ])
     );
-    expect(result.current.error).toBe(
-      "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요."
-    );
+    expect(result.current.error).toBe(ODSAY_DAILY_LIMIT_MESSAGE);
   });
 
   it("resets previous matrix data and warning when locations are edited", async () => {

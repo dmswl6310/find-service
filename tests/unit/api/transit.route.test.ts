@@ -86,6 +86,19 @@ describe("GET /api/transit", () => {
     });
   });
 
+  it("returns 429 when ODsay reports the daily call limit", async () => {
+    mockFetchTransitRoute.mockResolvedValueOnce({
+      error: [{ code: "429", message: "Too Many Requests" }],
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const req = new NextRequest("http://localhost/api/transit?sx=1&sy=2&ex=3&ey=4");
+    const res = await GET(req);
+
+    expect(res.status).toBe(429);
+    await expect(res.json()).resolves.toMatchObject({ errorCode: "429", errorStatus: 429 });
+  });
+
   it("returns 404 when no route exists", async () => {
     mockFetchTransitRoute.mockResolvedValueOnce({
       result: { path: [] },

@@ -21,6 +21,8 @@ export function getOdsayRouteErrorStatus(code?: string): number {
     case "6":
     case "-99":
       return 404;
+    case "429": // 하루 호출 한도 초과
+      return 429;
     default:
       return 502;
   }

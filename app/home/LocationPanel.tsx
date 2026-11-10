@@ -22,6 +22,8 @@ export interface LocationPanelProps {
   onSelectEnd: (id: string) => void;
   onCalculate: () => void;
   SearchComponent?: ComponentType<LocationSearchProps>;
+  // 목적지 후보 제목 옆에 붙는 "AI로 찾기" 버튼
+  aiSuggest?: ReactNode;
   controls?: {
     shareButton: ReactNode;
     timeFilter: ReactNode;
@@ -42,6 +44,7 @@ export default function LocationPanel({
   onSelectEnd,
   onCalculate,
   SearchComponent,
+  aiSuggest,
   controls,
 }: LocationPanelProps) {
   const routeCount = starts.length * ends.length;
@@ -56,7 +59,7 @@ export default function LocationPanel({
       {controls?.timeFilter ?? <TimeFilter />}
       <div className="grid gap-5">
         <LocationGroup kind="origin" title="출발지" locations={starts} selectedId={selectedStartId} onSelectLocation={onSelectStart} onRemove={onRemoveStart} onAdd={onAddStart} SearchComponent={SearchComponent} />
-        <LocationGroup kind="candidate" title="목적지 후보" locations={ends} selectedId={selectedEndId} onSelectLocation={onSelectEnd} onRemove={onRemoveEnd} onAdd={onAddEnd} SearchComponent={SearchComponent} />
+        <LocationGroup kind="candidate" title="목적지 후보" locations={ends} selectedId={selectedEndId} onSelectLocation={onSelectEnd} onRemove={onRemoveEnd} onAdd={onAddEnd} SearchComponent={SearchComponent} headerAction={aiSuggest} />
       </div>
       <Button type="button" onClick={onCalculate} disabled={!canCalculate} isLoading={isCalculating} className="w-full">
         {isCalculating ? "경로 계산 중..." : canCalculate ? `${routeCount}개 경로 비교하기` : "장소를 추가해 주세요"}

@@ -8,6 +8,9 @@ import type { TransitFetchResult } from "@/types/odsay";
 const TRANSIT_MAX_CONCURRENCY = 3;
 const TRANSIT_MIN_START_GAP_MS = 250;
 const PARTIAL_FAILURE_MESSAGE = "일부 경로 계산에 실패했습니다. 콘솔을 확인하세요.";
+// ODsay 하루 호출 한도(현재 30회)를 다 쓰면 JSON 오류 코드 "429"가 온다 (docs/transit-request-interval-experiment-plan.md)
+export const ODSAY_DAILY_LIMIT_MESSAGE =
+  "오늘 이동시간 조회 가능 횟수를 모두 썼어요. 내일 다시 시도해 주세요.";
 
 export type CalculationProgress = {
   completed: number;
@@ -99,7 +102,7 @@ async function fetchTransitCell(params: {
 }
 
 function isTransitRateLimitResult(result: TransitFetchResult): boolean {
-  return result.errorStatus === 429 || result.errorCode === "-1";
+  return result.errorStatus === 429 || result.errorCode === "-1" || result.errorCode === "429";
 }
 
 function abortableDelay(milliseconds: number, signal?: AbortSignal): Promise<void> {
@@ -352,7 +355,9 @@ export function useTransitMatrix() {
       abortControllerRef.current = null;
       cancelersRef.current = [];
 
-      if (results.some((result) => result.error)) {
+      if (results.some((result) => result.error && result.errorCode === "429")) {
+        setError(ODSAY_DAILY_LIMIT_MESSAGE);
+      } else if (results.some((result) => result.error)) {
         setError(PARTIAL_FAILURE_MESSAGE);
       }
     } catch {
