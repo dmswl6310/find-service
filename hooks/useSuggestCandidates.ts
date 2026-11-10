@@ -11,6 +11,23 @@ export interface SuggestedCandidate {
 export type SuggestStatus = "idle" | "loading" | "success" | "error";
 
 export const SUGGEST_FALLBACK_MESSAGE = "AI 추천을 불러오지 못했어요. 목적지 후보를 직접 입력해 주세요.";
+export const SUGGEST_RATE_LIMIT_MESSAGE = "AI 추천 요청이 많아요. 잠시 후 다시 시도하거나 목적지 후보를 직접 입력해 주세요.";
+export const SUGGEST_NO_STATIONS_MESSAGE = "출발지 주변에서 추천할 역을 찾지 못했어요. 목적지 후보를 직접 입력해 주세요.";
+export const SUGGEST_TIMEOUT_MESSAGE = "AI 응답이 늦어지고 있어요. 다시 시도하거나 목적지 후보를 직접 입력해 주세요.";
+
+// 서버 응답 코드별로 사용자에게 보여 줄 안내 (모두 직접 입력으로 돌아갈 수 있게)
+export function getSuggestErrorMessage(status: number): string {
+  switch (status) {
+    case 429:
+      return SUGGEST_RATE_LIMIT_MESSAGE;
+    case 503:
+      return SUGGEST_NO_STATIONS_MESSAGE;
+    case 504:
+      return SUGGEST_TIMEOUT_MESSAGE;
+    default:
+      return SUGGEST_FALLBACK_MESSAGE;
+  }
+}
 
 // /api/suggest 응답의 station에는 카카오 필드가 더 붙어 오므로, 앱에서 쓰는 필드만 남긴다.
 // "용산역 경의중앙선" → "용산역"처럼 노선 이름은 떼서 보여 준다.
@@ -68,7 +85,7 @@ export function useSuggestCandidates() {
 
       if (!res.ok || !isSuggestResponse(data) || data.candidates.length === 0) {
         setStatus("error");
-        setError(SUGGEST_FALLBACK_MESSAGE);
+        setError(getSuggestErrorMessage(res.ok ? 502 : res.status));
         return;
       }
 
