@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import ComparisonWorkspace, {
   type ComparisonWorkspaceProps,
 } from "@/app/home/ComparisonWorkspace";
+import { trackEvent } from "@/lib/analytics";
 import { useAppStore } from "@/store/useAppStore";
 import { makeFailedRoute, makeLocation, makeRoute } from "@/tests/fixtures/transit";
 import type { CandidateSummary } from "@/components/result/resultModel";
@@ -63,17 +64,26 @@ vi.mock("@/components/map/MapWorkspace", () => ({
   ),
 }));
 
+vi.mock("@/lib/analytics", () => ({ trackEvent: vi.fn() }));
+
 vi.mock("@/app/home/LocationPanel", () => ({
   default: ({
     starts,
     onRemoveStart,
     onCalculate,
+    aiSuggest,
   }: {
     starts: ReturnType<typeof makeLocation>[];
     onRemoveStart: (id: string) => void;
     onCalculate: () => void;
+    aiSuggest?: { props: { onAddEnd: (location: ReturnType<typeof makeLocation>) => void } };
   }) => (
     <section aria-label="장소 입력">
+      {aiSuggest ? (
+        <button type="button" onClick={() => aiSuggest.props.onAddEnd(makeLocation("ai1", "AI 후보"))}>
+          AI 후보 추가
+        </button>
+      ) : null}
       {starts[0] ? (
         <button type="button" onClick={() => onRemoveStart(starts[0].id)}>
           첫 출발지 제거
@@ -367,5 +377,18 @@ describe("ComparisonWorkspace 상태 오케스트레이션", () => {
     rerender(<ComparisonWorkspace {...baseProps} />);
     expect(screen.getByRole("region", { name: "후보 비교 결과" })).toBeVisible();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("비교를 실행하면 목적지 수와 그중 AI로 넣은 수를 GA4로 보낸다", () => {
+    vi.mocked(trackEvent).mockClear();
+    renderWorkspace({ matrixData: [] });
+
+    fireEvent.click(screen.getByRole("button", { name: "AI 후보 추가" }));
+    fireEvent.click(screen.getByRole("button", { name: "계산하기" }));
+
+    expect(trackEvent).toHaveBeenCalledWith({
+      name: "compare_run",
+      params: { end_count: 3, ai_end_count: 1 },
+    });
   });
 });

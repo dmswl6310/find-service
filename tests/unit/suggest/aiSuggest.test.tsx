@@ -11,7 +11,10 @@ import {
   toCandidateLocation,
   useSuggestCandidates,
 } from "@/hooks/useSuggestCandidates";
+import { trackEvent } from "@/lib/analytics";
 import { makeLocation } from "@/tests/fixtures/transit";
+
+vi.mock("@/lib/analytics", () => ({ trackEvent: vi.fn() }));
 
 const starts = [makeLocation("s1", "강남역"), makeLocation("s2", "홍대입구역")];
 const yongsan = { ...makeLocation("21160921", "용산역 경의중앙선"), distance: "989" };
@@ -129,6 +132,7 @@ describe("AiSuggestPanel", () => {
     expect(props.onAddEnd).toHaveBeenCalledTimes(1);
     expect(props.onAddEnd).toHaveBeenCalledWith(first);
     expect(onDone).toHaveBeenCalledTimes(1);
+    expect(trackEvent).toHaveBeenCalledWith({ name: "ai_suggest_add", params: { added_count: 1 } });
   });
 
   it("shows stations already in the list as added and not selectable", () => {
@@ -175,6 +179,7 @@ describe("useSuggestCandidates", () => {
     });
     expect(result.current.status).toBe("success");
     expect(result.current.candidates[0].station.place_name).toBe("용산역");
+    expect(trackEvent).toHaveBeenCalledWith({ name: "ai_suggest_request", params: { result: "success", status_code: 200 } });
   });
 
   it("falls back to manual entry when the API fails", async () => {
@@ -194,6 +199,7 @@ describe("useSuggestCandidates", () => {
     await act(() => result.current.suggest(starts, "회식"));
 
     expect(result.current.error).toBe(SUGGEST_RATE_LIMIT_MESSAGE);
+    expect(trackEvent).toHaveBeenCalledWith({ name: "ai_suggest_request", params: { result: "error", status_code: 429 } });
   });
 
   it("maps each server status to a message", () => {

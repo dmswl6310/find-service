@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import type { KakaoLocation } from "@/types/kakao";
 
 export interface SuggestedCandidate {
@@ -84,18 +85,23 @@ export function useSuggestCandidates() {
       const data: unknown = await res.json().catch(() => null);
 
       if (!res.ok || !isSuggestResponse(data) || data.candidates.length === 0) {
+        const statusCode = res.ok ? 502 : res.status;
         setStatus("error");
-        setError(getSuggestErrorMessage(res.ok ? 502 : res.status));
+        setError(getSuggestErrorMessage(statusCode));
+        trackEvent({ name: "ai_suggest_request", params: { result: "error", status_code: statusCode } });
         return;
       }
 
       setCandidates(data.candidates.map((c) => ({ reason: c.reason, station: toCandidateLocation(c.station) })));
       setStatus("success");
+      trackEvent({ name: "ai_suggest_request", params: { result: "success", status_code: res.status } });
     } catch (e) {
       if (controller.signal.aborted) return;
       console.error(e);
       setStatus("error");
       setError(SUGGEST_FALLBACK_MESSAGE);
+      // 0 = 네트워크 오류 등 서버 응답을 못 받은 경우
+      trackEvent({ name: "ai_suggest_request", params: { result: "error", status_code: 0 } });
     }
   }, []);
 

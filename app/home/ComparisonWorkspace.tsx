@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import LocationPanel from "@/app/home/LocationPanel";
 import AiSuggestSection from "@/components/suggest/AiSuggestSection";
 import ResultPanel from "@/app/home/ResultPanel";
@@ -12,6 +12,7 @@ import RouteDetailSheet from "@/components/result/RouteDetailSheet";
 import RouteMatrix from "@/components/result/RouteMatrix";
 import { buildCandidateSummaries } from "@/components/result/resultModel";
 import Button from "@/components/ui/Button";
+import { trackEvent } from "@/lib/analytics";
 import type { CalculationProgress as CalculationProgressState } from "@/hooks/useTransitMatrix";
 import { useAppStore } from "@/store/useAppStore";
 import type { KakaoLocation } from "@/types/kakao";
@@ -63,6 +64,8 @@ export default function ComparisonWorkspace({
   const [isMatrixOpen, setIsMatrixOpen] = useState(false);
   const [routeDetail, setRouteDetail] = useState<RouteDetailState | null>(null);
   const [previousIsCalculating, setPreviousIsCalculating] = useState(isCalculating);
+  // AI 추천으로 넣은 목적지 id (GA4 "AI 후보 사용 비율"용, 화면에는 안 씀)
+  const aiEndIdsRef = useRef<Set<string>>(new Set());
   const {
     activeMapRouteId,
     selectedRoute,
@@ -142,6 +145,13 @@ export default function ComparisonWorkspace({
     setSelectedStartId(undefined);
     setSelectedEndId(undefined);
     setSelectedCandidateId(undefined);
+    trackEvent({
+      name: "compare_run",
+      params: {
+        end_count: ends.length,
+        ai_end_count: ends.filter((end) => aiEndIdsRef.current.has(end.id)).length,
+      },
+    });
     void calculateMatrix(
       starts,
       ends,
@@ -170,6 +180,11 @@ export default function ComparisonWorkspace({
     closeSecondaryViews();
     setSelectedCandidateId(undefined);
     addEnd(location);
+  };
+
+  const handleAddAiEnd = (location: KakaoLocation) => {
+    aiEndIdsRef.current.add(location.id);
+    handleAddEnd(location);
   };
 
   const handleRemoveEnd = (id: string) => {
@@ -275,7 +290,7 @@ export default function ComparisonWorkspace({
       onSelectStart={setSelectedStartId}
       onSelectEnd={setSelectedEndId}
       onCalculate={handleCalculate}
-      aiSuggest={<AiSuggestSection starts={starts} ends={ends} onAddEnd={handleAddEnd} />}
+      aiSuggest={<AiSuggestSection starts={starts} ends={ends} onAddEnd={handleAddAiEnd} />}
     />
   );
 
