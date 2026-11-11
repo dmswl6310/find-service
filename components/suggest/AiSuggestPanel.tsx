@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import Button from "@/components/ui/Button";
 import InlineNotice from "@/components/ui/InlineNotice";
+import { trackEvent } from "@/lib/analytics";
 import type { SuggestedCandidate, SuggestStatus } from "@/hooks/useSuggestCandidates";
 import type { KakaoLocation } from "@/types/kakao";
 
@@ -52,6 +53,7 @@ export default function AiSuggestPanel({ startCount, ends, status, candidates, e
 
   const addSelected = () => {
     selected.forEach(({ station }) => onAddEnd(station));
+    trackEvent({ name: "ai_suggest_add", params: { added_count: selected.length } });
     setSelectedIds(new Set());
     onDone?.();
   };
